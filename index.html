@@ -483,7 +483,7 @@ function openObject(i){
      </div>
    </div>
    ${o.estimateItems&&o.estimateItems.length?
-     (()=>{const total=o.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const purchased=o.estimateItems.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);const work=o.estimateItems.filter(x=>x.status==="work").length;const done=o.estimateItems.filter(x=>x.status==="done").length;const buy=o.estimateItems.filter(x=>beType(x.name)==="Материалы"&&(+x.purchasedQty||0)<(+x.qty||0)).length;return `
+     (()=>{const total=o.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const purchased=o.estimateItems.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);const work=o.estimateItems.filter(x=>x.status==="work").length;const done=o.estimateItems.filter(x=>x.status==="done").length;const buy=o.estimateItems.filter(x=>window.beType(x.name)==="Материалы"&&(+x.purchasedQty||0)<(+x.qty||0)).length;return `
        <h3>📋 Смета объекта</h3>
        <div class="be-summary">
          <div class="be-stat"><span>Сумма сметы</span><b>${beMoney(total)}</b></div>
@@ -1286,11 +1286,11 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
   window.beCloseEstimate=function(){document.getElementById("beEstimateModal").classList.remove("show");};
   function beMoney(x){return new Intl.NumberFormat("ru-RU").format(Number(x)||0)+" ₽";}
   function beEsc(x){return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
-  function beType(name){
+  window.beType=function(name){
     const n=String(name||"").toLowerCase();
     if(/плит|клей|грунт|краск|штукатур|шпаклев|гипс|профил|кабел|провод|розет|выключ|смес|труб|ламин|паркет|цемент|саморез|дюбел|гермет|утепл|минват|фанер|мдф|дсп|керам|обои|светиль|силикон/.test(n))return "Материалы";
     return "Работы";
-  }
+  };
   function beStatus(x){
     const st=x.status||"todo";
     if(st==="done")return ["done","✅ Выполнено"];
@@ -1308,7 +1308,7 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
     o.estimateItems=o.estimateItems||[];
     const items=o.estimateItems;
     const q=(o.beEstimateFilter||"all"), search=o.beEstimateSearch||"";
-    const filtered=items.filter(x=>(q==="all"||beType(x.name)===q||x.status===q)&&String(x.name||"").toLowerCase().includes(search.toLowerCase()));
+    const filtered=items.filter(x=>(q==="all"||window.beType(x.name)===q||x.status===q)&&String(x.name||"").toLowerCase().includes(search.toLowerCase()));
     const total=items.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
     const purchased=items.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);
     const left=Math.max(0,total-purchased);
@@ -1337,9 +1337,9 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
       <div style="margin-top:12px">
         ${filtered.map((x,j)=>{const realIndex=items.indexOf(x), st=beStatus(x), sum=(+x.qty||0)*(+x.price||0), rem=Math.max(0,(+x.qty||0)-(+x.purchasedQty||0));return `
           <div class="be-item" onclick="beItem(${i},${realIndex})">
-            <div class="be-item-top"><div><div class="be-name">${beEsc(x.name)}</div><div class="be-muted">${beType(x.name)} · ${x.qty||0} ${beEsc(x.unit||"шт")} · ${beMoney(x.price||0)}/${beEsc(x.unit||"шт")}</div></div><div class="be-amount">${beMoney(sum)}</div></div>
+            <div class="be-item-top"><div><div class="be-name">${beEsc(x.name)}</div><div class="be-muted">${window.beType(x.name)} · ${x.qty||0} ${beEsc(x.unit||"шт")} · ${beMoney(x.price||0)}/${beEsc(x.unit||"шт")}</div></div><div class="be-amount">${beMoney(sum)}</div></div>
             <span class="be-status ${st[0]}">${st[1]}</span>
-            ${beType(x.name)==="Материалы"&&rem>0?`<div class="be-muted" style="margin-top:7px">🛒 Купить ещё: <b>${rem} ${beEsc(x.unit||"шт")}</b></div>`:""}
+            ${window.beType(x.name)==="Материалы"&&rem>0?`<div class="be-muted" style="margin-top:7px">🛒 Купить ещё: <b>${rem} ${beEsc(x.unit||"шт")}</b></div>`:""}
           </div>`}).join("")||'<div class="be-muted" style="padding:20px 0">Ничего не найдено.</div>'}
       </div>`;
     document.getElementById("beEstimateModal").classList.add("show");
@@ -1350,7 +1350,7 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
     document.getElementById("beEstimateSheet").innerHTML=`
       <button class="close" onclick="beOpenEstimate(${oi})">×</button>
       <h2>${beEsc(x.name)}</h2>
-      <div class="be-cat">${beType(x.name)}</div>
+      <div class="be-cat">${window.beType(x.name)}</div>
       <div class="be-summary" style="margin-top:14px">
         <div class="be-stat"><span>Количество</span><b>${x.qty||0} ${beEsc(x.unit||"шт")}</b></div>
         <div class="be-stat"><span>Цена</span><b>${beMoney(x.price||0)}</b></div>
@@ -1378,7 +1378,7 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
   };
   window.bePurchaseList=function(i){
     const o=beGetObj(i),items=o.estimateItems||[];
-    const buy=items.filter(x=>beType(x.name)==="Материалы"&&(+x.purchasedQty||0)<(+x.qty||0));
+    const buy=items.filter(x=>window.beType(x.name)==="Материалы"&&(+x.purchasedQty||0)<(+x.qty||0));
     const total=buy.reduce((a,x)=>a+(Math.max(0,(+x.qty||0)-(+x.purchasedQty||0))*(+x.price||0)),0);
     document.getElementById("beEstimateSheet").innerHTML=`
       <button class="close" onclick="beOpenEstimate(${i})">×</button>
@@ -1388,7 +1388,7 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
       <div class="be-actions"><button class="primary" onclick="beMarkAllPurchased(${i})">Отметить всё купленным</button><button onclick="beOpenEstimate(${i})">← К смете</button></div>`;
   };
   window.beMarkAllPurchased=function(i){
-    const o=beGetObj(i);(o.estimateItems||[]).forEach(x=>{if(beType(x.name)==="Материалы"){x.purchasedQty=+x.qty||0;x.status="done"}});save();bePurchaseList(i);
+    const o=beGetObj(i);(o.estimateItems||[]).forEach(x=>{if(window.beType(x.name)==="Материалы"){x.purchasedQty=+x.qty||0;x.status="done"}});save();bePurchaseList(i);
   };
   window.beEstimateCheck=function(i){
     const o=beGetObj(i),items=o.estimateItems||[], issues=[];
@@ -1407,5 +1407,15 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
   };
 })();
 </script>
+
+<script>
+if(typeof window.beType!=="function"){
+  window.beType=function(name){
+    const n=String(name||"").toLowerCase();
+    return /плит|клей|грунт|краск|штукатур|шпаклев|гипс|профил|кабел|провод|розет|выключ|смес|труб|ламин|паркет|цемент|саморез|дюбел|гермет|утепл|минват|фанер|мдф|дсп|керам|обои|светиль|силикон/.test(n)?"Материалы":"Работы";
+  };
+}
+</script>
+
 </body>
 </html>
