@@ -448,6 +448,7 @@ function addObject(){
 function renderObjects(){document.getElementById("objectList").innerHTML=objects.map((o,i)=>objectCard(o,i)).join("")||'<div class="empty">Объектов пока нет</div>'}
 function openObject(i){
  const o=objects[i];
+ try{ window.bfCurrentProject=String(o.id||o.name||""); window.bfCurrentProjectName=String(o.name||""); }catch(e){}
  const objExpenses=expenses.filter(e=>e.object===o.name);
  const spent=objExpenses.reduce((s,e)=>s+Number(e.amount||0),0);
  const remaining=Math.max(0,Number(o.budget||0)-spent);
@@ -875,10 +876,11 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
     sel.disabled=false;
     sel.innerHTML="<option value=''>Выбери объект</option>"+list.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
     const wanted=window.bfCurrentProject!=null?String(window.bfCurrentProject):"";
-    if(wanted){
+    const wantedName=String(window.bfCurrentProjectName||"");
+    if(wanted || wantedName){
       let opt=[...sel.options].find(o=>String(o.value)===wanted);
-      if(!opt){
-        const p=list.find(x=>String(x.name)===wanted);
+      if(!opt && wantedName){
+        const p=list.find(x=>String(x.name)===wantedName);
         if(p) opt=[...sel.options].find(o=>String(o.value)===String(p.id));
       }
       if(opt)sel.value=opt.value;
@@ -1109,67 +1111,76 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       saveS(s);
 
       // Sync imported data into the main BUILDOS app storage as well.
-      // The main app uses `buildos_objects` / `buildos_tasks`, while BUILDOS PRO
-      // uses `buildos_final_v1`. Without this bridge the import looked successful
-      // but was invisible in the normal object screen.
+      // IMPORTANT: the importer and the main screen may use different object IDs.
+      // Always resolve the real object by ID OR exact name, then update both the
+      // persisted array and the live `objects` array used by openObject().
       try{
         const mainObjects=JSON.parse(localStorage.getItem("buildos_objects")||"[]");
         const project=s.projects.find(p=>String(p.id)===String(pid));
-        const mainObj=Array.isArray(mainObjects)
-          ? mainObjects.find(o=>(project&&project.name&&o.name===project.name) || String(o.id||"")===String(pid))
-          : null;
+        const projectName=String(project?.name||window.bfCurrentProjectName||"").trim();
+        const matches=(o)=>{
+          if(!o) return false;
+          const oid=String(o.id||"");
+          const oname=String(o.name||o.title||"").trim();
+          return (project && oid && oid===String(project.id)) || (!!projectName && oname===projectName);
+        };
 
-        if(mainObj){
-          if(mode==="estimate"){
-            mainObj.estimateItems=mainObj.estimateItems||[];
-            const byKey=(x)=>norm(x.name)+"|"+norm(x.unit||"шт");
-            parsed.forEach(x=>{
-              const key=byKey(x);
-              const ex=mainObj.estimateItems.find(m=>byKey(m)===key);
-              if(ex){
-                ex.qty=(+ex.qty||0)+(+x.qty||0);
-                ex.price=+x.price||ex.price||0;
-                ex.total=(+ex.qty||0)*(+ex.price||0);
-              }else{
-                mainObj.estimateItems.push({
-                  id:x.id||id(),name:x.name,qty:+x.qty||0,unit:x.unit||"шт",
-                  price:+x.price||0,total:(+x.qty||0)*(+x.price||0)
-                });
-              }
-            });
-            mainObj.estimateTotal=mainObj.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
-          }else{
-            mainObj.schedule=mainObj.schedule||[];
-            parsed.forEach(x=>mainObj.schedule.push({
-              id:x.id||id(),title:x.name,start:x.start,end:x.end,
-              assignee:x.assignee||"",status:x.status||"Запланировано"
-            }));
+        const matched=[];
+        if(Array.isArray(mainObjects)){
+          mainObjects.forEach(o=>{if(matches(o)) matched.push(o);});
+        }
+
+        // If the object exists only in runtime, include that exact object too.
+        try{
+          if(typeof objects!=="undefined" && Array.isArray(objects)){
+            objects.forEach(o=>{if(matches(o) && !matched.includes(o)) matched.push(o);});
           }
+        }catch(e){}
+
+        if(matched.length){
+          matched.forEach(mainObj=>{
+            if(mode==="estimate"){
+              mainObj.estimateItems=Array.isArray(mainObj.estimateItems)?mainObj.estimateItems:[];
+              const byKey=(x)=>norm(x.name)+"|"+norm(x.unit||"шт");
+              parsed.forEach(x=>{
+                const key=byKey(x);
+                const ex=mainObj.estimateItems.find(m=>byKey(m)===key);
+                if(ex){
+                  ex.qty=(+ex.qty||0)+(+x.qty||0);
+                  ex.price=+x.price||ex.price||0;
+                  ex.total=(+ex.qty||0)*(+ex.price||0);
+                }else{
+                  mainObj.estimateItems.push({id:x.id||id(),name:x.name,qty:+x.qty||0,unit:x.unit||"шт",price:+x.price||0,total:(+x.qty||0)*(+x.price||0),purchasedQty:0,status:"todo"});
+                }
+              });
+              mainObj.estimateTotal=mainObj.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
+            }else{
+              mainObj.schedule=Array.isArray(mainObj.schedule)?mainObj.schedule:[];
+              parsed.forEach(x=>mainObj.schedule.push({id:x.id||id(),title:x.name,start:x.start,end:x.end,assignee:x.assignee||"",status:x.status||"Запланировано"}));
+            }
+          });
           localStorage.setItem("buildos_objects",JSON.stringify(mainObjects));
 
-          // IMPORTANT: the main app keeps `objects` in memory.
-          // Updating only localStorage does not refresh the currently opened
-          // object, so the screen can still say "Смета не загружена".
+          // Force the currently visible object to contain exactly the persisted data.
           try{
-            if(typeof objects!=="undefined" && Array.isArray(objects) && mainObj){
-              const liveObj=objects.find(o=>
-                (project&&project.name&&o.name===project.name) ||
-                String(o.id||"")===String(mainObj.id||"")
-              );
-              if(liveObj){
-                if(mode==="estimate"){
-                  liveObj.estimateItems=JSON.parse(JSON.stringify(mainObj.estimateItems||[]));
-                  liveObj.estimateTotal=+mainObj.estimateTotal||0;
-                }else{
-                  liveObj.schedule=JSON.parse(JSON.stringify(mainObj.schedule||[]));
+            if(typeof objects!=="undefined" && Array.isArray(objects)){
+              objects.forEach(liveObj=>{
+                if(!matches(liveObj)) return;
+                const source=matched.find(x=>String(x.id||"")===String(liveObj.id||""))||matched[0];
+                if(mode==="estimate") {
+                  liveObj.estimateItems=JSON.parse(JSON.stringify(source.estimateItems||[]));
+                  liveObj.estimateTotal=+source.estimateTotal||0;
+                } else {
+                  liveObj.schedule=JSON.parse(JSON.stringify(source.schedule||[]));
                 }
-                if(typeof save==="function") save();
-              }
+              });
+              save();
             }
-          }catch(liveErr){
-            console.warn("BUILDOS live object refresh failed",liveErr);
-          }
+          }catch(liveErr){ console.warn("BUILDOS live object refresh failed",liveErr); }
+        }else{
+          console.warn("BUILDOS object not found for import",{pid,projectName});
         }
+      }catch(syncErr){ console.warn("BUILDOS import sync failed",syncErr); }
 
         // Also mirror schedule tasks into the main Tasks screen.
         if(mode==="schedule"){
@@ -1181,13 +1192,9 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
           }));
           localStorage.setItem("buildos_tasks",JSON.stringify(mainTasks));
         }
-      }catch(syncErr){
-        console.warn("BUILDOS main storage sync failed",syncErr);
-      }
 
       bfImportStatus('<div class="bf-ok">✅ Готово! Смета сохранена и привязана к объекту.</div>');
       const b=document.getElementById("bfImportCommitBtn");
-      const topAction=document.getElementById("bfImportTopAction");
       if(topAction){ topAction.style.display="block"; topAction.style.position="sticky"; topAction.style.top="0"; topAction.style.zIndex="30"; topAction.style.background="#fff"; }
       if(b){b.textContent="✅ Добавлено";b.disabled=true;b.style.opacity=".6";}
 
