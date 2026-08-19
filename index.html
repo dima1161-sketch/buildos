@@ -263,29 +263,7 @@ window.addEventListener('unhandledrejection',function(e){
     </div>
   </section>
 
-  
-<section id="materials" class="view">
-  <div class="section-head"><h2>🧱 Материалы</h2><button class="primary" onclick="openMaterialModal()">＋ Добавить</button></div>
-  <div class="grid2">
-    <div class="stat"><div class="icon">🧱</div><div class="value" id="materialsCount">0</div><div class="label">позиций</div></div>
-    <div class="stat"><div class="icon">💰</div><div class="value" id="materialsTotal">0 ₽</div><div class="label">стоимость</div></div>
-  </div>
-  <div id="materialsList" style="margin-top:16px"></div>
-</section>
-
-<section id="clients" class="view">
-  <div class="section-head"><h2>👤 Клиенты</h2><button class="primary" onclick="openClientModal()">＋ Добавить</button></div>
-  <div class="card"><div class="small">Клиенты и привязанные к ним объекты</div><div class="money" id="clientsCount">0</div></div>
-  <div id="clientsList" style="margin-top:16px"></div>
-</section>
-
-<section id="calendar" class="view">
-  <div class="section-head"><h2>📅 Календарь</h2></div>
-  <div class="card"><div class="small">Задачи по срокам</div><div class="money" id="calendarCount">0</div></div>
-  <div id="calendarList" style="margin-top:16px"></div>
-</section>
-
-<section id="ai" class="view">
+  <section id="ai" class="view">
     <div class="section-head"><h2>AI-помощник</h2></div>
     <div class="ai-box">
       <div style="font-size:20px;font-weight:800">🤖 Чем помочь?</div>
@@ -320,15 +298,6 @@ window.addEventListener('unhandledrejection',function(e){
       <button class="more-item" onclick="closeMoreMenu();showView('workers')">
         <span class="more-icon">👷</span><b>Рабочие</b>
       </button>
-      <button class="more-item" onclick="closeMoreMenu();showView('materials')">
-        <span class="more-icon">🧱</span><b>Материалы</b>
-      </button>
-      <button class="more-item" onclick="closeMoreMenu();showView('clients')">
-        <span class="more-icon">👤</span><b>Клиенты</b>
-      </button>
-      <button class="more-item" onclick="closeMoreMenu();showView('calendar')">
-        <span class="more-icon">📅</span><b>Календарь</b>
-      </button>
       <button class="more-item" onclick="closeMoreMenu();showView('reports')">
         <span class="more-icon">📊</span><b>Отчёты</b>
       </button>
@@ -340,36 +309,6 @@ window.addEventListener('unhandledrejection',function(e){
   </div>
 </div>
 
-
-
-<div id="materialModal" class="modal" onclick="if(event.target===this)closeModal('materialModal')">
-  <div class="sheet">
-    <h2>Новый материал</h2>
-    <div class="field"><label>Наименование</label><input id="materialName" placeholder="Например: керамогранит"></div>
-    <div class="field"><label>Объект</label><select id="materialObject"></select></div>
-    <div class="grid2">
-      <div class="field"><label>Количество</label><input id="materialQty" type="number" inputmode="decimal" value="1"></div>
-      <div class="field"><label>Единица</label><input id="materialUnit" value="шт"></div>
-    </div>
-    <div class="grid2">
-      <div class="field"><label>Цена за единицу</label><input id="materialPrice" type="number" inputmode="decimal" placeholder="2500"></div>
-      <div class="field"><label>Поставщик</label><input id="materialSupplier" placeholder="Леруа / поставщик"></div>
-    </div>
-    <div class="field"><label>Статус</label><select id="materialStatus"><option>Нужно купить</option><option>Заказано</option><option>Доставлено</option><option>На объекте</option></select></div>
-    <div class="actions"><button class="secondary" onclick="closeModal('materialModal')">Отмена</button><button class="primary" onclick="addMaterial()">Добавить</button></div>
-  </div>
-</div>
-
-<div id="clientModal" class="modal" onclick="if(event.target===this)closeModal('clientModal')">
-  <div class="sheet">
-    <h2>Новый клиент</h2>
-    <div class="field"><label>Имя</label><input id="clientName" placeholder="Иван Петров"></div>
-    <div class="field"><label>Телефон</label><input id="clientPhone" type="tel" inputmode="tel" placeholder="+7 999 123-45-67"></div>
-    <div class="field"><label>Объект</label><select id="clientObject"></select></div>
-    <div class="field"><label>Комментарий</label><input id="clientNote" placeholder="Пожелания, договорённости..."></div>
-    <div class="actions"><button class="secondary" onclick="closeModal('clientModal')">Отмена</button><button class="primary" onclick="addClient()">Добавить</button></div>
-  </div>
-</div>
 
 <div id="workerModal" class="modal" onclick="if(event.target===this)closeModal('workerModal')">
   <div class="sheet">
@@ -450,17 +389,15 @@ let tasks=JSON.parse(localStorage.getItem("buildos_tasks")||"null")||[
 let expenses=JSON.parse(localStorage.getItem("buildos_expenses")||"[]");
 let incomes=JSON.parse(localStorage.getItem("buildos_incomes")||"[]");
 let workers=JSON.parse(localStorage.getItem("buildos_workers")||"[]");
-let materials=JSON.parse(localStorage.getItem("buildos_materials")||"[]");
-let clients=JSON.parse(localStorage.getItem("buildos_clients")||"[]");
 let taskFilter="all";
 
-function save(){localStorage.setItem("buildos_tasks",JSON.stringify(tasks));localStorage.setItem("buildos_expenses",JSON.stringify(expenses));localStorage.setItem("buildos_incomes",JSON.stringify(incomes));localStorage.setItem("buildos_workers",JSON.stringify(workers));localStorage.setItem("buildos_materials",JSON.stringify(materials));localStorage.setItem("buildos_clients",JSON.stringify(clients));localStorage.setItem("buildos_objects",JSON.stringify(objects))}
+function save(){localStorage.setItem("buildos_tasks",JSON.stringify(tasks));localStorage.setItem("buildos_expenses",JSON.stringify(expenses));localStorage.setItem("buildos_incomes",JSON.stringify(incomes));localStorage.setItem("buildos_workers",JSON.stringify(workers));localStorage.setItem("buildos_objects",JSON.stringify(objects))}
 function showView(id,btn){
  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
  const v=document.getElementById(id); if(v)v.classList.add("active");
  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("nav-active"));
  const nav=document.getElementById("nav-"+id); if(nav)nav.classList.add("nav-active");
- if(id==="home")renderHome(); if(id==="objects")renderObjects(); if(id==="tasks")renderTasks(); if(id==="expenses")renderExpenses(); if(id==="finance")renderFinance(); if(id==="workers")renderWorkers(); if(id==="materials")renderMaterials(); if(id==="clients")renderClients(); if(id==="calendar")renderCalendar(); if(id==="reports")renderReports();
+ if(id==="home")renderHome(); if(id==="objects")renderObjects(); if(id==="tasks")renderTasks(); if(id==="expenses")renderExpenses(); if(id==="finance")renderFinance(); if(id==="workers")renderWorkers(); if(id==="reports")renderReports();
  window.scrollTo(0,0);
 }
 function money(n){return Number(n||0).toLocaleString("ru-RU")+" ₽"}
@@ -505,7 +442,7 @@ function addObject(){
    days:Number(document.getElementById("objectDays").value)||0,progress:0,stage:document.getElementById("objectStage").value.trim()||"Подготовка",
    workers:0,start:new Date().toLocaleDateString("ru-RU"),finish:"",issues:0,icon:"🏠",tasks:[]
  });
- save();closeModal("objectModal");renderObjects();renderHome();objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");objectOptions("workerObject");objectOptions("materialObject");objectOptions("clientObject");
+ save();closeModal("objectModal");renderObjects();renderHome();objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");objectOptions("workerObject");
 }
 
 function renderObjects(){document.getElementById("objectList").innerHTML=objects.map((o,i)=>objectCard(o,i)).join("")||'<div class="empty">Объектов пока нет</div>'}
@@ -542,114 +479,11 @@ function openObject(i){
 
  <div class="detail-card"><h3>📋 Задачи объекта</h3>
  ${objTasks.length?objTasks.map(t=>`<div class="row"><span>${t.done?'✅':'⬜'} ${t.title}<br><span class="small">${t.assignee||"Не назначен"} · ${t.due||"Без срока"}</span></span></div>`).join(""):'<div class="empty">Задач пока нет.</div>'}
- <button class="secondary" style="width:100%;margin-top:10px" onclick="openTaskModal('${o.name}')">+ Добавить задачу</button></div>
-
- <div class="detail-card"><h3>🧱 Материалы объекта</h3>
- ${materials.filter(m=>m.object===o.name).length?materials.filter(m=>m.object===o.name).map(m=>`<div class="row"><span>${m.name}<br><span class="small">${m.qty} ${m.unit} · ${m.status}</span></span><b>${money(materialTotal(m))}</b></div>`).join(""):'<div class="empty">Материалов по объекту пока нет.</div>'}
- <button class="secondary" style="width:100%;margin-top:10px" onclick="showView('materials')">Открыть материалы →</button></div>
-
- <div class="detail-card"><h3>👷 Рабочие объекта</h3>
- ${workers.filter(w=>w.object===o.name).length?workers.filter(w=>w.object===o.name).map(w=>`<div class="row"><span>${w.name}<br><span class="small">${w.role||"Рабочий"}</span></span><b>${money(w.rate)} / день</b></div>`).join(""):'<div class="empty">Рабочие пока не назначены.</div>'}</div>`;
+ <button class="secondary" style="width:100%;margin-top:10px" onclick="openTaskModal('${o.name}')">+ Добавить задачу</button></div>`;
  showView("objectDetail");
 }
 function setTaskFilter(f,btn){taskFilter=f;document.querySelectorAll(".task-filter").forEach(b=>b.classList.remove("active"));btn.classList.add("active");renderTasks()}
 function priorityLabel(p){return p==="high"?"Высокий":p==="low"?"Низкий":"Средний"}
-
-
-function materialTotal(m){return Number(m.qty||0)*Number(m.price||0)}
-function openMaterialModal(){
-  objectOptions("materialObject");
-  document.getElementById("materialName").value="";
-  document.getElementById("materialQty").value="1";
-  document.getElementById("materialUnit").value="шт";
-  document.getElementById("materialPrice").value="";
-  document.getElementById("materialSupplier").value="";
-  document.getElementById("materialStatus").value="Нужно купить";
-  document.getElementById("materialModal").classList.add("show");
-  setTimeout(()=>document.getElementById("materialName").focus(),50);
-}
-function addMaterial(){
-  const name=document.getElementById("materialName").value.trim(); if(!name)return;
-  materials.push({
-    id:Date.now()+"_"+Math.random().toString(36).slice(2),
-    name,
-    object:document.getElementById("materialObject").value,
-    qty:Number(document.getElementById("materialQty").value)||0,
-    unit:document.getElementById("materialUnit").value.trim()||"шт",
-    price:Number(document.getElementById("materialPrice").value)||0,
-    supplier:document.getElementById("materialSupplier").value.trim(),
-    status:document.getElementById("materialStatus").value
-  });
-  save();closeModal("materialModal");renderMaterials();
-}
-function renderMaterials(){
-  const total=materials.reduce((sum,m)=>sum+materialTotal(m),0);
-  document.getElementById("materialsCount").textContent=materials.length;
-  document.getElementById("materialsTotal").textContent=money(total);
-  document.getElementById("materialsList").innerHTML=materials.length?materials.slice().reverse().map((m,ri)=>{
-    const i=materials.length-1-ri, total=materialTotal(m);
-    return `<div class="card">
-      <div style="display:flex;justify-content:space-between;gap:12px">
-        <div><div class="task-title">${m.name}</div><div class="muted">🏗️ ${m.object} · ${m.qty} ${m.unit}</div></div>
-        <div style="text-align:right"><b>${money(total)}</b><div class="small">${money(m.price)} / ${m.unit}</div></div>
-      </div>
-      <div class="task-meta" style="margin-top:10px">📦 ${m.status}${m.supplier?" · "+m.supplier:""}</div>
-      <button class="secondary danger-btn" style="margin-top:10px" onclick="deleteMaterial(${i})">Удалить</button>
-    </div>`;
-  }).join(""):'<div class="empty">Материалов пока нет.</div>';
-}
-function deleteMaterial(i){if(!confirm("Удалить позицию?"))return;materials.splice(i,1);save();renderMaterials()}
-
-function openClientModal(){
-  objectOptions("clientObject");
-  document.getElementById("clientName").value="";
-  document.getElementById("clientPhone").value="";
-  document.getElementById("clientNote").value="";
-  document.getElementById("clientModal").classList.add("show");
-  setTimeout(()=>document.getElementById("clientName").focus(),50);
-}
-function addClient(){
-  const name=document.getElementById("clientName").value.trim();if(!name)return;
-  clients.push({
-    id:Date.now()+"_"+Math.random().toString(36).slice(2),
-    name,
-    phone:document.getElementById("clientPhone").value.trim(),
-    object:document.getElementById("clientObject").value,
-    note:document.getElementById("clientNote").value.trim()
-  });
-  save();closeModal("clientModal");renderClients();
-}
-function renderClients(){
-  document.getElementById("clientsCount").textContent=clients.length;
-  document.getElementById("clientsList").innerHTML=clients.length?clients.slice().reverse().map((c,ri)=>{
-    const i=clients.length-1-ri;
-    return `<div class="card">
-      <div style="display:flex;justify-content:space-between;gap:12px">
-        <div><div class="task-title">👤 ${c.name}</div><div class="muted">🏗️ ${c.object||"Без объекта"}</div></div>
-        <a class="secondary" style="display:inline-flex;align-items:center;text-decoration:none" href="tel:${c.phone||""}">Позвонить</a>
-      </div>
-      <div class="task-meta" style="margin-top:10px">${c.phone||"Телефон не указан"}${c.note?" · "+c.note:""}</div>
-      <button class="secondary danger-btn" style="margin-top:10px" onclick="deleteClient(${i})">Удалить</button>
-    </div>`;
-  }).join(""):'<div class="empty">Клиентов пока нет.</div>';
-}
-function deleteClient(i){if(!confirm("Удалить клиента?"))return;clients.splice(i,1);save();renderClients()}
-
-function renderCalendar(){
-  const today=new Date();today.setHours(0,0,0,0);
-  const list=tasks.filter(t=>t.due).slice().sort((a,b)=>a.due.localeCompare(b.due));
-  document.getElementById("calendarCount").textContent=list.length;
-  document.getElementById("calendarList").innerHTML=list.length?list.map(t=>{
-    const d=new Date(t.due+"T00:00:00"), diff=Math.ceil((d-today)/86400000);
-    const status=t.done?"done":diff<0?"overdue":diff===0?"today":"upcoming";
-    const label=t.done?"Выполнено":diff<0?"Просрочено":diff===0?"Сегодня":("через "+diff+" дн.");
-    return `<div class="card task-card ${t.done?'done':''}">
-      <div class="task-main"><div class="task-title">${t.done?"✅":"📅"} ${t.title}</div>
-      <div class="task-meta">🏗️ ${t.object} · 👷 ${t.assignee||"Не назначен"} · ${new Date(t.due+"T00:00:00").toLocaleDateString("ru-RU")}</div>
-      <div class="task-status">${label} · ${priorityLabel(t.priority)}</div></div>
-    </div>`;
-  }).join(""):'<div class="empty">Задач со сроками пока нет. Добавь срок в задаче.</div>';
-}
 
 function openWorkerModal(){
  document.getElementById("workerName").value="";document.getElementById("workerRole").value="";document.getElementById("workerRate").value="";
@@ -820,8 +654,52 @@ function resetBuildos(){
 function openMoreMenu(){document.getElementById("moreModal").classList.add("show")}
 function closeMoreMenu(){document.getElementById("moreModal").classList.remove("show")}
 
-function init(){objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");objectOptions("workerObject");objectOptions("materialObject");objectOptions("clientObject");renderHome();renderObjects();renderTasks();renderExpenses();renderFinance();renderWorkers();renderReports()}
+function init(){objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");objectOptions("workerObject");renderHome();renderObjects();renderTasks();renderExpenses();renderFinance();renderWorkers();renderReports()}
 init();
 </script>
+
+<style>
+#bfLaunch{position:fixed;right:16px;bottom:90px;z-index:5000;width:54px;height:54px;border:0;border-radius:50%;background:#2878ed;color:#fff;font-size:24px;box-shadow:0 6px 20px rgba(40,120,237,.3)}
+.bf-modal{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:9999;display:none;align-items:flex-end}.bf-modal.show{display:flex}
+.bf-sheet{background:#fff;border-radius:28px 28px 0 0;width:100%;max-width:760px;margin:auto;max-height:92vh;overflow:auto;padding:20px 17px calc(22px + env(safe-area-inset-bottom));font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+.bf-sheet h2{margin:0 0 15px;font-size:26px}.bf-field{margin:11px 0}.bf-field label{display:block;color:#6e7787;font-weight:700;margin-bottom:6px}.bf-field input,.bf-field select,.bf-field textarea{width:100%;box-sizing:border-box;border:1px solid #d8dee7;border-radius:14px;padding:13px;background:#fff;font:inherit}.bf-field textarea{min-height:90px}
+.bf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bf-stat{background:#f6f8fb;border:1px solid #e4e8ef;border-radius:18px;padding:14px}.bf-stat b{display:block;font-size:22px;margin-top:5px}.bf-stat span{color:#70798a;font-size:13px}
+.bf-card{background:#fff;border:1px solid #e2e6ec;border-radius:22px;padding:16px;margin:10px 0}.bf-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #e6e9ee}.bf-row:last-child{border-bottom:0}.bf-muted{color:#737c8c;font-size:13px}.bf-btn{border:1px solid #dce1e8;background:#fff;border-radius:15px;padding:13px;font-weight:750}.bf-primary{background:#2878ed;color:#fff;border-color:#2878ed}.bf-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+</style>
+<div id="bfModal" class="bf-modal" onclick="if(event.target===this)bfClose()"><div id="bfSheet" class="bf-sheet"></div></div>
+<script>
+(function(){
+const K="buildos_final_v1", oldK="buildos_data";
+let S; try{S=JSON.parse(localStorage.getItem(K)||"{}")}catch(e){S={}}
+for(const k of ["projects","tasks","workers","materials","expenses","incomes","timesheets","clients","events","estimates","documents","notes"])S[k]=S[k]||[];
+const save=()=>localStorage.setItem(K,JSON.stringify(S)), id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+const esc=x=>String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const money=x=>new Intl.NumberFormat("ru-RU").format(Number(x)||0)+" ₽", today=()=>new Date().toISOString().slice(0,10);
+function sync(){if(S.projects.length||S.tasks.length||S.workers.length)return;try{let o=JSON.parse(localStorage.getItem(oldK)||"{}");S.projects=(o.objects||[]).map((x,i)=>({id:x.id||id(),name:x.name||"Объект "+(i+1),client:x.client||"",address:x.address||"",area:+x.area||0,budget:+x.budget||0,progress:+x.progress||0,stage:x.stage||""}));S.tasks=(o.tasks||[]).map(x=>({id:x.id||id(),title:x.title||x.name||"Задача",projectId:S.projects.find(p=>p.name===x.object)?.id||S.projects[0]?.id||"",assignee:x.assignee||"",due:x.due||"",priority:x.priority||"medium",done:!!x.done}));S.workers=(o.workers||[]).map(x=>({id:x.id||id(),name:x.name||"",role:x.role||"",rate:+x.rate||0,projectId:S.projects.find(p=>p.name===x.object)?.id||S.projects[0]?.id||""}));save()}catch(e){}}
+sync();
+function open(t,b,a){document.getElementById("bfSheet").innerHTML=`<button class="bf-btn" style="float:right;border-radius:50%" onclick="bfClose()">×</button><h2>${t}</h2>${b}<div class="bf-actions">${a||'<button class="bf-btn" onclick="bfClose()">Закрыть</button>'}</div>`;document.getElementById("bfModal").classList.add("show")}
+window.bfClose=()=>document.getElementById("bfModal").classList.remove("show");
+const p=id=>S.projects.find(x=>x.id===id);
+function calc(pid){let ex=S.expenses.filter(x=>x.projectId===pid).reduce((a,x)=>a+(+x.amount||0),0),inc=S.incomes.filter(x=>x.projectId===pid).reduce((a,x)=>a+(+x.amount||0),0),mat=S.materials.filter(x=>x.projectId===pid).reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0),sal=S.timesheets.filter(x=>x.projectId===pid&&x.status==="worked").reduce((a,x)=>a+(+x.rate||0),0),spent=ex+mat+sal,planned=+(p(pid)?.budget)||0;return{ex,inc,mat,sal,spent,planned,left:planned-spent,profit:inc-spent}}
+window.bfOpenProject=pid=>{let o=p(pid),c=calc(pid);open("🏗️ "+esc(o.name),`<div class="bf-card"><b>${esc(o.client||"Клиент не указан")}</b><div class="bf-muted">${esc(o.address||"")} · ${o.area||0} м²</div><div style="margin:12px 0;height:9px;background:#e5eaf1;border-radius:99px;overflow:hidden"><i style="display:block;height:100%;width:${o.progress||0}%;background:#2878ed"></i></div><b>${o.progress||0}% готовности</b></div><div class="bf-grid">${[['Бюджет',c.planned],['Расходы',c.spent],['Получено',c.inc],['Прибыль',c.profit]].map(x=>`<div class="bf-stat"><span>${x[0]}</span><b>${money(x[1])}</b></div>`).join("")}</div><div class="bf-actions"><button class="bf-btn bf-primary" onclick="bfFinance('${pid}')">💰 Финансы</button><button class="bf-btn" onclick="bfStages('${pid}')">🧱 Этапы</button><button class="bf-btn" onclick="bfTask('${pid}')">📋 Задача</button><button class="bf-btn" onclick="bfMaterial('${pid}')">📦 Материал</button><button class="bf-btn" onclick="bfWorker('${pid}')">👷 Рабочий</button><button class="bf-btn" onclick="bfEstimate('${pid}')">📋 Смета</button><button class="bf-btn" onclick="bfJournal('${pid}')">📓 Журнал</button><button class="bf-btn" onclick="bfReport('${pid}')">📊 Отчёт</button></div>`)}
+window.bfFinance=pid=>{let c=calc(pid);open("💰 Финансы",`<div class="bf-grid">${[['План',c.planned],['Факт',c.spent],['Остаток',c.left],['Прибыль',c.profit]].map(x=>`<div class="bf-stat"><span>${x[0]}</span><b>${money(x[1])}</b></div>`).join("")}</div><div class="bf-card"><div class="bf-row"><span>Расходы</span><b>${money(c.ex)}</b></div><div class="bf-row"><span>Материалы</span><b>${money(c.mat)}</b></div><div class="bf-row"><span>Зарплата</span><b>${money(c.sal)}</b></div><div class="bf-row"><span>Приходы</span><b>${money(c.inc)}</b></div></div>`,`<button class="bf-btn" onclick="bfExpense('${pid}')">＋ Расход</button><button class="bf-btn bf-primary" onclick="bfIncome('${pid}')">＋ Приход</button>`)};
+window.bfExpense=pid=>open("💸 Расход",`<div class="bf-field"><label>Статья</label><input id="b1"></div><div class="bf-field"><label>Сумма</label><input id="b2" type="number"></div><div class="bf-field"><label>Дата</label><input id="b3" type="date" value="${today()}"></div>`,`<button class="bf-btn" onclick="bfClose()">Отмена</button><button class="bf-btn bf-primary" onclick="S.expenses.push({id:id(),projectId:'${pid}',category:document.getElementById('b1').value,amount:+document.getElementById('b2').value||0,date:document.getElementById('b3').value});save();bfFinance('${pid}')">Добавить</button>`);
+window.bfIncome=pid=>open("💳 Приход",`<div class="bf-field"><label>Сумма</label><input id="i1" type="number"></div><div class="bf-field"><label>Дата</label><input id="i2" type="date" value="${today()}"></div>`,`<button class="bf-btn" onclick="bfClose()">Отмена</button><button class="bf-btn bf-primary" onclick="S.incomes.push({id:id(),projectId:'${pid}',amount:+document.getElementById('i1').value||0,date:document.getElementById('i2').value});save();bfFinance('${pid}')">Добавить</button>`);
+const stages=["Подготовка","Демонтаж","Черновые","Электрика","Сантехника","Стены/потолки","Плитка","Полы","Двери","Мебель","Финиш","Сдача"];
+window.bfStages=pid=>{let o=p(pid);o.stages=o.stages||stages.map(n=>({name:n,percent:0,done:false}));open("🧱 Этапы",o.stages.map((x,i)=>`<div class="bf-card"><div class="bf-row"><span><b>${esc(x.name)}</b><div class="bf-muted">${x.percent}%</div></span><button class="bf-btn" onclick="o=p('${pid}');o.stages[${i}].done=!o.stages[${i}].done;o.stages[${i}].percent=o.stages[${i}].done?100:0;o.progress=Math.round(o.stages.reduce((a,x)=>a+x.percent,0)/o.stages.length);save();bfStages('${pid}')">${x.done?"✓":"○"}</button></div></div>`).join("")) ;save()};
+window.bfTask=pid=>open("📋 Задача",`<div class="bf-field"><label>Название</label><input id="t1"></div><div class="bf-field"><label>Ответственный</label><input id="t2"></div><div class="bf-field"><label>Срок</label><input id="t3" type="date"></div>`,`<button class="bf-btn" onclick="bfOpenProject('${pid}')">Отмена</button><button class="bf-btn bf-primary" onclick="S.tasks.push({id:id(),projectId:'${pid}',title:document.getElementById('t1').value,assignee:document.getElementById('t2').value,due:document.getElementById('t3').value,priority:'medium',done:false});save();bfOpenProject('${pid}')">Добавить</button>`);
+window.bfMaterial=pid=>open("📦 Материал",`<div class="bf-field"><label>Название</label><input id="m1"></div><div class="bf-grid"><div class="bf-field"><label>Количество</label><input id="m2" type="number" value="1"></div><div class="bf-field"><label>Цена</label><input id="m3" type="number"></div></div><div class="bf-field"><label>Поставщик</label><input id="m4"></div>`,`<button class="bf-btn" onclick="bfOpenProject('${pid}')">Отмена</button><button class="bf-btn bf-primary" onclick="S.materials.push({id:id(),projectId:'${pid}',name:document.getElementById('m1').value,qty:+document.getElementById('m2').value||0,price:+document.getElementById('m3').value||0,supplier:document.getElementById('m4').value});save();bfOpenProject('${pid}')">Добавить</button>`);
+window.bfWorker=pid=>open("👷 Рабочий",`<div class="bf-field"><label>ФИО</label><input id="w1"></div><div class="bf-field"><label>Специальность</label><input id="w2"></div><div class="bf-field"><label>Ставка/день</label><input id="w3" type="number"></div>`,`<button class="bf-btn" onclick="bfOpenProject('${pid}')">Отмена</button><button class="bf-btn bf-primary" onclick="S.workers.push({id:id(),projectId:'${pid}',name:document.getElementById('w1').value,role:document.getElementById('w2').value,rate:+document.getElementById('w3').value||0});save();bfOpenProject('${pid}')">Добавить</button>`);
+window.bfEstimate=pid=>{let e=S.estimates.find(x=>x.projectId===pid);if(!e){e={id:id(),projectId:pid,name:"Смета объекта",items:[]};S.estimates.push(e)}let total=e.items.reduce((a,x)=>a+x.qty*x.price,0);open("📋 Смета",`<div class="bf-stat"><span>Итого</span><b>${money(total)}</b></div>${e.items.map(x=>`<div class="bf-row"><span>${esc(x.name)}<div class="bf-muted">${x.qty} ${x.unit} × ${money(x.price)}</div></span><b>${money(x.qty*x.price)}</b></div>`).join("")||'<div class="bf-muted">Позиций пока нет.</div>'}`,`<button class="bf-btn" onclick="bfEstimateItem('${pid}')">＋ Позиция</button><button class="bf-btn bf-primary" onclick="bfOpenProject('${pid}')">Готово</button>`);save()};
+window.bfEstimateItem=pid=>open("Позиция сметы",`<div class="bf-field"><label>Название</label><input id="e1"></div><div class="bf-grid"><div class="bf-field"><label>Количество</label><input id="e2" type="number" value="1"></div><div class="bf-field"><label>Цена</label><input id="e3" type="number"></div></div>`,`<button class="bf-btn" onclick="bfEstimate('${pid}')">Отмена</button><button class="bf-btn bf-primary" onclick="let e=S.estimates.find(x=>x.projectId==='${pid}');e.items.push({name:document.getElementById('e1').value,qty:+document.getElementById('e2').value||0,unit:'шт',price:+document.getElementById('e3').value||0});save();bfEstimate('${pid}')">Добавить</button>`);
+window.bfJournal=pid=>open("📓 Журнал",S.notes.filter(x=>x.projectId===pid).map(x=>`<div class="bf-card"><b>${x.date}</b><div>${esc(x.text)}</div></div>`).join("")||'<div class="bf-muted">Записей нет.</div>',`<button class="bf-btn" onclick="bfNote('${pid}')">＋ Запись</button><button class="bf-btn bf-primary" onclick="bfOpenProject('${pid}')">Готово</button>`);
+window.bfNote=pid=>open("Новая запись",`<div class="bf-field"><label>Текст</label><textarea id="n1"></textarea></div>`,`<button class="bf-btn" onclick="bfJournal('${pid}')">Отмена</button><button class="bf-btn bf-primary" onclick="S.notes.push({id:id(),projectId:'${pid}',date:today(),text:document.getElementById('n1').value});save();bfJournal('${pid}')">Сохранить</button>`);
+window.bfReport=pid=>{let o=p(pid),c=calc(pid);let txt=`BUILDOS — ОТЧЁТ ПО ОБЪЕКТУ\n${o.name}\nГотовность: ${o.progress||0}%\nБюджет: ${c.planned}\nРасходы: ${c.spent}\nОстаток: ${c.left}\nПолучено: ${c.inc}\nПрибыль: ${c.profit}`;open("📊 Отчёт",`<pre style="white-space:pre-wrap;background:#111827;color:#fff;padding:14px;border-radius:15px">${esc(txt)}</pre>`,`<button class="bf-btn" onclick="navigator.clipboard?.writeText(${JSON.stringify(txt)});alert('Скопировано')">Копировать</button><button class="bf-btn bf-primary" onclick="bfClose()">Закрыть</button>`)};
+window.bfDashboard=()=>open("🚀 BUILDOS PRO",`<div class="bf-grid"><div class="bf-stat"><span>Объекты</span><b>${S.projects.length}</b></div><div class="bf-stat"><span>Задачи</span><b>${S.tasks.filter(x=>!x.done).length}</b></div><div class="bf-stat"><span>Получено</span><b>${money(S.incomes.reduce((a,x)=>a+x.amount,0))}</b></div><div class="bf-stat"><span>Расходы</span><b>${money(S.expenses.reduce((a,x)=>a+x.amount,0))}</b></div></div>${S.projects.map(o=>`<div class="bf-row"><span><b>${esc(o.name)}</b><div class="bf-muted">${o.progress||0}%</div></span><button class="bf-btn" onclick="bfOpenProject('${o.id}')">Открыть</button></div>`).join("")}`);
+function mount(){if(document.getElementById("bfLaunch"))return;let b=document.createElement("button");b.id="bfLaunch";b.textContent="🚀";b.onclick=bfDashboard;document.body.appendChild(b);window.BUILDOS_FINAL={data:S,save};save()}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mount);else mount();
+})();
+</script>
+
 </body>
 </html>
