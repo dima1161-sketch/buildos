@@ -701,5 +701,292 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 })();
 </script>
 
+
+<style>
+.bf-import-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10001;display:none;align-items:flex-end}
+.bf-import-modal.show{display:flex}
+.bf-import-sheet{background:#fff;width:100%;max-width:780px;margin:auto;max-height:94vh;overflow:auto;border-radius:28px 28px 0 0;padding:20px 17px calc(24px + env(safe-area-inset-bottom));font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+.bf-import-sheet h2{margin:0 0 8px;font-size:26px}.bf-import-muted{color:#70798a;font-size:13px}
+.bf-upload{border:2px dashed #cbd5e1;border-radius:20px;padding:22px;text-align:center;margin:14px 0;background:#f8fafc}
+.bf-upload input{width:100%;font-size:16px}
+.bf-import-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.bf-import-tab{padding:12px;border:1px solid #dce1e8;background:#fff;border-radius:14px;font-weight:800}
+.bf-import-tab.active{background:#2878ed;color:#fff;border-color:#2878ed}
+.bf-import-preview{border:1px solid #e1e6ed;border-radius:18px;padding:12px;max-height:300px;overflow:auto;margin-top:12px}
+.bf-import-table{width:100%;border-collapse:collapse;font-size:13px}.bf-import-table th,.bf-import-table td{border-bottom:1px solid #e7eaf0;padding:8px;text-align:left}
+.bf-import-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+.bf-warn{background:#fff7e6;border:1px solid #f3d28b;border-radius:15px;padding:12px;margin-top:12px;font-size:13px}
+.bf-ok{background:#eefaf2;border:1px solid #b9e2c5;border-radius:15px;padding:12px;margin-top:12px;font-size:13px}
+.bf-calendar-line{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #e7eaf0}
+.bf-datebox{font-weight:800;font-size:13px}.bf-bar{height:10px;background:#e9edf3;border-radius:99px;overflow:hidden}.bf-bar i{display:block;height:100%;background:#2878ed}
+</style>
+
+<div id="bfImportModal" class="bf-import-modal" onclick="if(event.target===this)bfImportClose()">
+  <div class="bf-import-sheet">
+    <button class="bf-btn" style="float:right;border-radius:50%" onclick="bfImportClose()">×</button>
+    <h2>📥 Импорт документов</h2>
+    <div class="bf-import-muted">Загрузи смету или график — BUILDOS разберёт позиции и сроки и привяжет их к объекту.</div>
+
+    <div class="bf-import-tabs">
+      <button id="bfTabEstimate" class="bf-import-tab active" onclick="bfImportMode('estimate')">📋 Смета</button>
+      <button id="bfTabSchedule" class="bf-import-tab" onclick="bfImportMode('schedule')">📅 График</button>
+    </div>
+
+    <div class="bf-field"><label>Объект</label><select id="bfImportProject"></select></div>
+
+    <div class="bf-upload">
+      <div style="font-size:34px">📄</div>
+      <b>Выбери файл</b>
+      <div class="bf-import-muted" style="margin:7px 0 12px">PDF, Excel, CSV, TXT или JSON</div>
+      <input id="bfImportFile" type="file" accept=".pdf,.xlsx,.xls,.csv,.txt,.json">
+    </div>
+
+    <div class="bf-field">
+      <label>Или вставь текст из документа</label>
+      <textarea id="bfImportText" style="width:100%;box-sizing:border-box;min-height:130px;border:1px solid #d8dee7;border-radius:14px;padding:13px;font:inherit" placeholder="Например:
+Плитка керамогранит 52 м2 1850
+Клей плиточный 28 меш 620
+Демонтаж 24.08 28.08
+Электрика 29.08 05.09"></textarea>
+    </div>
+
+    <div id="bfImportStatus"></div>
+    <div id="bfImportPreview"></div>
+
+    <div class="bf-import-actions">
+      <button class="bf-btn" onclick="bfImportClose()">Отмена</button>
+      <button class="bf-btn bf-primary" onclick="bfImportAnalyze()">🔍 Анализировать</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  if(window.BUILDOS_IMPORT_V2)return;
+  window.BUILDOS_IMPORT_V2=true;
+
+  const K="buildos_final_v1";
+  function getS(){try{return JSON.parse(localStorage.getItem(K)||"{}")}catch(e){return {}}}
+  function saveS(s){localStorage.setItem(K,JSON.stringify(s))}
+  const esc=x=>String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  const money=x=>new Intl.NumberFormat("ru-RU").format(Number(x)||0)+" ₽";
+  const today=()=>new Date().toISOString().slice(0,10);
+  const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+  let mode="estimate", parsed=null, selectedFileName="";
+
+  function projects(){
+    const s=getS(); return s.projects||[];
+  }
+  function fillProjects(){
+    const sel=document.getElementById("bfImportProject");
+    sel.innerHTML=projects().map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("")||"<option value=''>Сначала добавь объект</option>";
+  }
+  window.bfOpenImport=function(initial="estimate"){
+    mode=initial; parsed=null; selectedFileName="";
+    document.getElementById("bfImportText").value="";
+    document.getElementById("bfImportFile").value="";
+    fillProjects(); bfImportMode(initial); bfImportStatus(""); bfImportPreview("");
+    document.getElementById("bfImportModal").classList.add("show");
+  };
+  window.bfImportClose=function(){document.getElementById("bfImportModal").classList.remove("show")};
+  window.bfImportMode=function(m){
+    mode=m;
+    document.getElementById("bfTabEstimate").classList.toggle("active",m==="estimate");
+    document.getElementById("bfTabSchedule").classList.toggle("active",m==="schedule");
+    bfImportStatus("");
+    bfImportPreview("");
+  };
+  function bfImportStatus(html){document.getElementById("bfImportStatus").innerHTML=html||""}
+  function bfImportPreview(html){document.getElementById("bfImportPreview").innerHTML=html||""}
+
+  document.getElementById("bfImportFile").addEventListener("change", async function(){
+    const f=this.files&&this.files[0]; if(!f)return;
+    selectedFileName=f.name;
+    const ext=f.name.toLowerCase().split(".").pop();
+    if(ext==="csv"||ext==="txt"||ext==="json"){
+      const text=await f.text();
+      document.getElementById("bfImportText").value=text;
+      bfImportStatus(`<div class="bf-ok">Файл <b>${esc(f.name)}</b> прочитан. Нажми «Анализировать».</div>`);
+      return;
+    }
+    if(ext==="pdf"||ext==="xlsx"||ext==="xls"){
+      bfImportStatus(`<div class="bf-warn">Файл <b>${esc(f.name)}</b> выбран. BUILDOS попробует распознать его. Если формат не удастся прочитать прямо на телефоне, ниже появится вариант вставить текст/таблицу.</div>`);
+      try{
+        if(ext==="pdf") await readPDF(f);
+        else await readXLSX(f);
+      }catch(e){
+        bfImportStatus(`<div class="bf-warn">Не удалось автоматически прочитать файл в этом браузере. Открой его и вставь таблицу/текст в поле ниже — BUILDOS всё равно сможет разобрать позиции.</div>`);
+      }
+    }
+  });
+
+  async function loadScript(url){
+    return new Promise((resolve,reject)=>{
+      const sc=document.createElement("script");sc.src=url;sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc);
+    });
+  }
+
+  async function readXLSX(file){
+    if(!window.XLSX) await loadScript("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js");
+    if(!window.XLSX)throw Error("XLSX unavailable");
+    const data=await file.arrayBuffer();
+    const wb=XLSX.read(data,{type:"array"});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+    document.getElementById("bfImportText").value=rows.map(r=>r.join("\t")).join("\n");
+    bfImportStatus(`<div class="bf-ok">Excel прочитан: лист <b>${esc(wb.SheetNames[0])}</b>. Найдено строк: <b>${rows.length}</b>.</div>`);
+  }
+
+  async function readPDF(file){
+    if(!window.pdfjsLib){
+      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");
+      if(window.pdfjsLib)window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+    if(!window.pdfjsLib)throw Error("PDF unavailable");
+    const buf=await file.arrayBuffer(), pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let out=[];
+    for(let n=1;n<=pdf.numPages;n++){
+      const page=await pdf.getPage(n), content=await page.getTextContent();
+      out.push(content.items.map(x=>x.str).join(" "));
+    }
+    document.getElementById("bfImportText").value=out.join("\n");
+    bfImportStatus(`<div class="bf-ok">PDF прочитан: <b>${pdf.numPages}</b> стр. Теперь BUILDOS может разобрать его.</div>`);
+  }
+
+  function parseLines(text){
+    return text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  }
+  function norm(s){return String(s||"").toLowerCase().replace(/ё/g,"е").trim()}
+  function numberNear(str){
+    const m=String(str).replace(",",".").match(/(\d+(?:\.\d+)?)/);
+    return m?Number(m[1]):0;
+  }
+  function parseEstimate(text){
+    const lines=parseLines(text), items=[], categories=[];
+    for(const line of lines){
+      if(/^(итого|всего|сумма|раздел|материалы|работы)\b/i.test(line))continue;
+      const nums=[...line.replace(/,/g,".").matchAll(/(\d+(?:\.\d+)?)/g)].map(m=>Number(m[1]));
+      if(!nums.length)continue;
+      const lower=norm(line);
+      const units=["м2","м²","м","м.п","шт","меш","мешок","л","кг","компл","рул","лист","уп","пог.м","день"];
+      const unit=(line.match(new RegExp("\\b("+units.map(x=>x.replace(".","\\.")).join("|")+")\\b","i"))||[])[1]||"шт";
+      let qty=nums[0], price=nums.length>1?nums[1]:0;
+      let name=line.replace(/\d+(?:[.,]\d+)?/g," ").replace(new RegExp("\\b"+unit+"\\b","ig")," ").replace(/\s{2,}/g," ").trim();
+      if(!name||name.length<2)name=line;
+      const total=nums.length>=3?nums[nums.length-1]:qty*price;
+      const likelyMaterial=/(плит|клей|грунт|штукатур|гипс|профил|кабел|провод|розет|выключ|смес|труба|ламин|паркет|краск|цемент|шпаклев|гермет|двер|плинтус|сух|утепл|минват|фанер|мдф|дсп|керам|обои|светиль|силикон|саморез|дюбел|арматур|песок)/i.test(lower);
+      if(likelyMaterial || mode==="estimate")items.push({id:id(),name,qty,unit,price,total:nums.length>=3?total:qty*price,category:likelyMaterial?"Материалы":"Проверить"});
+    }
+    // Merge duplicates by normalized name + unit.
+    const map=new Map();
+    for(const x of items){
+      const key=norm(x.name)+"|"+norm(x.unit);
+      if(map.has(key)){const a=map.get(key);a.qty+=x.qty;a.total+=x.total;if(!a.price&&x.price)a.price=x.price}
+      else map.set(key,{...x});
+    }
+    return [...map.values()];
+  }
+  function dateFromText(x){
+    const m=String(x).match(/(\d{1,2})[.\-/](\d{1,2})(?:[.\-/](\d{2,4}))?/);
+    if(!m)return "";
+    let y=m[3]?Number(m[3]):new Date().getFullYear();if(y<100)y+=2000;
+    return `${y}-${String(m[2]).padStart(2,"0")}-${String(m[1]).padStart(2,"0")}`;
+  }
+  function parseSchedule(text){
+    const lines=parseLines(text), out=[];
+    for(let i=0;i<lines.length;i++){
+      const line=lines[i], dates=[...line.matchAll(/(\d{1,2}[.\-/]\d{1,2}(?:[.\-/]\d{2,4})?)/g)].map(m=>m[1]);
+      if(!dates.length)continue;
+      const start=dateFromText(dates[0]), end=dateFromText(dates[1]||dates[0]);
+      let name=line.replace(/(\d{1,2}[.\-/]\d{1,2}(?:[.\-/]\d{2,4})?)/g," ").replace(/\s{2,}/g," ").trim();
+      if(!name)name="Этап "+(out.length+1);
+      out.push({id:id(),name,start,end,assignee:"",status:"Запланировано"});
+    }
+    // If no dates, support "Этап | 2026-08-24 | 2026-08-28"
+    if(!out.length){
+      lines.forEach(line=>{
+        const parts=line.split(/\t|;|\|/).map(x=>x.trim());
+        if(parts.length>=3){
+          const a=dateFromText(parts[1])||parts[1], b=dateFromText(parts[2])||parts[2];
+          if(a&&b)out.push({id:id(),name:parts[0],start:a,end:b,assignee:parts[3]||"",status:"Запланировано"});
+        }
+      });
+    }
+    return out;
+  }
+  window.bfImportAnalyze=function(){
+    const text=document.getElementById("bfImportText").value.trim();
+    if(!text){bfImportStatus('<div class="bf-warn">Добавь файл или вставь текст.</div>');return}
+    parsed=mode==="estimate"?parseEstimate(text):parseSchedule(text);
+    if(mode==="estimate")renderEstimatePreview(parsed); else renderSchedulePreview(parsed);
+  };
+  function renderEstimatePreview(items){
+    const total=items.reduce((a,x)=>a+x.total,0);
+    bfImportStatus(`<div class="bf-ok">Найдено <b>${items.length}</b> сводных позиций. Ориентировочная сумма: <b>${money(total)}</b>.</div>`);
+    bfImportPreview(items.length?`<table class="bf-import-table"><thead><tr><th>Материал</th><th>Объём</th><th>Цена</th><th>Сумма</th></tr></thead><tbody>${items.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.qty} ${esc(x.unit)}</td><td>${money(x.price)}</td><td>${money(x.total)}</td></tr>`).join("")}</tbody></table>`:"<div class='bf-import-muted'>Позиции не распознаны. Попробуй вставить текст таблицы.</div>");
+  }
+  function renderSchedulePreview(items){
+    bfImportStatus(`<div class="bf-ok">Найдено этапов: <b>${items.length}</b>. Они будут добавлены в календарь объекта.</div>`);
+    bfImportPreview(items.length?items.map(x=>`<div class="bf-calendar-line"><div class="bf-datebox">${x.start}<br>↓<br>${x.end}</div><div><b>${esc(x.name)}</b><div class="bf-muted">${esc(x.assignee||"Ответственный не указан")}</div></div></div>`).join(""):"<div class='bf-import-muted'>Сроки не распознаны.</div>");
+  }
+
+  window.bfImportCommit=function(){
+    const s=getS(), pid=document.getElementById("bfImportProject").value;
+    if(!pid||!parsed||!parsed.length){bfImportStatus('<div class="bf-warn">Выбери объект и сначала выполни анализ.</div>');return}
+    if(mode==="estimate"){
+      s.materials=s.materials||[]; s.estimates=s.estimates||[];
+      for(const x of parsed){
+        const existing=s.materials.find(m=>m.projectId===pid&&norm(m.name)===norm(x.name)&&norm(m.unit||"шт")===norm(x.unit));
+        if(existing){existing.qty=(+existing.qty||0)+(+x.qty||0);existing.price=existing.price||x.price}
+        else s.materials.push({id:x.id,projectId:pid,name:x.name,qty:x.qty,unit:x.unit,price:x.price,supplier:"",status:"Нужно купить"});
+      }
+      let e=s.estimates.find(x=>x.projectId===pid);
+      if(!e){e={id:id(),projectId:pid,name:"Импортированная смета",items:[]};s.estimates.push(e)}
+      e.items=(e.items||[]).concat(parsed.map(x=>({id:id(),name:x.name,qty:x.qty,unit:x.unit,price:x.price})));
+      saveS(s);
+      bfImportStatus(`<div class="bf-ok">Готово. <b>${parsed.length}</b> позиций добавлены в материалы объекта. Их можно распределить по статусам закупки.</div>`);
+    }else{
+      s.events=s.events||[];s.tasks=s.tasks||[];
+      for(const x of parsed){
+        s.events.push({id:x.id,projectId:pid,title:x.name,start:x.start,end:x.end,status:x.status,assignee:x.assignee});
+        s.tasks.push({id:id(),projectId:pid,title:x.name,assignee:x.assignee,due:x.end,priority:"medium",done:false});
+      }
+      saveS(s);
+      bfImportStatus(`<div class="bf-ok">Готово. <b>${parsed.length}</b> этапов добавлены в график и задачи объекта. Контроль идёт по конечной дате этапа.</div>`);
+    }
+  };
+
+  // Add an "Импорт" button to the BUILDOS PRO dashboard without touching the stable app.
+  const oldDash=window.bfDashboard;
+  window.bfDashboard=function(){
+    oldDash();
+    setTimeout(()=>{
+      const sheet=document.getElementById("bfSheet");
+      if(!sheet)return;
+      const actions=sheet.querySelector(".bf-actions");
+      if(!actions)return;
+      const b1=document.createElement("button");b1.className="bf-btn";b1.textContent="📥 Загрузить смету";b1.onclick=()=>bfOpenImport("estimate");
+      const b2=document.createElement("button");b2.className="bf-btn";b2.textContent="📅 Загрузить график";b2.onclick=()=>bfOpenImport("schedule");
+      actions.appendChild(b1);actions.appendChild(b2);
+    },30);
+  };
+
+  // Commit button is added inside the importer after analysis.
+  const oldAnalyze=window.bfImportAnalyze;
+  window.bfImportAnalyze=function(){oldAnalyze();setTimeout(()=>{
+    if(!parsed||!parsed.length)return;
+    const actions=document.querySelector("#bfImportModal .bf-import-actions");
+    if(actions&&!document.getElementById("bfImportCommitBtn")){
+      const b=document.createElement("button");b.id="bfImportCommitBtn";b.className="bf-btn bf-primary";b.textContent=mode==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";b.onclick=bfImportCommit;actions.appendChild(b);
+    }
+  },20)};
+
+  // Convenience launch buttons.
+  window.bfOpenEstimateImport=()=>bfOpenImport("estimate");
+  window.bfOpenScheduleImport=()=>bfOpenImport("schedule");
+})();
+</script>
+
 </body>
 </html>
