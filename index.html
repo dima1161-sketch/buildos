@@ -793,7 +793,14 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
     mode=initial; parsed=null; selectedFileName="";
     document.getElementById("bfImportText").value="";
     document.getElementById("bfImportFile").value="";
-    fillProjects(); bfImportMode(initial); bfImportStatus(""); bfImportPreview("");
+    fillProjects();
+    if(window.bfCurrentProject){
+      const sel=document.getElementById("bfImportProject");
+      if(sel) sel.value=window.bfCurrentProject;
+    }
+    bfImportMode(initial); bfImportStatus(""); bfImportPreview("");
+    const b=document.getElementById("bfImportCommitBtn");
+    if(b){b.style.display="none";b.disabled=false;b.textContent=initial==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";b.style.opacity="1";}
     document.getElementById("bfImportModal").classList.add("show");
   };
   window.bfImportClose=function(){document.getElementById("bfImportModal").classList.remove("show")};
@@ -803,6 +810,10 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
     document.getElementById("bfTabSchedule").classList.toggle("active",m==="schedule");
     bfImportStatus("");
     bfImportPreview("");
+    const top=document.getElementById("bfImportTopAction");
+    const b=document.getElementById("bfImportCommitBtn");
+    if(top) top.style.display="none";
+    if(b){b.disabled=false;b.style.opacity="1";b.textContent=m==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";}
   };
   function bfImportStatus(html){document.getElementById("bfImportStatus").innerHTML=html||""}
   function bfImportPreview(html){document.getElementById("bfImportPreview").innerHTML=html||""}
@@ -924,9 +935,14 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
   }
   window.bfImportAnalyze=function(){
     const text=document.getElementById("bfImportText").value.trim();
+    const top=document.getElementById("bfImportTopAction");
+    const b=document.getElementById("bfImportCommitBtn");
+    if(top) top.style.display="none";
+    if(b){b.disabled=false;b.style.opacity="1";b.textContent=mode==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";}
     if(!text){bfImportStatus('<div class="bf-warn">Добавь файл или вставь текст.</div>');return}
     parsed=mode==="estimate"?parseEstimate(text):parseSchedule(text);
     if(mode==="estimate")renderEstimatePreview(parsed); else renderSchedulePreview(parsed);
+    if(top && parsed && parsed.length) top.style.display="block";
   };
   function renderEstimatePreview(items){
     const total=items.reduce((a,x)=>a+x.total,0);
@@ -965,6 +981,8 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       saveS(s);
       bfImportStatus('<div class="bf-ok">✅ Готово! Данные добавлены в выбранный объект.</div>');
       const b=document.getElementById("bfImportCommitBtn");
+      const top=document.getElementById("bfImportTopAction");
+      if(top) top.style.display="block";
       if(b){b.textContent="✅ Добавлено";b.disabled=true;b.style.opacity=".6";}
     }catch(err){bfImportStatus('<div class="bf-warn">Ошибка сохранения: '+esc(err.message||err)+'</div>')}
   };
