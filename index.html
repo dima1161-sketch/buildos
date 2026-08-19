@@ -757,6 +757,14 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 Электрика 29.08 05.09"></textarea>
     </div>
 
+    <!-- TOP COMMIT ACTION: shown immediately after analysis -->
+    <div id="bfImportTopAction" style="display:none;margin:14px 0 16px">
+      <button id="bfImportCommitBtn"
+              class="bf-btn bf-primary"
+              style="display:block;width:100%;min-height:58px;font-size:19px;font-weight:800"
+              onclick="bfImportCommit()">➕ Добавить в объект</button>
+    </div>
+
     <div id="bfImportStatus"></div>
     <div id="bfImportPreview"></div>
 
@@ -799,6 +807,10 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       if(sel) sel.value=window.bfCurrentProject;
     }
     bfImportMode(initial); bfImportStatus(""); bfImportPreview("");
+    const top=document.getElementById("bfImportTopAction");
+    const btn=document.getElementById("bfImportCommitBtn");
+    if(top) top.style.display="none";
+    if(btn){btn.disabled=false;btn.style.opacity="1";btn.textContent=initial==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";}
     const top=document.getElementById("bfImportTopAction");
     const b=document.getElementById("bfImportCommitBtn");
     if(top) top.style.display="none";
@@ -938,13 +950,24 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
   window.bfImportAnalyze=function(){
     const text=document.getElementById("bfImportText").value.trim();
     const top=document.getElementById("bfImportTopAction");
-    const b=document.getElementById("bfImportCommitBtn");
+    const btn=document.getElementById("bfImportCommitBtn");
     if(top) top.style.display="none";
-    if(b){b.disabled=false;b.style.opacity="1";b.textContent=mode==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";}
-    if(!text){bfImportStatus('<div class="bf-warn">Добавь файл или вставь текст.</div>');return}
+    if(btn){
+      btn.disabled=false;
+      btn.style.opacity="1";
+      btn.textContent=mode==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";
+    }
+    if(!text){
+      bfImportStatus('<div class="bf-warn">Добавь файл или вставь текст.</div>');
+      return;
+    }
     parsed=mode==="estimate"?parseEstimate(text):parseSchedule(text);
-    if(mode==="estimate")renderEstimatePreview(parsed); else renderSchedulePreview(parsed);
-    if(top && parsed && parsed.length) top.style.display="block";
+    if(mode==="estimate") renderEstimatePreview(parsed);
+    else renderSchedulePreview(parsed);
+    if(top && parsed && parsed.length){
+      top.style.display="block";
+      top.scrollIntoView({behavior:"smooth",block:"nearest"});
+    }
   };
   function renderEstimatePreview(items){
     const total=items.reduce((a,x)=>a+x.total,0);
