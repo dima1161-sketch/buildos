@@ -967,19 +967,6 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       const b=document.getElementById("bfImportCommitBtn");
       if(b){b.textContent="✅ Добавлено";b.disabled=true;b.style.opacity=".6";}
     }catch(err){bfImportStatus('<div class="bf-warn">Ошибка сохранения: '+esc(err.message||err)+'</div>')}
-  };s.estimates.push(e)}
-      e.items=(e.items||[]).concat(parsed.map(x=>({id:id(),name:x.name,qty:x.qty,unit:x.unit,price:x.price})));
-      saveS(s);
-      bfImportStatus(`<div class="bf-ok">Готово. <b>${parsed.length}</b> позиций добавлены в материалы объекта. Их можно распределить по статусам закупки.</div>`);
-    }else{
-      s.events=s.events||[];s.tasks=s.tasks||[];
-      for(const x of parsed){
-        s.events.push({id:x.id,projectId:pid,title:x.name,start:x.start,end:x.end,status:x.status,assignee:x.assignee});
-        s.tasks.push({id:id(),projectId:pid,title:x.name,assignee:x.assignee,due:x.end,priority:"medium",done:false});
-      }
-      saveS(s);
-      bfImportStatus(`<div class="bf-ok">Готово. <b>${parsed.length}</b> этапов добавлены в график и задачи объекта. Контроль идёт по конечной дате этапа.</div>`);
-    }
   };
 
   // Add an "Импорт" button to the BUILDOS PRO dashboard without touching the stable app.
