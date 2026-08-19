@@ -791,11 +791,41 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
   let mode="estimate", parsed=null, selectedFileName="";
 
   function projects(){
-    const s=getS(); return s.projects||[];
+    const s=getS();
+    s.projects=s.projects||[];
+
+    // BUILDOS stores the main objects in buildos_objects.
+    // Import v2 used a separate store, so the dropdown could be empty.
+    try{
+      const mainObjects=JSON.parse(localStorage.getItem("buildos_objects")||"[]");
+      if(Array.isArray(mainObjects) && mainObjects.length){
+        mainObjects.forEach((o,i)=>{
+          const name=o.name||("Объект "+(i+1));
+          let p=s.projects.find(x=>x.name===name);
+          if(!p){
+            p={
+              id:o.id||("main_"+encodeURIComponent(name)),
+              name:name,
+              client:o.client||"",
+              address:o.address||"",
+              area:+o.area||0,
+              budget:+o.budget||0,
+              progress:+o.progress||0,
+              stage:o.stage||""
+            };
+            s.projects.push(p);
+          }
+        });
+        saveS(s);
+      }
+    }catch(e){}
+    return s.projects;
   }
   function fillProjects(){
     const sel=document.getElementById("bfImportProject");
-    sel.innerHTML=projects().map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("")||"<option value=''>Сначала добавь объект</option>";
+    if(!sel)return;
+    const list=projects();
+    sel.innerHTML=list.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("")||"<option value=''>Сначала добавь объект</option>";
   }
   window.bfOpenImport=function(initial="estimate"){
     mode=initial; parsed=null; selectedFileName="";
@@ -804,7 +834,9 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
     fillProjects();
     if(window.bfCurrentProject){
       const sel=document.getElementById("bfImportProject");
-      if(sel) sel.value=window.bfCurrentProject;
+      if(sel && [...sel.options].some(o=>o.value===window.bfCurrentProject)){
+        sel.value=window.bfCurrentProject;
+      }
     }
     bfImportMode(initial); bfImportStatus(""); bfImportPreview("");
     const top=document.getElementById("bfImportTopAction");
