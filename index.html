@@ -55,6 +55,18 @@ label{display:block;color:var(--muted);font-weight:750;margin:0 0 7px;font-size:
 .budget-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.budget-box{border:1px solid var(--line);border-radius:16px;padding:13px;background:#fafbfc}.budget-label{font-size:12px;color:var(--muted)}.budget-value{font-size:20px;font-weight:850;margin-top:4px}.budget-value.red{color:var(--red)}.budget-value.green{color:var(--green)}
 .expense-item{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}.expense-item:last-child{border-bottom:0}.expense-name{font-weight:750}.expense-meta{font-size:12px;color:var(--muted);margin-top:4px}.expense-amount{font-weight:850;white-space:nowrap}
 
+
+.finance-hero{background:#111827;color:#fff;border-radius:24px;padding:20px;margin-bottom:14px}
+.finance-hero .finance-label{color:#cbd5e1;font-size:14px}
+.finance-hero .finance-profit{font-size:38px;font-weight:850;margin-top:6px}
+.finance-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.finance-stat{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px}
+.finance-stat .label{font-size:13px;color:var(--muted)}
+.finance-stat .value{font-size:24px;font-weight:850;margin-top:5px}
+.finance-stat .value.green{color:var(--green)}.finance-stat .value.red{color:var(--red)}
+.income-item{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.income-item:last-child{border-bottom:0}.income-name{font-weight:750}.income-meta{font-size:12px;color:var(--muted);margin-top:4px}.income-amount{font-weight:850;white-space:nowrap;color:var(--green)}
+
 </style>
 </head>
 <body>
@@ -81,7 +93,7 @@ label{display:block;color:var(--muted);font-weight:750;margin:0 0 7px;font-size:
       <div class="grid">
         <button class="secondary" onclick="openTaskModal()">➕ Задача</button>
         <button class="secondary" onclick="showView('objects')">🏗️ Объекты</button>
-        <button class="secondary" onclick="openExpenseModal()">💰 Расход</button>
+        <button class="secondary" onclick="showView('finance')">💰 Финансы</button>
         <button class="secondary" onclick="showView('ai')">🤖 Спросить AI</button>
       </div>
     </div>
@@ -113,6 +125,46 @@ label{display:block;color:var(--muted);font-weight:750;margin:0 0 7px;font-size:
     <div id="expenseList"></div>
   </section>
 
+
+  <section id="finance" class="view">
+    <div class="section-head"><h2>Финансы</h2></div>
+
+    <div class="finance-hero">
+      <div class="finance-label">Прибыль по внесённым данным</div>
+      <div id="financeProfit" class="finance-profit">0 ₽</div>
+      <div class="small" style="color:#cbd5e1;margin-top:5px">Доходы − расходы</div>
+    </div>
+
+    <div class="finance-grid">
+      <div class="finance-stat"><div class="label">💚 Доходы</div><div id="financeIncome" class="value green">0 ₽</div></div>
+      <div class="finance-stat"><div class="label">💸 Расходы</div><div id="financeExpenses" class="value red">0 ₽</div></div>
+      <div class="finance-stat"><div class="label">🏗️ Объектов</div><div id="financeObjects" class="value">0</div></div>
+      <div class="finance-stat"><div class="label">📊 Средняя маржа</div><div id="financeMargin" class="value">0%</div></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="section-head" style="margin-bottom:8px">
+        <h3 style="margin:0">По объектам</h3>
+        <button class="secondary" onclick="openIncomeModal()">+ Доход</button>
+      </div>
+      <div id="financeObjectList"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head" style="margin-bottom:8px">
+        <h3 style="margin:0">Доходы</h3>
+        <button class="secondary" onclick="openIncomeModal()">+ Добавить</button>
+      </div>
+      <div id="incomeList"></div>
+    </div>
+
+    <div class="section-head" style="margin-top:18px">
+      <h3 style="margin:0">Расходы</h3>
+      <button class="primary" style="width:auto" onclick="openExpenseModal()">+ Добавить</button>
+    </div>
+    <div id="financeExpenseList"></div>
+  </section>
+
   <section id="ai" class="view">
     <div class="section-head"><h2>AI-помощник</h2></div>
     <div class="ai-box">
@@ -130,6 +182,7 @@ label{display:block;color:var(--muted);font-weight:750;margin:0 0 7px;font-size:
   <button id="nav-home" class="nav-active" onclick="showView('home',this)"><span class="nav-icon">🏠</span>Главная</button>
   <button id="nav-objects" onclick="showView('objects',this)"><span class="nav-icon">🏗️</span>Объекты</button>
   <button id="nav-tasks" onclick="showView('tasks',this)"><span class="nav-icon">✅</span>Задачи</button>
+  <button id="nav-finance" onclick="showView('finance',this)"><span class="nav-icon">💰</span>Финансы</button>
   <button id="nav-ai" onclick="showView('ai',this)"><span class="nav-icon">🤖</span>AI</button>
 </nav>
 
@@ -142,6 +195,19 @@ label{display:block;color:var(--muted);font-weight:750;margin:0 0 7px;font-size:
     <div class="field"><label>Срок</label><input id="taskDue" type="date"></div>
     <div class="field"><label>Приоритет</label><select id="taskPriority"><option value="high">🔴 Высокий</option><option value="medium" selected>🟠 Средний</option><option value="low">🟢 Низкий</option></select></div>
     <div class="actions"><button class="secondary" onclick="closeModal('taskModal')">Отмена</button><button class="primary" onclick="addTask()">Сохранить</button></div>
+  </div>
+</div>
+
+
+<div id="incomeModal" class="modal" onclick="if(event.target===this)closeModal('incomeModal')">
+  <div class="sheet">
+    <h2>Новый доход</h2>
+    <div class="field"><label>Объект</label><select id="incomeObject"></select></div>
+    <div class="field"><label>Статья</label><input id="incomeCategory" placeholder="Оплата клиента, аванс, допработы..."></div>
+    <div class="field"><label>Сумма</label><input id="incomeAmount" type="number" inputmode="decimal" placeholder="500000"></div>
+    <div class="field"><label>Дата</label><input id="incomeDate" type="date"></div>
+    <div class="field"><label>Комментарий</label><input id="incomeComment" placeholder="За какой этап / что оплачено?"></div>
+    <div class="actions"><button class="secondary" onclick="closeModal('incomeModal')">Отмена</button><button class="primary" onclick="addIncome()">Добавить</button></div>
   </div>
 </div>
 
@@ -171,15 +237,16 @@ let tasks=JSON.parse(localStorage.getItem("buildos_tasks")||"null")||[
  {title:"Фотоотчёт заказчику",object:"ЖК Хорошевский",assignee:"",due:"",priority:"medium",done:false}
 ];
 let expenses=JSON.parse(localStorage.getItem("buildos_expenses")||"[]");
+let incomes=JSON.parse(localStorage.getItem("buildos_incomes")||"[]");
 let taskFilter="all";
 
-function save(){localStorage.setItem("buildos_tasks",JSON.stringify(tasks));localStorage.setItem("buildos_expenses",JSON.stringify(expenses));localStorage.setItem("buildos_objects",JSON.stringify(objects))}
+function save(){localStorage.setItem("buildos_tasks",JSON.stringify(tasks));localStorage.setItem("buildos_expenses",JSON.stringify(expenses));localStorage.setItem("buildos_incomes",JSON.stringify(incomes));localStorage.setItem("buildos_objects",JSON.stringify(objects))}
 function showView(id,btn){
  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
  const v=document.getElementById(id); if(v)v.classList.add("active");
  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("nav-active"));
  const nav=document.getElementById("nav-"+id); if(nav)nav.classList.add("nav-active");
- if(id==="home")renderHome(); if(id==="objects")renderObjects(); if(id==="tasks")renderTasks(); if(id==="expenses")renderExpenses();
+ if(id==="home")renderHome(); if(id==="objects")renderObjects(); if(id==="tasks")renderTasks(); if(id==="expenses")renderExpenses(); if(id==="finance")renderFinance();
  window.scrollTo(0,0);
 }
 function money(n){return Number(n||0).toLocaleString("ru-RU")+" ₽"}
@@ -263,6 +330,45 @@ function addTask(){
  tasks.unshift({title,object:document.getElementById("taskObject").value,assignee:document.getElementById("taskAssignee").value.trim(),due:document.getElementById("taskDue").value,priority:document.getElementById("taskPriority").value,done:false});
  save();closeModal("taskModal");showView("tasks");
 }
+
+function totalIncome(){return incomes.reduce((s,e)=>s+Number(e.amount||0),0)}
+function totalExpenses(){return expenses.reduce((s,e)=>s+Number(e.amount||0),0)}
+function renderFinance(){
+  const income=totalIncome(), spent=totalExpenses(), profit=income-spent;
+  document.getElementById("financeIncome").textContent=money(income);
+  document.getElementById("financeExpenses").textContent=money(spent);
+  const p=document.getElementById("financeProfit");p.textContent=money(profit);p.style.color=profit<0?"#fca5a5":"#fff";
+  document.getElementById("financeObjects").textContent=objects.length;
+  document.getElementById("financeMargin").textContent=income?Math.round(profit/income*100)+"%":"0%";
+
+  document.getElementById("financeObjectList").innerHTML=objects.map(o=>{
+    const inc=incomes.filter(e=>e.object===o.name).reduce((s,e)=>s+Number(e.amount||0),0);
+    const exp=expenses.filter(e=>e.object===o.name).reduce((s,e)=>s+Number(e.amount||0),0);
+    const pr=inc-exp;
+    return `<div class="row"><span><b>${o.name}</b><br><span class="small">Доход ${money(inc)} · Расход ${money(exp)}</span></span><b style="color:${pr<0?'var(--red)':'var(--green)'}">${money(pr)}</b></div>`;
+  }).join("")||'<div class="empty">Объектов пока нет.</div>';
+
+  document.getElementById("incomeList").innerHTML=incomes.length?incomes.slice().reverse().map(e=>`<div class="income-item"><div><div class="income-name">${e.category||"Доход"}</div><div class="income-meta">${e.object}${e.comment?" · "+e.comment:""} · ${e.date}</div></div><div class="income-amount">${money(e.amount)}</div></div>`).join(""):'<div class="empty">Доходов пока нет.</div>';
+
+  document.getElementById("financeExpenseList").innerHTML=expenses.length?expenses.slice().reverse().map(e=>`<div class="card"><div class="row"><span>${e.category||"Расход"}</span><b>${money(e.amount)}</b></div><div class="small">${e.object}${e.comment?" · "+e.comment:""} · ${e.date}</div></div>`).join(""):'<div class="empty">Расходов пока нет.</div>';
+}
+function openIncomeModal(objectName){
+  objectOptions("incomeObject");
+  if(objectName)document.getElementById("incomeObject").value=objectName;
+  document.getElementById("incomeCategory").value="";
+  document.getElementById("incomeAmount").value="";
+  document.getElementById("incomeDate").value=new Date().toISOString().slice(0,10);
+  document.getElementById("incomeComment").value="";
+  document.getElementById("incomeModal").classList.add("show");
+}
+function addIncome(){
+  const amount=Number(document.getElementById("incomeAmount").value);if(!amount)return;
+  const rawDate=document.getElementById("incomeDate").value;
+  const date=rawDate?new Date(rawDate+"T00:00:00").toLocaleDateString("ru-RU"):new Date().toLocaleDateString("ru-RU");
+  incomes.push({object:document.getElementById("incomeObject").value,category:document.getElementById("incomeCategory").value.trim()||"Доход",amount,comment:document.getElementById("incomeComment").value.trim(),date});
+  save();closeModal("incomeModal");showView("finance");
+}
+
 function renderExpenses(){
  const total=expenses.reduce((s,e)=>s+Number(e.amount||0),0);
  document.getElementById("expensePageTotal").textContent=money(total);
@@ -284,7 +390,7 @@ function askAI(){
  if(q.includes("завтра")){a.innerHTML=`На данный момент в задачах нет отдельного планировщика уведомлений. Задачи со сроками сохраняются в приложении.`;return}
  a.innerHTML=`Сейчас я могу помочь с быстрым анализом: <b>просроченных задач</b>, <b>расходов</b> и текущего списка задач.`;
 }
-function init(){objectOptions("taskObject");objectOptions("expenseObject");renderHome();renderObjects();renderTasks();renderExpenses()}
+function init(){objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");renderHome();renderObjects();renderTasks();renderExpenses();renderFinance()}
 init();
 </script>
 </body>
