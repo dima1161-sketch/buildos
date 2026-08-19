@@ -932,17 +932,35 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
   }
 
   window.bfImportCommit=function(){
-    const s=getS(), pid=document.getElementById("bfImportProject").value;
-    if(!pid||!parsed||!parsed.length){bfImportStatus('<div class="bf-warn">Выбери объект и сначала выполни анализ.</div>');return}
-    if(mode==="estimate"){
+    try{
+      const s=getS(), pid=document.getElementById("bfImportProject").value;
+      if(!pid){bfImportStatus('<div class="bf-warn">Сначала выбери объект.</div>');return}
+      if(!parsed||!parsed.length){bfImportStatus('<div class="bf-warn">Сначала нажми «Анализировать».</div>');return}
       s.materials=s.materials||[]; s.estimates=s.estimates||[];
-      for(const x of parsed){
-        const existing=s.materials.find(m=>m.projectId===pid&&norm(m.name)===norm(x.name)&&norm(m.unit||"шт")===norm(x.unit));
-        if(existing){existing.qty=(+existing.qty||0)+(+x.qty||0);existing.price=existing.price||x.price}
-        else s.materials.push({id:x.id,projectId:pid,name:x.name,qty:x.qty,unit:x.unit,price:x.price,supplier:"",status:"Нужно купить"});
+      if(mode==="estimate"){
+        for(const x of parsed){
+          const ex=s.materials.find(m=>m.projectId===pid&&norm(m.name)===norm(x.name)&&norm(m.unit||"шт")===norm(x.unit));
+          if(ex){ex.qty=(+ex.qty||0)+(+x.qty||0);if(!ex.price)ex.price=x.price}
+          else s.materials.push({id:x.id||id(),projectId:pid,name:x.name,qty:x.qty,unit:x.unit,price:x.price,supplier:"",status:"Нужно купить"});
+        }
+        let e=s.estimates.find(x=>x.projectId===pid);
+        if(!e){e={id:id(),projectId:pid,name:"Импортированная смета",items:[]};s.estimates.push(e)}
+        e.items=e.items||[];
+        parsed.forEach(x=>e.items.push({id:id(),name:x.name,qty:x.qty,unit:x.unit,price:x.price}));
+        e.amount=e.items.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
+      }else{
+        s.events=s.events||[];s.tasks=s.tasks||[];
+        parsed.forEach(x=>{
+          s.events.push({id:x.id||id(),projectId:pid,title:x.name,start:x.start,end:x.end,status:x.status,assignee:x.assignee});
+          s.tasks.push({id:id(),projectId:pid,title:x.name,assignee:x.assignee,due:x.end,priority:"medium",done:false});
+        });
       }
-      let e=s.estimates.find(x=>x.projectId===pid);
-      if(!e){e={id:id(),projectId:pid,name:"Импортированная смета",items:[]};s.estimates.push(e)}
+      saveS(s);
+      bfImportStatus('<div class="bf-ok">✅ Готово! Данные добавлены в выбранный объект.</div>');
+      const b=document.getElementById("bfImportCommitBtn");
+      if(b){b.textContent="✅ Добавлено";b.disabled=true;b.style.opacity=".6";}
+    }catch(err){bfImportStatus('<div class="bf-warn">Ошибка сохранения: '+esc(err.message||err)+'</div>')}
+  };s.estimates.push(e)}
       e.items=(e.items||[]).concat(parsed.map(x=>({id:id(),name:x.name,qty:x.qty,unit:x.unit,price:x.price})));
       saveS(s);
       bfImportStatus(`<div class="bf-ok">Готово. <b>${parsed.length}</b> позиций добавлены в материалы объекта. Их можно распределить по статусам закупки.</div>`);
@@ -975,12 +993,9 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
   // Commit button is added inside the importer after analysis.
   const oldAnalyze=window.bfImportAnalyze;
   window.bfImportAnalyze=function(){oldAnalyze();setTimeout(()=>{
-    if(!parsed||!parsed.length)return;
-    const actions=document.querySelector("#bfImportModal .bf-import-actions");
-    if(actions&&!document.getElementById("bfImportCommitBtn")){
-      const b=document.createElement("button");b.id="bfImportCommitBtn";b.className="bf-btn bf-primary";b.textContent=mode==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";b.onclick=bfImportCommit;actions.appendChild(b);
-    }
-  },20)};
+    const b=document.getElementById("bfImportCommitBtn");
+    if(b){b.style.display=(parsed&&parsed.length)?"block":"none";b.textContent=mode==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";b.disabled=false;b.style.opacity="1";}
+  },50)};
 
   // Convenience launch buttons.
   window.bfOpenEstimateImport=()=>bfOpenImport("estimate");
