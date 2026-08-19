@@ -28,6 +28,19 @@ nav button{border:0;background:none;color:var(--muted);font-size:12px;padding:5p
 .detail-card h3{margin-bottom:8px}.detail-card .row b{font-weight:800}
 .object-card{cursor:default}.object-card .primary{display:block;cursor:pointer;position:relative;z-index:2}
 .grid .secondary{width:100%;min-height:48px}
+.task-tools{display:flex;gap:8px;margin-bottom:14px;overflow:auto}
+.task-filter{border:1px solid var(--line);background:#fff;border-radius:99px;padding:8px 12px;font-weight:700;white-space:nowrap;color:var(--muted)}
+.task-filter.active{background:#eef4ff;color:var(--blue);border-color:#cfe0ff}
+.task-card{display:flex;gap:12px;align-items:flex-start}
+.task-main{flex:1;min-width:0}
+.task-title{font-weight:750;font-size:16px}
+.task-meta{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.35}
+.priority{display:inline-block;font-size:11px;font-weight:800;border-radius:99px;padding:4px 7px;margin-top:7px}
+.priority.high{background:#fee2e2;color:#b91c1c}
+.priority.medium{background:#fff7ed;color:#c2410c}
+.priority.low{background:#ecfdf5;color:#15803d}
+.task-status{font-size:12px;font-weight:800;color:var(--blue);margin-top:6px}
+
 </style>
 </head>
 <body>
@@ -76,6 +89,12 @@ nav button{border:0;background:none;color:var(--muted);font-size:12px;padding:5p
 
 <section id="tasks" class="view">
   <div class="section-head"><h2>Задачи</h2><button class="primary" style="width:auto;padding:9px 13px" onclick="openTaskModal()">+ Добавить</button></div>
+  <div class="task-tools">
+    <button class="task-filter active" id="filterAll" onclick="setTaskFilter('all',this)">Все</button>
+    <button class="task-filter" onclick="setTaskFilter('open',this)">В работе</button>
+    <button class="task-filter" onclick="setTaskFilter('done',this)">Выполнены</button>
+  </div>
+  <div id="taskSummary" class="small" style="margin-bottom:12px"></div>
   <div id="taskList"></div>
 </section>
 
@@ -104,7 +123,17 @@ nav button{border:0;background:none;color:var(--muted);font-size:12px;padding:5p
  <div class="sheet">
   <h3>Новая задача</h3>
   <input class="input" id="taskTitle" placeholder="Что нужно сделать?">
-  <input class="input" id="taskObject" placeholder="Объект, например ЖК Хорошевский">
+  <select class="input" id="taskObject">
+    <option>ЖК Хорошевский</option>
+    <option>Квартира №27</option>
+  </select>
+  <input class="input" id="taskAssignee" placeholder="Ответственный">
+  <input class="input" id="taskDue" type="date">
+  <select class="input" id="taskPriority">
+    <option value="high">🔴 Высокий приоритет</option>
+    <option value="medium" selected>🟠 Средний приоритет</option>
+    <option value="low">🟢 Низкий приоритет</option>
+  </select>
   <div class="sheet-actions"><button class="secondary" onclick="closeTaskModal()">Отмена</button><button class="primary" onclick="addTask()">Добавить</button></div>
  </div>
 </div>
@@ -115,12 +144,13 @@ const objects=[
  {name:"Квартира №27",area:"87 м²",days:"61 день",progress:41,issues:0,icon:"🏠",client:"Анна",budget:"1 850 000 ₽",address:"Москва",stage:"Подготовка стен",workers:"4 человека",start:"5 августа",finish:"5 октября",tasks:["Подготовить стены","Заказать сантехнику","Проверить смету"]}
 ];
 let tasks=JSON.parse(localStorage.getItem("buildos_tasks")||"null")||[
- {title:"Проверить электрику",object:"ЖК Хорошевский",done:false},
- {title:"Согласовать плитку",object:"ЖК Хорошевский",done:false},
- {title:"Заказать сантехнику",object:"Квартира №27",done:true},
- {title:"Подготовить стены",object:"Квартира №27",done:false},
- {title:"Фотоотчёт заказчику",object:"ЖК Хорошевский",done:false}
+ {title:"Проверить электрику",object:"ЖК Хорошевский",assignee:"Сергей",due:"",priority:"high",done:false},
+ {title:"Согласовать плитку",object:"ЖК Хорошевский",assignee:"Дмитрий",due:"",priority:"medium",done:false},
+ {title:"Заказать сантехнику",object:"Квартира №27",assignee:"Анна",due:"",priority:"medium",done:true},
+ {title:"Подготовить стены",object:"Квартира №27",assignee:"Сергей",due:"",priority:"high",done:false},
+ {title:"Фотоотчёт заказчику",object:"ЖК Хорошевский",assignee:"Дмитрий",due:"",priority:"low",done:false}
 ];
+let taskFilter="all";
 
 function save(){localStorage.setItem("buildos_tasks",JSON.stringify(tasks))}
 function showView(id,btn){
@@ -182,22 +212,61 @@ function openObject(i){
   <button class="primary" onclick="showView('tasks')">Открыть все задачи →</button>`;
   showView("objectDetail");window.scrollTo(0,0)
 }
+function setTaskFilter(filter,btn){
+  taskFilter=filter;
+  document.querySelectorAll(".task-filter").forEach(x=>x.classList.remove("active"));
+  btn.classList.add("active");
+  renderTasks();
+}
+function priorityLabel(p){return p==="high"?"Высокий":p==="low"?"Низкий":"Средний"}
 function renderTasks(){
- document.getElementById("taskList").innerHTML=tasks.map((t,i)=>`
- <div class="card task ${t.done?'done':''}" onclick="toggleTask(${i})"><div class="check"></div><div><div class="task-title">${t.title}</div><div class="task-meta">${t.object}</div></div></div>`).join("");
- document.getElementById("todayCount").textContent=tasks.filter(t=>!t.done).length;
+  const list=taskFilter==="all"?tasks:taskFilter==="done"?tasks.filter(t=>t.done):tasks.filter(t=>!t.done);
+  const open=tasks.filter(t=>!t.done).length, done=tasks.filter(t=>t.done).length;
+  document.getElementById("taskSummary").textContent=`Всего: ${tasks.length} · В работе: ${open} · Выполнено: ${done}`;
+  document.getElementById("taskList").innerHTML=list.length?list.map(t=>{
+    const i=tasks.indexOf(t);
+    const due=t.due?new Date(t.due+"T00:00:00").toLocaleDateString("ru-RU"):"без срока";
+    return `<div class="card task-card ${t.done?'done':''}" onclick="toggleTask(${i})">
+      <div class="check"></div>
+      <div class="task-main">
+        <div class="task-title">${t.title}</div>
+        <div class="task-meta">🏗️ ${t.object} · 👷 ${t.assignee||"не назначен"} · 📅 ${due}</div>
+        <span class="priority ${t.priority||'medium'}">${priorityLabel(t.priority||"medium")} приоритет</span>
+        <div class="task-status">${t.done?"✓ Выполнено":"В работе"}</div>
+      </div>
+    </div>`;
+  }).join(""):'<div class="card"><div class="small">Задач в этом разделе пока нет.</div></div>';
+  document.getElementById("todayCount").textContent=open;
+  document.getElementById("overdue").textContent=tasks.filter(t=>!t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date()).length;
 }
 function toggleTask(i){tasks[i].done=!tasks[i].done;save();renderTasks()}
-function openTaskModal(){document.getElementById("taskModal").classList.add("show");setTimeout(()=>document.getElementById("taskTitle").focus(),100)}
+function openTaskModal(){
+  document.getElementById("taskModal").classList.add("show");
+  setTimeout(()=>document.getElementById("taskTitle").focus(),100);
+}
 function closeTaskModal(){document.getElementById("taskModal").classList.remove("show")}
 function addTask(){
- const title=document.getElementById("taskTitle").value.trim(), object=document.getElementById("taskObject").value.trim()||"ЖК Хорошевский";
- if(!title)return;
- tasks.unshift({title,object,done:false});save();document.getElementById("taskTitle").value="";document.getElementById("taskObject").value="";closeTaskModal();showView("tasks")
+  const title=document.getElementById("taskTitle").value.trim();
+  const object=document.getElementById("taskObject").value;
+  const assignee=document.getElementById("taskAssignee").value.trim();
+  const due=document.getElementById("taskDue").value;
+  const priority=document.getElementById("taskPriority").value;
+  if(!title)return;
+  tasks.unshift({title,object,assignee,due,priority,done:false});
+  save();
+  document.getElementById("taskTitle").value="";
+  document.getElementById("taskAssignee").value="";
+  document.getElementById("taskDue").value="";
+  document.getElementById("taskPriority").value="medium";
+  closeTaskModal();
+  showView("tasks");
 }
 function askAI(){
  const q=document.getElementById("aiInput").value.toLowerCase(), a=document.getElementById("aiAnswer");
- if(q.includes("просроч")) a.innerHTML='<div class="detail-card"><b>Нашёл 3 задачи, которые требуют внимания.</b><br><br>• Проверить электрику — ЖК Хорошевский<br>• Согласовать плитку — ЖК Хорошевский<br>• Подготовить стены — Квартира №27</div>';
+ if(q.includes("просроч")) {
+  const overdue=tasks.filter(t=>!t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date());
+  a.innerHTML='<div class="detail-card"><b>Просроченных задач: '+overdue.length+'</b><br><br>'+(overdue.length?overdue.map(t=>"• "+t.title+" — "+t.object).join("<br>"):"Просроченных задач нет.")+'</div>';
+}
  else if(q.includes("завтра")) a.innerHTML='<div class="detail-card"><b>План на завтра:</b><br><br>1. Проверить электрику<br>2. Согласовать плитку<br>3. Фотоотчёт заказчику</div>';
  else a.innerHTML='<div class="detail-card">Пока я работаю как демонстрационный AI. Следующий этап — подключить настоящую AI-модель и данные объектов.</div>';
 }
