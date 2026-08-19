@@ -638,5 +638,245 @@ function closeMoreMenu(){document.getElementById("moreModal").classList.remove("
 function init(){objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");objectOptions("workerObject");renderHome();renderObjects();renderTasks();renderExpenses();renderFinance();renderWorkers();renderReports()}
 init();
 </script>
+
+<script>
+/* BUILDOS BIG UPDATE — v5
+   Functional modules: Workers, Reports, Settings, Object workspace,
+   payments, photo reports, materials, documents, client payments,
+   salary calculation, activity log, export/import, demo data.
+*/
+(function(){
+  const KEY = "buildos_big_v5";
+  const base = {
+    workers: [],
+    payments: [],
+    materials: [],
+    photos: [],
+    documents: [],
+    activity: [],
+    settings: {company:"BUILDOS", currency:"₽", notifications:true},
+    objectNotes: {},
+    clientPayments: []
+  };
+  function loadExtra(){
+    try { return Object.assign({}, base, JSON.parse(localStorage.getItem(KEY)||"{}")); }
+    catch(e){ return {...base}; }
+  }
+  let X = loadExtra();
+
+  function saveX(){
+    localStorage.setItem(KEY, JSON.stringify(X));
+    if(typeof window.renderObjects==="function") window.renderObjects();
+    if(typeof window.renderTasks==="function") window.renderTasks();
+    try{ renderV5(); }catch(e){}
+  }
+  function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
+  function money(n){return new Intl.NumberFormat("ru-RU").format(Number(n)||0)+" ₽";}
+  function today(){return new Date().toISOString().slice(0,10);}
+  function log(action, details){
+    X.activity.unshift({date:new Date().toISOString(),action,details});
+    X.activity=X.activity.slice(0,100);
+  }
+  function getObjects(){ return Array.isArray(window.objects)?window.objects:[]; }
+  function getTasks(){ return Array.isArray(window.tasks)?window.tasks:[]; }
+
+  function modal(title, body, buttons=""){
+    let m=document.getElementById("v5Modal");
+    if(!m){
+      m=document.createElement("div");m.id="v5Modal";m.className="modal";
+      document.body.appendChild(m);
+    }
+    m.innerHTML=`<div class="v5-sheet"><div class="v5-head"><h2>${title}</h2><button onclick="v5Close()">✕</button></div><div class="v5-body">${body}</div><div class="v5-actions">${buttons||'<button class="secondary" onclick="v5Close()">Закрыть</button>'}</div></div>`;
+    m.classList.add("show");
+  }
+  window.v5Close=()=>{document.getElementById("v5Modal")?.classList.remove("show")};
+
+  function objectSelect(id="v5Object"){
+    return `<select id="${id}">${getObjects().map((o,i)=>`<option value="${i}">${esc(o.name)}</option>`).join("")||'<option value="">Нет объектов</option>'}</select>`;
+  }
+
+  window.v5Workers=function(){
+    const rows=X.workers.map((w,i)=>`
+      <div class="v5-row"><div><b>${esc(w.name)}</b><small>${esc(w.role||"Рабочий")} · ${esc(w.objectName||"Без объекта")}</small></div>
+      <b>${money(w.rate)}/день</b><button class="icon-btn" onclick="v5DeleteWorker(${i})">🗑️</button></div>`).join("") || `<div class="v5-empty">Рабочих пока нет</div>`;
+    modal("👷 Рабочие",`<button class="primary" onclick="v5AddWorker()">＋ Добавить рабочего</button><div class="v5-list">${rows}</div>`);
+  };
+  window.v5AddWorker=function(){
+    modal("Новый рабочий",`
+      <label>Имя<input id="wName" placeholder="Например: Сергей"></label>
+      <label>Специальность<input id="wRole" placeholder="Маляр, плиточник..."></label>
+      <label>Объект${objectSelect("wObj")}</label>
+      <label>Ставка за день<input id="wRate" type="number" placeholder="5000"></label>`,
+      `<button class="secondary" onclick="v5Workers()">Отмена</button><button class="primary" onclick="v5SaveWorker()">Сохранить</button>`);
+  };
+  window.v5SaveWorker=function(){
+    const name=document.getElementById("wName").value.trim(); if(!name)return;
+    const oi=document.getElementById("wObj").value, os=getObjects()[oi];
+    X.workers.push({name,role:document.getElementById("wRole").value.trim(),objectName:os?.name||"",rate:+document.getElementById("wRate").value||0});
+    log("Добавлен рабочий",name);saveX();v5Workers();
+  };
+  window.v5DeleteWorker=function(i){if(confirm("Удалить рабочего?")){log("Удалён рабочий",X.workers[i].name);X.workers.splice(i,1);saveX();v5Workers()}};
+
+  window.v5Finance=function(){
+    const ps=X.payments.map((p,i)=>`<div class="v5-row"><div><b>${esc(p.category)}</b><small>${esc(p.objectName||"")} · ${p.date}</small></div><b class="${p.type==="income"?"green":"red"}">${p.type==="income"?"+":"−"}${money(p.amount)}</b><button class="icon-btn" onclick="v5DeletePayment(${i})">🗑️</button></div>`).join("")||'<div class="v5-empty">Операций пока нет</div>';
+    modal("💰 Финансы",`<div class="v5-grid2"><button class="primary" onclick="v5AddPayment('expense')">＋ Расход</button><button class="primary" onclick="v5AddPayment('income')">＋ Доход</button></div><div class="v5-list">${ps}</div>`);
+  };
+  window.v5AddPayment=function(type){
+    modal(type==="income"?"Новый доход":"Новый расход",`
+      <label>Статья<input id="pCat" placeholder="${type==="income"?"Оплата клиента":"Материалы, доставка..."}"></label>
+      <label>Объект${objectSelect("pObj")}</label>
+      <label>Сумма<input id="pAmt" type="number" placeholder="50000"></label>
+      <label>Дата<input id="pDate" type="date" value="${today()}"></label>
+      <label>Комментарий<input id="pNote" placeholder="Комментарий"></label>`,
+      `<button class="secondary" onclick="v5Finance()">Отмена</button><button class="primary" onclick="v5SavePayment('${type}')">Добавить</button>`);
+  };
+  window.v5SavePayment=function(type){
+    const oi=document.getElementById("pObj").value, o=getObjects()[oi];
+    const p={type,category:document.getElementById("pCat").value.trim()||"Без категории",objectName:o?.name||"",amount:+document.getElementById("pAmt").value||0,date:document.getElementById("pDate").value||today(),note:document.getElementById("pNote").value.trim()};
+    if(!p.amount)return;
+    X.payments.unshift(p);log(type==="income"?"Доход добавлен":"Расход добавлен",`${p.category}: ${money(p.amount)}`);saveX();v5Finance();
+  };
+  window.v5DeletePayment=function(i){if(confirm("Удалить операцию?")){X.payments.splice(i,1);saveX();v5Finance()}};
+
+  window.v5Reports=function(){
+    const income=X.payments.filter(p=>p.type==="income").reduce((s,p)=>s+p.amount,0);
+    const expense=X.payments.filter(p=>p.type==="expense").reduce((s,p)=>s+p.amount,0);
+    const profit=income-expense, tasks=getTasks(), done=tasks.filter(t=>t.done).length;
+    const overdue=tasks.filter(t=>!t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date()).length;
+    const objectRows=getObjects().map(o=>{
+      const inc=X.payments.filter(p=>p.type==="income"&&p.objectName===o.name).reduce((s,p)=>s+p.amount,0);
+      const exp=X.payments.filter(p=>p.type==="expense"&&p.objectName===o.name).reduce((s,p)=>s+p.amount,0);
+      return `<div class="v5-row"><div><b>${esc(o.name)}</b><small>Готовность ${o.progress||0}%</small></div><span>${money(inc-exp)}</span></div>`;
+    }).join("");
+    modal("📊 Отчёты",`
+      <div class="v5-stats"><div><b>${money(income)}</b><small>Доходы</small></div><div><b>${money(expense)}</b><small>Расходы</small></div><div><b class="${profit>=0?"green":"red"}">${money(profit)}</b><small>Прибыль</small></div><div><b>${done}/${tasks.length}</b><small>Задачи</small></div><div><b>${overdue}</b><small>Просрочено</small></div><div><b>${X.workers.length}</b><small>Рабочих</small></div></div>
+      <h3>По объектам</h3><div class="v5-list">${objectRows||'<div class="v5-empty">Нет объектов</div>'}</div>`);
+  };
+
+  window.v5ObjectWorkspace=function(i){
+    const o=getObjects()[i]; if(!o)return;
+    const notes=X.objectNotes[o.name]||"";
+    const mats=X.materials.filter(m=>m.objectName===o.name);
+    const pays=X.clientPayments.filter(p=>p.objectName===o.name);
+    const photos=X.photos.filter(p=>p.objectName===o.name);
+    modal(`🏗️ ${esc(o.name)}`,`
+      <div class="v5-object-hero"><b>${esc(o.client||"Клиент не указан")}</b><span>${esc(o.stage||"Этап не указан")} · ${o.progress||0}%</span></div>
+      <div class="v5-grid2">
+        <button class="secondary" onclick="v5ObjectNotes('${encodeURIComponent(o.name)}')">📝 Заметки</button>
+        <button class="secondary" onclick="v5Materials(${i})">🧱 Материалы</button>
+        <button class="secondary" onclick="v5ClientPayments(${i})">💳 Платежи клиента</button>
+        <button class="secondary" onclick="v5Photos(${i})">📷 Фотоотчёт</button>
+      </div>
+      <h3>Кратко</h3><div class="v5-list"><div class="v5-row"><span>Бюджет</span><b>${esc(o.budget||"—")}</b></div><div class="v5-row"><span>Срок</span><b>${esc(o.finish||"—")}</b></div><div class="v5-row"><span>Материалов</span><b>${mats.length}</b></div><div class="v5-row"><span>Платежей клиента</span><b>${pays.length}</b></div><div class="v5-row"><span>Фото</span><b>${photos.length}</b></div></div>`);
+  };
+  window.v5ObjectNotes=function(enc){
+    const name=decodeURIComponent(enc);
+    modal("📝 Заметки",`<textarea id="v5Notes" rows="8" placeholder="Что важно по объекту...">${esc(X.objectNotes[name]||"")}</textarea>`,
+      `<button class="secondary" onclick="v5Close()">Отмена</button><button class="primary" onclick="X.objectNotes[decodeURIComponent('${enc}')]=document.getElementById('v5Notes').value;log('Обновлены заметки',decodeURIComponent('${enc}'));saveX();v5Close()">Сохранить</button>`);
+  };
+  window.v5Materials=function(i){
+    const o=getObjects()[i];
+    const rows=X.materials.filter(m=>m.objectName===o.name).map(m=>`<div class="v5-row"><div><b>${esc(m.name)}</b><small>${m.qty} · ${money(m.amount)}</small></div></div>`).join("");
+    modal("🧱 Материалы",`<button class="primary" onclick="v5AddMaterial(${i})">＋ Добавить материал</button><div class="v5-list">${rows||'<div class="v5-empty">Материалов пока нет</div>'}</div>`);
+  };
+  window.v5AddMaterial=function(i){
+    const o=getObjects()[i];
+    modal("Новый материал",`<label>Материал<input id="mName" placeholder="Плитка, клей..."></label><label>Количество<input id="mQty" placeholder="20 м²"></label><label>Сумма<input id="mAmt" type="number" placeholder="50000"></label>`,
+      `<button class="secondary" onclick="v5Materials(${i})">Отмена</button><button class="primary" onclick="X.materials.push({objectName:'${String(o.name).replace(/'/g,"\\'")}',name:document.getElementById('mName').value,qty:document.getElementById('mQty').value,amount:+document.getElementById('mAmt').value||0});saveX();v5Materials(${i})">Добавить</button>`);
+  };
+  window.v5ClientPayments=function(i){
+    const o=getObjects()[i], rows=X.clientPayments.filter(p=>p.objectName===o.name).map(p=>`<div class="v5-row"><div><b>${money(p.amount)}</b><small>${p.date} · ${esc(p.note||"")}</small></div></div>`).join("");
+    modal("💳 Платежи клиента",`<button class="primary" onclick="v5AddClientPayment(${i})">＋ Платёж</button><div class="v5-list">${rows||'<div class="v5-empty">Платежей пока нет</div>'}</div>`);
+  };
+  window.v5AddClientPayment=function(i){
+    const o=getObjects()[i];
+    modal("Платёж клиента",`<label>Сумма<input id="cpAmt" type="number" placeholder="300000"></label><label>Дата<input id="cpDate" type="date" value="${today()}"></label><label>Комментарий<input id="cpNote" placeholder="Аванс, этап 1..."></label>`,
+      `<button class="secondary" onclick="v5ClientPayments(${i})">Отмена</button><button class="primary" onclick="X.clientPayments.unshift({objectName:'${String(o.name).replace(/'/g,"\\'")}',amount:+document.getElementById('cpAmt').value||0,date:document.getElementById('cpDate').value,note:document.getElementById('cpNote').value});log('Платёж клиента', '${String(o.name).replace(/'/g,"\\'")}');saveX();v5ClientPayments(${i})">Добавить</button>`);
+  };
+  window.v5Photos=function(i){
+    const o=getObjects()[i];
+    const rows=X.photos.filter(p=>p.objectName===o.name).map(p=>`<div class="v5-photo"><div>📷</div><b>${esc(p.title)}</b><small>${p.date}</small></div>`).join("");
+    modal("📷 Фотоотчёт",`<button class="primary" onclick="v5AddPhoto(${i})">＋ Добавить запись</button><div class="v5-photo-grid">${rows||'<div class="v5-empty">Фотоотчётов пока нет</div>'}</div>`);
+  };
+  window.v5AddPhoto=function(i){
+    const o=getObjects()[i];
+    modal("Новый фотоотчёт",`<label>Название<input id="phTitle" placeholder="До начала работ"></label><label>Дата<input id="phDate" type="date" value="${today()}"></label><label>Комментарий<textarea id="phNote" rows="4" placeholder="Что изменилось..."></textarea></label>`,
+      `<button class="secondary" onclick="v5Photos(${i})">Отмена</button><button class="primary" onclick="X.photos.unshift({objectName:'${String(o.name).replace(/'/g,"\\'")}',title:document.getElementById('phTitle').value,date:document.getElementById('phDate').value,note:document.getElementById('phNote').value});saveX();v5Photos(${i})">Добавить</button>`);
+  };
+
+  window.v5Settings=function(){
+    modal("⚙️ Настройки",`
+      <label>Название компании<input id="setCompany" value="${esc(X.settings.company)}"></label>
+      <label>Уведомления<select id="setNotif"><option value="1" ${X.settings.notifications?"selected":""}>Включены</option><option value="0" ${!X.settings.notifications?"selected":""}>Выключены</option></select></label>
+      <button class="secondary" onclick="v5Export()">💾 Скачать резервную копию</button>
+      <label>Восстановить копию<input id="v5Import" type="file" accept=".json"></label>
+      <button class="danger" onclick="if(confirm('Сбросить данные дополнительных модулей?')){localStorage.removeItem(KEY);location.reload()}">Сбросить дополнительные данные</button>`,
+      `<button class="secondary" onclick="v5Close()">Отмена</button><button class="primary" onclick="X.settings.company=document.getElementById('setCompany').value;X.settings.notifications=document.getElementById('setNotif').value==='1';saveX();v5Close()">Сохранить</button>`);
+    document.getElementById("v5Import").addEventListener("change",e=>{
+      const f=e.target.files[0]; if(!f)return;
+      const r=new FileReader(); r.onload=()=>{try{X=Object.assign({},base,JSON.parse(r.result));saveX();alert("Копия восстановлена");location.reload()}catch(_){alert("Не удалось прочитать файл")}};r.readAsText(f);
+    });
+  };
+  window.v5Export=function(){
+    const blob=new Blob([JSON.stringify(X,null,2)],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="BUILDOS_backup_"+today()+".json";a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  };
+
+  function addMenuHooks(){
+    // Existing "Ещё" buttons are handled by text where possible.
+    document.querySelectorAll("button").forEach(b=>{
+      const t=(b.innerText||"").trim();
+      if(t==="Рабочие"){b.onclick=v5Workers}
+      if(t==="Отчёты"){b.onclick=v5Reports}
+      if(t==="Расходы"){b.onclick=()=>v5Finance()}
+      if(t==="Настройки"){b.onclick=v5Settings}
+    });
+    // Make object cards open the workspace after the existing renderer.
+    document.querySelectorAll("[onclick*='openObject']").forEach(b=>{
+      const old=b.getAttribute("onclick");
+      const m=old.match(/openObject\((\d+)\)/);
+      if(m)b.addEventListener("dblclick",()=>v5ObjectWorkspace(+m[1]));
+    });
+  }
+  function renderV5(){
+    // Add a compact status strip once.
+    let strip=document.getElementById("v5Strip");
+    if(!strip){
+      const app=document.querySelector(".app");
+      const main=app?.querySelector(".content");
+      if(main){
+        strip=document.createElement("div");strip.id="v5Strip";strip.className="v5-strip";
+        main.prepend(strip);
+      }
+    }
+    if(strip){
+      const inc=X.payments.filter(p=>p.type==="income").reduce((s,p)=>s+p.amount,0);
+      const exp=X.payments.filter(p=>p.type==="expense").reduce((s,p)=>s+p.amount,0);
+      const overdue=getTasks().filter(t=>!t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date()).length;
+      strip.innerHTML=`<b>BUILDOS</b><span>Прибыль ${money(inc-exp)}</span><span>👷 ${X.workers.length}</span><span>⚠️ ${overdue}</span>`;
+    }
+  }
+  function injectStyles(){
+    const s=document.createElement("style");s.textContent=`
+      .v5-sheet{background:#fff;border-radius:28px 28px 0 0;position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;padding:18px}
+      .v5-head{display:flex;justify-content:space-between;align-items:center}.v5-head h2{margin:0;font-size:25px}.v5-head button{border:0;background:#eef1f6;border-radius:50%;width:40px;height:40px;font-size:20px}
+      .v5-body{padding:16px 0}.v5-body label{display:block;font-weight:700;margin:12px 0;color:#697386}.v5-body input,.v5-body select,.v5-body textarea{width:100%;margin-top:7px;padding:15px;border:1px solid #d7dce5;border-radius:15px;font:inherit;box-sizing:border-box;background:#fff}
+      .v5-actions{display:flex;gap:10px}.v5-actions button{flex:1}.v5-list{display:grid;gap:9px;margin-top:12px}.v5-row{display:flex;gap:10px;align-items:center;padding:13px;border:1px solid #e1e5eb;border-radius:16px}.v5-row>div{flex:1;min-width:0}.v5-row small{display:block;color:#747d8d;margin-top:4px}.icon-btn{border:0;background:#f3f5f8;border-radius:12px;padding:9px}.v5-empty{padding:25px;text-align:center;color:#7b8492;background:#f5f7fa;border-radius:16px}.v5-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.v5-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.v5-stats>div{background:#f5f7fa;border-radius:17px;padding:15px}.v5-stats b{font-size:21px;display:block}.v5-stats small{color:#747d8d}.green{color:#159447!important}.red{color:#d93636!important}.v5-object-hero{background:#f1f5ff;border-radius:18px;padding:16px;margin-bottom:12px}.v5-object-hero span{display:block;color:#687386;margin-top:5px}.v5-photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.v5-photo{background:#f5f7fa;border-radius:16px;padding:14px}.v5-photo>div{font-size:35px}.v5-strip{display:flex;gap:8px;overflow:auto;padding:8px 0}.v5-strip span,.v5-strip b{background:#fff;border:1px solid #e2e6ed;border-radius:999px;padding:8px 11px;white-space:nowrap;font-size:12px}.danger{border:1px solid #e55;background:#fff;color:#d33;border-radius:14px;padding:14px;width:100%;font:inherit}
+      #v5Modal.show{display:flex!important}
+      @media(max-width:430px){.v5-grid2{grid-template-columns:1fr 1fr}.v5-sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom))}}
+    `;document.head.appendChild(s);
+  }
+  function init(){
+    injectStyles();renderV5();setTimeout(addMenuHooks,300);
+    // Re-hook periodically because the original app re-renders sections.
+    setInterval(addMenuHooks,1500);
+    // Expose a global for future object-card integration.
+    window.BUILDOS_V5={data:()=>X,save:saveX,workers:v5Workers,reports:v5Reports,finance:v5Finance,settings:v5Settings};
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
+</script>
+
 </body>
 </html>
