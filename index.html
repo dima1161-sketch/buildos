@@ -51,6 +51,10 @@ label{display:block;color:var(--muted);font-weight:750;margin:0 0 7px;font-size:
 .ai-box{background:#111827;color:#fff;border-radius:22px;padding:18px}.ai-box input{background:#fff}.ai-answer{margin-top:14px;line-height:1.5}
 .small{font-size:13px;color:var(--muted)}
 @media(min-width:700px){body{padding:20px}.app{box-shadow:0 5px 30px rgba(0,0,0,.08);border-radius:24px;overflow:hidden}}
+
+.budget-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.budget-box{border:1px solid var(--line);border-radius:16px;padding:13px;background:#fafbfc}.budget-label{font-size:12px;color:var(--muted)}.budget-value{font-size:20px;font-weight:850;margin-top:4px}.budget-value.red{color:var(--red)}.budget-value.green{color:var(--green)}
+.expense-item{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}.expense-item:last-child{border-bottom:0}.expense-name{font-weight:750}.expense-meta{font-size:12px;color:var(--muted);margin-top:4px}.expense-amount{font-weight:850;white-space:nowrap}
+
 </style>
 </head>
 <body>
@@ -147,6 +151,7 @@ label{display:block;color:var(--muted);font-weight:750;margin:0 0 7px;font-size:
     <div class="field"><label>Объект</label><select id="expenseObject"></select></div>
     <div class="field"><label>Статья</label><input id="expenseCategory" placeholder="Материалы, рабочие, доставка..."></div>
     <div class="field"><label>Сумма</label><input id="expenseAmount" type="number" inputmode="decimal" placeholder="50000"></div>
+    <div class="field"><label>Дата</label><input id="expenseDate" type="date"></div>
     <div class="field"><label>Комментарий</label><input id="expenseComment" placeholder="Что купили?"></div>
     <div class="actions"><button class="secondary" onclick="closeModal('expenseModal')">Отмена</button><button class="primary" onclick="addExpense()">Добавить</button></div>
   </div>
@@ -201,15 +206,38 @@ function objectCard(o,i,home=false){
 function renderObjects(){document.getElementById("objectList").innerHTML=objects.map((o,i)=>objectCard(o,i)).join("")||'<div class="empty">Объектов пока нет</div>'}
 function openObject(i){
  const o=objects[i];
+ const objExpenses=expenses.filter(e=>e.object===o.name);
+ const spent=objExpenses.reduce((s,e)=>s+Number(e.amount||0),0);
+ const remaining=Math.max(0,Number(o.budget||0)-spent);
+ const percent=o.budget?Math.min(100,Math.round(spent/Number(o.budget)*100)):0;
+ const objTasks=tasks.filter(t=>t.object===o.name);
  document.getElementById("detail").innerHTML=`<div class="card">
- <div class="object-top"><div class="icon">${o.icon}</div><div><div class="detail-title">${o.name}</div><div class="object-meta">${o.city} · ${o.area} м²</div></div></div>
+ <button class="secondary" onclick="showView('objects')">← Все объекты</button>
+ <div class="object-top" style="margin-top:14px"><div class="icon">${o.icon}</div><div><div class="detail-title">${o.name}</div><div class="object-meta">${o.city} · ${o.area} м²</div></div></div>
  <div class="progress"><i style="width:${o.progress}%"></i></div><div style="margin-top:12px;font-size:18px;font-weight:800">Готовность ${o.progress}%</div>
  </div>
+
+ <div class="detail-card"><h3>💰 Финансы объекта</h3>
+   <div class="budget-summary">
+    <div class="budget-box"><div class="budget-label">Бюджет</div><div class="budget-value">${money(o.budget)}</div></div>
+    <div class="budget-box"><div class="budget-label">Потрачено</div><div class="budget-value ${spent>o.budget?'red':''}">${money(spent)}</div></div>
+    <div class="budget-box"><div class="budget-label">Осталось</div><div class="budget-value ${remaining<o.budget*.1?'red':'green'}">${money(remaining)}</div></div>
+    <div class="budget-box"><div class="budget-label">Освоено</div><div class="budget-value">${percent}%</div></div>
+   </div>
+   <div class="progress"><i style="width:${percent}%;background:${percent>90?'var(--red)':'var(--green)'}"></i></div>
+   <button class="primary" style="margin-top:12px" onclick="openExpenseModal('${o.name}')">+ Добавить расход</button>
+ </div>
+
+ <div class="detail-card"><h3>🧾 Расходы</h3>
+   ${objExpenses.length?objExpenses.slice().reverse().map(e=>`<div class="expense-item"><div><div class="expense-name">${e.category||"Расход"}</div><div class="expense-meta">${e.comment||"Без комментария"} · ${e.date}</div></div><div class="expense-amount">${money(e.amount)}</div></div>`).join(""):'<div class="empty">Расходов по объекту пока нет.</div>'}
+ </div>
+
  <div class="detail-card"><h3>📋 Основная информация</h3>
- <div class="row"><span>Клиент</span><b>${o.client}</b></div><div class="row"><span>Бюджет</span><b>${money(o.budget)}</b></div><div class="row"><span>Этап</span><span>${o.stage}</span></div><div class="row"><span>Рабочие</span><span>${o.workers} человек</span></div><div class="row"><span>Начало</span><span>${o.start}</span></div><div class="row"><span>Сдача</span><span>${o.finish}</span></div></div>
- <div class="detail-card"><h3>⚠️ Контроль</h3><div class="row"><span>Проблемы</span><b style="color:${o.issues?'var(--red)':'var(--green)'}">${o.issues}</b></div><div class="row"><span>Задач объекта</span><b>${tasks.filter(t=>t.object===o.name).length}</b></div><div class="row"><span>Срок</span><b>${o.days} дней</b></div></div>
- <div class="detail-card"><h3>📋 Задачи объекта</h3>${tasks.filter(t=>t.object===o.name).map(t=>`<div class="row"><span>${t.done?'✅':'⬜'} ${t.title}</span></div>`).join("")||'<div class="small">Задач пока нет.</div>'}</div>
- <div class="grid"><button class="secondary" onclick="openTaskModal('${o.name}')">+ Задача</button><button class="secondary" onclick="openExpenseModal('${o.name}')">💰 Расход</button></div>`;
+ <div class="row"><span>Клиент</span><b>${o.client}</b></div><div class="row"><span>Этап</span><span>${o.stage}</span></div><div class="row"><span>Рабочие</span><span>${o.workers} человек</span></div><div class="row"><span>Начало</span><span>${o.start}</span></div><div class="row"><span>Сдача</span><span>${o.finish}</span></div></div>
+
+ <div class="detail-card"><h3>📋 Задачи объекта</h3>
+ ${objTasks.length?objTasks.map(t=>`<div class="row"><span>${t.done?'✅':'⬜'} ${t.title}<br><span class="small">${t.assignee||"Не назначен"} · ${t.due||"Без срока"}</span></span></div>`).join(""):'<div class="empty">Задач пока нет.</div>'}
+ <button class="secondary" style="width:100%;margin-top:10px" onclick="openTaskModal('${o.name}')">+ Добавить задачу</button></div>`;
  showView("objectDetail");
 }
 function setTaskFilter(f,btn){taskFilter=f;document.querySelectorAll(".task-filter").forEach(b=>b.classList.remove("active"));btn.classList.add("active");renderTasks()}
@@ -240,10 +268,12 @@ function renderExpenses(){
  document.getElementById("expensePageTotal").textContent=money(total);
  document.getElementById("expenseList").innerHTML=expenses.length?expenses.slice().reverse().map(e=>`<div class="card"><div class="row"><span>${e.category||"Расход"}</span><b>${money(e.amount)}</b></div><div class="small">${e.object}${e.comment?" · "+e.comment:""} · ${e.date}</div></div>`).join(""):'<div class="empty">Расходов пока нет.</div>';
 }
-function openExpenseModal(objectName){objectOptions("expenseObject");if(objectName)document.getElementById("expenseObject").value=objectName;document.getElementById("expenseCategory").value="";document.getElementById("expenseAmount").value="";document.getElementById("expenseComment").value="";document.getElementById("expenseModal").classList.add("show")}
+function openExpenseModal(objectName){objectOptions("expenseObject");if(objectName)document.getElementById("expenseObject").value=objectName;document.getElementById("expenseCategory").value="";document.getElementById("expenseAmount").value="";document.getElementById("expenseDate").value=new Date().toISOString().slice(0,10);document.getElementById("expenseComment").value="";document.getElementById("expenseModal").classList.add("show")}
 function addExpense(){
  const amount=Number(document.getElementById("expenseAmount").value);if(!amount)return;
- expenses.push({object:document.getElementById("expenseObject").value,category:document.getElementById("expenseCategory").value.trim()||"Расход",amount,comment:document.getElementById("expenseComment").value.trim(),date:new Date().toLocaleDateString("ru-RU")});
+ const rawDate=document.getElementById("expenseDate").value;
+ const date=rawDate?new Date(rawDate+"T00:00:00").toLocaleDateString("ru-RU"):new Date().toLocaleDateString("ru-RU");
+ expenses.push({object:document.getElementById("expenseObject").value,category:document.getElementById("expenseCategory").value.trim()||"Расход",amount,comment:document.getElementById("expenseComment").value.trim(),date});
  save();closeModal("expenseModal");showView("expenses");
 }
 function closeModal(id){document.getElementById(id).classList.remove("show")}
