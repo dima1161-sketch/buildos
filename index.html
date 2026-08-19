@@ -67,6 +67,18 @@ label{display:block;color:var(--muted);font-weight:750;margin:0 0 7px;font-size:
 .income-item{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
 .income-item:last-child{border-bottom:0}.income-name{font-weight:750}.income-meta{font-size:12px;color:var(--muted);margin-top:4px}.income-amount{font-weight:850;white-space:nowrap;color:var(--green)}
 
+
+.more-sheet{width:min(430px,100%);background:#fff;border-radius:28px 28px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
+.more-title{font-size:24px;font-weight:850;margin:4px 0 16px}
+.more-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.more-item{border:1px solid var(--line);background:#fff;border-radius:18px;padding:16px 10px;text-align:center;font:inherit;cursor:pointer;color:var(--text);min-height:82px}
+.more-item .more-icon{display:block;font-size:28px;line-height:1.1;margin-bottom:6px}
+.more-item b{font-size:15px}
+.more-close{width:100%;margin-top:12px;min-height:52px}
+nav{grid-template-columns:repeat(5,1fr)}
+nav button{font-size:12px;min-width:0}
+nav .nav-icon{font-size:25px}
+
 </style>
 </head>
 <body>
@@ -183,8 +195,33 @@ label{display:block;color:var(--muted);font-weight:750;margin:0 0 7px;font-size:
   <button id="nav-objects" onclick="showView('objects',this)"><span class="nav-icon">🏗️</span>Объекты</button>
   <button id="nav-tasks" onclick="showView('tasks',this)"><span class="nav-icon">✅</span>Задачи</button>
   <button id="nav-finance" onclick="showView('finance',this)"><span class="nav-icon">💰</span>Финансы</button>
-  <button id="nav-ai" onclick="showView('ai',this)"><span class="nav-icon">🤖</span>AI</button>
+  <button id="nav-more" onclick="openMoreMenu()"><span class="nav-icon">•••</span>Ещё</button>
 </nav>
+
+
+<div id="moreModal" class="modal" onclick="if(event.target===this)closeMoreMenu()">
+  <div class="more-sheet">
+    <div class="more-title">Ещё</div>
+    <div class="more-grid">
+      <button class="more-item" onclick="closeMoreMenu();showView('ai',document.getElementById('nav-more'))">
+        <span class="more-icon">🤖</span><b>AI-помощник</b>
+      </button>
+      <button class="more-item" onclick="closeMoreMenu();showView('expenses')">
+        <span class="more-icon">💸</span><b>Расходы</b>
+      </button>
+      <button class="more-item" onclick="alert('Раздел рабочих добавим следующим этапом')">
+        <span class="more-icon">👷</span><b>Рабочие</b>
+      </button>
+      <button class="more-item" onclick="alert('Отчёты добавим следующим этапом')">
+        <span class="more-icon">📊</span><b>Отчёты</b>
+      </button>
+      <button class="more-item" onclick="alert('Настройки добавим следующим этапом')">
+        <span class="more-icon">⚙️</span><b>Настройки</b>
+      </button>
+    </div>
+    <button class="secondary more-close" onclick="closeMoreMenu()">Закрыть</button>
+  </div>
+</div>
 
 <div id="taskModal" class="modal" onclick="if(event.target===this)closeModal('taskModal')">
   <div class="sheet">
@@ -390,6 +427,10 @@ function askAI(){
  if(q.includes("завтра")){a.innerHTML=`На данный момент в задачах нет отдельного планировщика уведомлений. Задачи со сроками сохраняются в приложении.`;return}
  a.innerHTML=`Сейчас я могу помочь с быстрым анализом: <b>просроченных задач</b>, <b>расходов</b> и текущего списка задач.`;
 }
+
+function openMoreMenu(){document.getElementById("moreModal").classList.add("show")}
+function closeMoreMenu(){document.getElementById("moreModal").classList.remove("show")}
+
 function init(){objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");renderHome();renderObjects();renderTasks();renderExpenses();renderFinance()}
 init();
 </script>
