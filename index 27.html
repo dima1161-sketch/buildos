@@ -1,0 +1,1463 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BUILDOS</title>
+<style>
+:root{--bg:#f5f7fa;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--blue:#2875ed;--green:#16a34a;--red:#dc2626;--orange:#f59e0b}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+body{min-height:100vh}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:92px}
+header{background:#fff;padding:24px 18px 18px;border-bottom:1px solid var(--line)}
+.brand{font-size:25px;font-weight:850;letter-spacing:-1px}.brand span{color:#f2a21a}
+.greeting{margin-top:20px;font-size:25px;font-weight:800}.subtitle{margin-top:8px;font-size:17px;color:var(--muted)}
+.content{padding:18px 16px}
+.view{display:none}.view.active{display:block}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+h2{font-size:28px;margin:0;font-weight:850}
+h3{margin:0 0 12px;font-size:22px}
+.card,.detail-card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(17,24,39,.04)}
+.object-card{cursor:pointer}
+.object-top{display:flex;gap:14px;align-items:center}
+.icon{width:68px;height:68px;border-radius:20px;background:#e8eef7;display:grid;place-items:center;font-size:38px;flex:none}
+.object-name{font-size:23px;font-weight:850}.object-meta{font-size:16px;color:var(--muted);margin-top:4px}
+.progress{height:9px;background:#e9edf3;border-radius:99px;overflow:hidden;margin-top:18px}.progress i{display:block;height:100%;background:var(--blue);border-radius:99px}
+.status{font-size:15px;font-weight:750;margin-top:10px}.status.ok{color:var(--green)}.status.bad{color:#ef4444}
+.primary{width:100%;border:0;background:var(--blue);color:#fff;border-radius:18px;padding:15px 18px;font-size:20px;font-weight:800}
+.secondary{border:1px solid var(--line);background:#fff;border-radius:16px;padding:12px 14px;color:var(--text);font-weight:700}
+.danger{border:1px solid #fecaca;background:#fff;color:var(--red);border-radius:16px;padding:12px 14px;font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid .secondary{width:100%;min-height:50px}
+.detail-title{font-size:25px;font-weight:850}
+.row{display:flex;justify-content:space-between;gap:15px;padding:13px 0;border-bottom:1px solid var(--line);font-size:17px}.row:last-child{border-bottom:0}.row b{font-weight:800}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:800}
+.badge.red{background:#fee2e2;color:#b91c1c}.badge.orange{background:#fff7ed;color:#c2410c}.badge.green{background:#ecfdf5;color:#15803d}
+.task-tools{display:flex;gap:8px;margin-bottom:12px;overflow:auto}.task-filter{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 16px;font-weight:750}.task-filter.active{background:#eef4ff;color:var(--blue);border-color:#93c5fd}
+.task-card{display:flex;gap:12px;align-items:flex-start;cursor:pointer}.check{width:28px;height:28px;border:3px solid #b8c2d1;border-radius:9px;flex:none;margin-top:1px}.task-card.done .check{background:#16a34a;border-color:#16a34a;position:relative}.task-card.done .check:after{content:"✓";color:white;font-weight:900;position:absolute;left:4px;top:-4px;font-size:22px}.task-card.done .task-title{text-decoration:line-through;color:#6b7280}
+.task-main{flex:1;min-width:0}.task-title{font-size:18px;font-weight:800}.task-meta{font-size:13px;color:var(--muted);margin-top:5px}.task-status{font-size:13px;font-weight:750;color:var(--muted);margin-top:5px}
+.summary{font-size:14px;color:var(--muted);margin:0 0 12px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}.stat{background:#fff;border:1px solid var(--line);border-radius:24px;padding:18px;min-height:145px}.stat-icon{font-size:30px}.stat-num{font-size:48px;font-weight:850;line-height:1.05;margin-top:8px}.stat-label{font-size:18px;color:var(--muted);margin-top:4px}
+.quick{background:#fff;border:1px solid var(--line);border-radius:24px;padding:18px;margin-top:12px}.quick h3{margin-bottom:14px}
+nav{position:fixed;z-index:20;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:10px 8px calc(10px + env(safe-area-inset-bottom))}
+nav button{border:0;background:none;color:#6b7280;font-size:13px;padding:3px 0}.nav-icon{display:block;font-size:28px;line-height:1.1;margin-bottom:3px}.nav-active{color:var(--blue)!important;font-weight:800}
+.modal{position:fixed;z-index:50;inset:0;background:rgba(0,0,0,.42);display:none;align-items:flex-end;justify-content:center}.modal.show{display:flex}.sheet{width:min(430px,100%);background:#fff;border-radius:28px 28px 0 0;padding:26px 18px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}.sheet h2{margin-bottom:20px}
+label{display:block;color:var(--muted);font-weight:750;margin:0 0 7px;font-size:15px}.field{margin-bottom:14px}input,select{width:100%;border:1px solid #d7dde7;border-radius:16px;background:#fff;padding:15px 14px;font-size:17px;outline:none}input:focus,select:focus{border-color:#75b8ff;box-shadow:0 0 0 3px #dbeeff}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}.actions button{min-height:54px}
+.empty{padding:28px 10px;text-align:center;color:var(--muted)}
+.ai-box{background:#111827;color:#fff;border-radius:22px;padding:18px}.ai-box input{background:#fff}.ai-answer{margin-top:14px;line-height:1.5}
+.small{font-size:13px;color:var(--muted)}
+@media(min-width:700px){body{padding:20px}.app{box-shadow:0 5px 30px rgba(0,0,0,.08);border-radius:24px;overflow:hidden}}
+
+.budget-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.budget-box{border:1px solid var(--line);border-radius:16px;padding:13px;background:#fafbfc}.budget-label{font-size:12px;color:var(--muted)}.budget-value{font-size:20px;font-weight:850;margin-top:4px}.budget-value.red{color:var(--red)}.budget-value.green{color:var(--green)}
+.expense-item{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}.expense-item:last-child{border-bottom:0}.expense-name{font-weight:750}.expense-meta{font-size:12px;color:var(--muted);margin-top:4px}.expense-amount{font-weight:850;white-space:nowrap}
+
+
+.finance-hero{background:#111827;color:#fff;border-radius:24px;padding:20px;margin-bottom:14px}
+.finance-hero .finance-label{color:#cbd5e1;font-size:14px}
+.finance-hero .finance-profit{font-size:38px;font-weight:850;margin-top:6px}
+.finance-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.finance-stat{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px}
+.finance-stat .label{font-size:13px;color:var(--muted)}
+.finance-stat .value{font-size:24px;font-weight:850;margin-top:5px}
+.finance-stat .value.green{color:var(--green)}.finance-stat .value.red{color:var(--red)}
+.income-item{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.income-item:last-child{border-bottom:0}.income-name{font-weight:750}.income-meta{font-size:12px;color:var(--muted);margin-top:4px}.income-amount{font-weight:850;white-space:nowrap;color:var(--green)}
+
+
+.more-sheet{width:min(430px,100%);background:#fff;border-radius:28px 28px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
+.more-title{font-size:24px;font-weight:850;margin:4px 0 16px}
+.more-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.more-item{border:1px solid var(--line);background:#fff;border-radius:18px;padding:16px 10px;text-align:center;font:inherit;cursor:pointer;color:var(--text);min-height:82px}
+.more-item .more-icon{display:block;font-size:28px;line-height:1.1;margin-bottom:6px}
+.more-item b{font-size:15px}
+.more-close{width:100%;margin-top:12px;min-height:52px}
+nav{grid-template-columns:repeat(5,1fr)}
+nav button{font-size:12px;min-width:0}
+nav .nav-icon{font-size:25px}
+
+
+.section-actions{display:flex;gap:8px;align-items:center}
+.worker-card{display:flex;align-items:center;gap:14px}
+.worker-avatar{width:54px;height:54px;border-radius:16px;background:#eef4ff;display:flex;align-items:center;justify-content:center;font-size:28px;flex:none}
+.worker-name{font-weight:800;font-size:17px}.worker-role{font-size:13px;color:var(--muted);margin-top:3px}
+.worker-money{margin-left:auto;text-align:right;font-weight:800}.worker-money small{display:block;color:var(--muted);font-weight:500}
+.report-bar{height:12px;background:#e9edf3;border-radius:99px;overflow:hidden}.report-bar i{display:block;height:100%;background:#3b82f6;border-radius:99px}
+.report-row{padding:12px 0;border-bottom:1px solid var(--line)}.report-row:last-child{border-bottom:0}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kpi{border:1px solid var(--line);border-radius:18px;padding:14px;background:#fff}.kpi b{font-size:22px;display:block;margin-top:5px}
+.danger-text{color:#dc2626!important}.danger-btn{border:1px solid #fecaca;background:#fff;color:#dc2626!important}
+.backup-note{font-size:13px;color:var(--muted);line-height:1.45}
+@media(max-width:380px){.more-grid{grid-template-columns:1fr}.kpi-grid{grid-template-columns:1fr}}
+
+</style>
+
+<style>
+#bootError{display:none;position:fixed;inset:0;background:#fff;padding:28px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#111;z-index:99999}
+#bootError h2{font-size:24px;margin:0 0 12px}#bootError pre{white-space:pre-wrap;background:#f3f4f6;padding:12px;border-radius:12px;font-size:13px}
+</style>
+</head>
+<body>
+<div id="bootError"><h2>BUILDOS не загрузился</h2>
+<div>Произошла ошибка при запуске. Пришли мне этот экран — по нему я сразу найду проблему.</div>
+<pre id="bootErrorText"></pre></div>
+<script>
+window.addEventListener('error',function(e){
+  var b=document.getElementById('bootError'),t=document.getElementById('bootErrorText');
+  if(b&&t){b.style.display='block';t.textContent=(e.message||'Ошибка JavaScript')+'\n'+(e.filename||'')+':'+(e.lineno||'');}
+});
+window.addEventListener('unhandledrejection',function(e){
+  var b=document.getElementById('bootError'),t=document.getElementById('bootErrorText');
+  if(b&&t){b.style.display='block';t.textContent='Promise error: '+(e.reason&&e.reason.message?e.reason.message:e.reason);}
+});
+</script>
+
+<div class="app">
+<header>
+  <div class="brand">BUILD<span>OS</span></div>
+  <div class="greeting">Добрый день, Дмитрий 👋</div>
+  <div class="subtitle">Вот что происходит на объектах</div>
+</header>
+
+<main class="content">
+  <section id="home" class="view active">
+    <div class="section-head"><h2>Мои объекты</h2><button class="secondary" onclick="showView('objects')">Все объекты →</button></div>
+    <div id="homeObjects"></div>
+    <h2 style="margin:28px 0 14px">Сегодня</h2>
+    <div class="stats">
+      <div class="stat"><div class="stat-icon">🔴</div><div id="overdue" class="stat-num">0</div><div class="stat-label">просрочено</div></div>
+      <div class="stat"><div class="stat-icon">📋</div><div id="todayCount" class="stat-num">0</div><div class="stat-label">в работе</div></div>
+      <div class="stat"><div class="stat-icon">💰</div><div id="expenseTotal" class="stat-num">0</div><div class="stat-label">расходы</div></div>
+      <div class="stat"><div class="stat-icon">👷</div><div id="workersTotal" class="stat-num">0</div><div class="stat-label">рабочих</div></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="section-head" style="margin-bottom:10px"><h3 style="margin:0">📊 Сейчас по бизнесу</h3><button class="secondary" onclick="showView('reports')">Отчёты →</button></div>
+      <div class="kpi-grid">
+        <div class="kpi"><span class="small">Доходы</span><b id="homeIncome">0 ₽</b></div>
+        <div class="kpi"><span class="small">Прибыль</span><b id="homeProfit">0 ₽</b></div>
+        <div class="kpi"><span class="small">Расходы</span><b id="homeExpenses">0 ₽</b></div>
+        <div class="kpi"><span class="small">Задач просрочено</span><b id="homeOverdue">0</b></div>
+      </div>
+    </div>
+
+    <div class="quick">
+      <h3>⚡ Быстрые действия</h3>
+      <div class="grid">
+        <button class="secondary" onclick="openTaskModal()">➕ Задача</button>
+        <button class="secondary" onclick="showView('objects')">🏗️ Объекты</button>
+        <button class="secondary" onclick="showView('finance')">💰 Финансы</button>
+        <button class="secondary" onclick="showView('ai')">🤖 Спросить AI</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="objects" class="view">
+    <div class="section-head"><h2>Мои объекты</h2><button class="primary" style="width:auto" onclick="openObjectModal()">+ Добавить</button></div>
+    <div id="objectList"></div>
+  </section>
+
+  <section id="objectDetail" class="view">
+    <div id="detail"></div>
+  </section>
+
+  <section id="tasks" class="view">
+    <div class="section-head"><h2>Задачи</h2><button class="primary" style="width:auto" onclick="openTaskModal()">+ Добавить</button></div>
+    <div class="task-tools">
+      <button class="task-filter active" data-filter="all" onclick="setTaskFilter('all',this)">Все</button>
+      <button class="task-filter" data-filter="open" onclick="setTaskFilter('open',this)">В работе</button>
+      <button class="task-filter" data-filter="done" onclick="setTaskFilter('done',this)">Выполнены</button>
+    </div>
+    <p id="taskSummary" class="summary"></p>
+    <div id="taskList"></div>
+  </section>
+
+  <section id="expenses" class="view">
+    <div class="section-head"><h2>Расходы</h2><button class="primary" style="width:auto" onclick="openExpenseModal()">+ Добавить</button></div>
+    <div class="card"><div class="row"><span>Всего расходов</span><b id="expensePageTotal">0 ₽</b></div></div>
+    <div id="expenseList"></div>
+  </section>
+
+
+  <section id="finance" class="view">
+    <div class="section-head"><h2>Финансы</h2></div>
+
+    <div class="finance-hero">
+      <div class="finance-label">Прибыль по внесённым данным</div>
+      <div id="financeProfit" class="finance-profit">0 ₽</div>
+      <div class="small" style="color:#cbd5e1;margin-top:5px">Доходы − расходы</div>
+    </div>
+
+    <div class="finance-grid">
+      <div class="finance-stat"><div class="label">💚 Доходы</div><div id="financeIncome" class="value green">0 ₽</div></div>
+      <div class="finance-stat"><div class="label">💸 Расходы</div><div id="financeExpenses" class="value red">0 ₽</div></div>
+      <div class="finance-stat"><div class="label">🏗️ Объектов</div><div id="financeObjects" class="value">0</div></div>
+      <div class="finance-stat"><div class="label">📊 Средняя маржа</div><div id="financeMargin" class="value">0%</div></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="section-head" style="margin-bottom:8px">
+        <h3 style="margin:0">По объектам</h3>
+        <button class="secondary" onclick="openIncomeModal()">+ Доход</button>
+      </div>
+      <div id="financeObjectList"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head" style="margin-bottom:8px">
+        <h3 style="margin:0">Доходы</h3>
+        <button class="secondary" onclick="openIncomeModal()">+ Добавить</button>
+      </div>
+      <div id="incomeList"></div>
+    </div>
+
+    <div class="section-head" style="margin-top:18px">
+      <h3 style="margin:0">Расходы</h3>
+      <button class="primary" style="width:auto" onclick="openExpenseModal()">+ Добавить</button>
+    </div>
+    <div id="financeExpenseList"></div>
+  </section>
+
+
+  <section id="workers" class="view">
+    <div class="section-head"><h2>Рабочие</h2><button class="primary" style="width:auto" onclick="openWorkerModal()">+ Добавить</button></div>
+    <div class="card"><div class="row"><span>Всего рабочих</span><b id="workersPageTotal">0</b></div></div>
+    <div id="workerList"></div>
+  </section>
+
+  <section id="reports" class="view">
+    <div class="section-head"><h2>Отчёты</h2><button class="secondary" onclick="renderReports()">Обновить</button></div>
+    <div class="card">
+      <h3 style="margin-top:0">📅 За текущий месяц</h3>
+      <div class="kpi-grid">
+        <div class="kpi"><span class="small">Доходы</span><b id="reportIncome">0 ₽</b></div>
+        <div class="kpi"><span class="small">Расходы</span><b id="reportExpenses">0 ₽</b></div>
+        <div class="kpi"><span class="small">Прибыль</span><b id="reportProfit">0 ₽</b></div>
+        <div class="kpi"><span class="small">Маржа</span><b id="reportMargin">0%</b></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🏗️ Объекты</h3>
+      <div id="reportObjects"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">📋 Задачи</h3>
+      <div id="reportTasks"></div>
+    </div>
+  </section>
+
+  <section id="backup" class="view">
+    <div class="section-head"><h2>Данные</h2></div>
+    <div class="card">
+      <h3 style="margin-top:0">💾 Резервная копия</h3>
+      <p class="backup-note">Скачать все объекты, задачи, доходы, расходы и рабочих одним JSON-файлом. Потом этот файл можно восстановить на этом устройстве.</p>
+      <button class="primary" onclick="exportBackup()">Скачать резервную копию</button>
+      <input id="backupFile" type="file" accept=".json,application/json" style="display:none" onchange="importBackup(event)">
+      <button class="secondary" style="margin-top:10px" onclick="document.getElementById('backupFile').click()">Восстановить из файла</button>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">⚠️ Сброс данных</h3>
+      <p class="backup-note">Удалит сохранённые данные приложения на этом устройстве. Используй только после резервной копии.</p>
+      <button class="secondary danger-btn" onclick="resetBuildos()">Сбросить сохранённые данные</button>
+    </div>
+  </section>
+
+  <section id="ai" class="view">
+    <div class="section-head"><h2>AI-помощник</h2></div>
+    <div class="ai-box">
+      <div style="font-size:20px;font-weight:800">🤖 Чем помочь?</div>
+      <div class="small" style="color:#cbd5e1;margin:7px 0 14px">Спроси про задачи, сроки или расходы.</div>
+      <input id="aiInput" placeholder="Например: что просрочено?">
+      <button class="primary" style="margin-top:10px" onclick="askAI()">Спросить</button>
+      <div id="aiAnswer" class="ai-answer"></div>
+    </div>
+  </section>
+</main>
+</div>
+
+<nav>
+  <button id="nav-home" class="nav-active" onclick="showView('home',this)"><span class="nav-icon">🏠</span>Главная</button>
+  <button id="nav-objects" onclick="showView('objects',this)"><span class="nav-icon">🏗️</span>Объекты</button>
+  <button id="nav-tasks" onclick="showView('tasks',this)"><span class="nav-icon">✅</span>Задачи</button>
+  <button id="nav-finance" onclick="showView('finance',this)"><span class="nav-icon">💰</span>Финансы</button>
+  <button id="nav-more" onclick="openMoreMenu()"><span class="nav-icon">•••</span>Ещё</button>
+</nav>
+
+
+<div id="moreModal" class="modal" onclick="if(event.target===this)closeMoreMenu()">
+  <div class="more-sheet">
+    <div class="more-title">Ещё</div>
+    <div class="more-grid">
+      <button class="more-item" onclick="closeMoreMenu();showView('ai',document.getElementById('nav-more'))">
+        <span class="more-icon">🤖</span><b>AI-помощник</b>
+      </button>
+      <button class="more-item" onclick="closeMoreMenu();showView('expenses')">
+        <span class="more-icon">💸</span><b>Расходы</b>
+      </button>
+      <button class="more-item" onclick="closeMoreMenu();showView('workers')">
+        <span class="more-icon">👷</span><b>Рабочие</b>
+      </button>
+      <button class="more-item" onclick="closeMoreMenu();showView('reports')">
+        <span class="more-icon">📊</span><b>Отчёты</b>
+      </button>
+      <button class="more-item" onclick="closeMoreMenu();showView('backup')">
+        <span class="more-icon">💾</span><b>Данные</b>
+      </button>
+    </div>
+    <button class="secondary more-close" onclick="closeMoreMenu()">Закрыть</button>
+  </div>
+</div>
+
+
+<div id="workerModal" class="modal" onclick="if(event.target===this)closeModal('workerModal')">
+  <div class="sheet">
+    <h2>Новый рабочий</h2>
+    <div class="field"><label>Имя</label><input id="workerName" placeholder="Например: Сергей"></div>
+    <div class="field"><label>Специальность</label><input id="workerRole" placeholder="Электрик, отделочник..."></div>
+    <div class="field"><label>Объект</label><select id="workerObject"></select></div>
+    <div class="field"><label>Ставка за день</label><input id="workerRate" type="number" inputmode="decimal" placeholder="5000"></div>
+    <div class="actions"><button class="secondary" onclick="closeModal('workerModal')">Отмена</button><button class="primary" onclick="addWorker()">Добавить</button></div>
+  </div>
+</div>
+
+<div id="taskModal" class="modal" onclick="if(event.target===this)closeModal('taskModal')">
+  <div class="sheet">
+    <h2>Новая задача</h2>
+    <div class="field"><label>Задача</label><input id="taskTitle" placeholder="Например: проверить электрику"></div>
+    <div class="field"><label>Объект</label><select id="taskObject"></select></div>
+    <div class="field"><label>Ответственный</label><input id="taskAssignee" placeholder="Например: Сергей"></div>
+    <div class="field"><label>Срок</label><input id="taskDue" type="date"></div>
+    <div class="field"><label>Приоритет</label><select id="taskPriority"><option value="high">🔴 Высокий</option><option value="medium" selected>🟠 Средний</option><option value="low">🟢 Низкий</option></select></div>
+    <div class="actions"><button class="secondary" onclick="closeModal('taskModal')">Отмена</button><button class="primary" onclick="addTask()">Сохранить</button></div>
+  </div>
+</div>
+
+
+
+<div id="objectModal" class="modal" onclick="if(event.target===this)closeModal('objectModal')">
+  <div class="sheet">
+    <h2>Новый объект</h2>
+    <div class="field"><label>Название</label><input id="objectName" placeholder="Например: Квартира №35"></div>
+    <div class="field"><label>Клиент</label><input id="objectClient" placeholder="Имя клиента"></div>
+    <div class="field"><label>Город</label><input id="objectCity" value="Москва"></div>
+    <div class="field"><label>Площадь, м²</label><input id="objectArea" type="number" inputmode="decimal" placeholder="80"></div>
+    <div class="field"><label>Бюджет</label><input id="objectBudget" type="number" inputmode="decimal" placeholder="2500000"></div>
+    <div class="field"><label>Срок, дней</label><input id="objectDays" type="number" inputmode="numeric" placeholder="90"></div>
+    <div class="field"><label>Этап</label><input id="objectStage" placeholder="Черновые работы"></div>
+    <div class="actions"><button class="secondary" onclick="closeModal('objectModal')">Отмена</button><button class="primary" onclick="addObject()">Добавить</button></div>
+  </div>
+</div>
+
+<div id="incomeModal" class="modal" onclick="if(event.target===this)closeModal('incomeModal')">
+  <div class="sheet">
+    <h2>Новый доход</h2>
+    <div class="field"><label>Объект</label><select id="incomeObject"></select></div>
+    <div class="field"><label>Статья</label><input id="incomeCategory" placeholder="Оплата клиента, аванс, допработы..."></div>
+    <div class="field"><label>Сумма</label><input id="incomeAmount" type="number" inputmode="decimal" placeholder="500000"></div>
+    <div class="field"><label>Дата</label><input id="incomeDate" type="date"></div>
+    <div class="field"><label>Комментарий</label><input id="incomeComment" placeholder="За какой этап / что оплачено?"></div>
+    <div class="actions"><button class="secondary" onclick="closeModal('incomeModal')">Отмена</button><button class="primary" onclick="addIncome()">Добавить</button></div>
+  </div>
+</div>
+
+<div id="expenseModal" class="modal" onclick="if(event.target===this)closeModal('expenseModal')">
+  <div class="sheet">
+    <h2>Новый расход</h2>
+    <div class="field"><label>Объект</label><select id="expenseObject"></select></div>
+    <div class="field"><label>Статья</label><input id="expenseCategory" placeholder="Материалы, рабочие, доставка..."></div>
+    <div class="field"><label>Сумма</label><input id="expenseAmount" type="number" inputmode="decimal" placeholder="50000"></div>
+    <div class="field"><label>Дата</label><input id="expenseDate" type="date"></div>
+    <div class="field"><label>Комментарий</label><input id="expenseComment" placeholder="Что купили?"></div>
+    <div class="actions"><button class="secondary" onclick="closeModal('expenseModal')">Отмена</button><button class="primary" onclick="addExpense()">Добавить</button></div>
+  </div>
+</div>
+
+<script>
+const defaultObjects=[
+ {name:"ЖК Хорошевский",city:"Москва",client:"Иван",budget:3200000,area:142,days:74,progress:64,stage:"Черновые работы",workers:6,start:"12 августа",finish:"25 октября",issues:2,icon:"🏗️",tasks:["Проверить электрику","Согласовать плитку","Фотоотчёт заказчику"]},
+ {name:"Квартира №27",city:"Москва",client:"Анна",budget:1850000,area:87,days:61,progress:41,stage:"Подготовка",workers:4,start:"1 сентября",finish:"31 октября",issues:0,icon:"🏠",tasks:["Заказать сантехнику","Подготовить стены"]}
+];
+let objects=JSON.parse(localStorage.getItem("buildos_objects")||"null")||defaultObjects;
+let tasks=JSON.parse(localStorage.getItem("buildos_tasks")||"null")||[
+ {title:"Проверить электрику",object:"ЖК Хорошевский",assignee:"",due:"",priority:"high",done:false},
+ {title:"Согласовать плитку",object:"ЖК Хорошевский",assignee:"",due:"",priority:"medium",done:true},
+ {title:"Заказать сантехнику",object:"Квартира №27",assignee:"",due:"",priority:"medium",done:true},
+ {title:"Подготовить стены",object:"Квартира №27",assignee:"",due:"",priority:"low",done:false},
+ {title:"Фотоотчёт заказчику",object:"ЖК Хорошевский",assignee:"",due:"",priority:"medium",done:false}
+];
+let expenses=JSON.parse(localStorage.getItem("buildos_expenses")||"[]");
+let incomes=JSON.parse(localStorage.getItem("buildos_incomes")||"[]");
+let workers=JSON.parse(localStorage.getItem("buildos_workers")||"[]");
+let taskFilter="all";
+
+function save(){localStorage.setItem("buildos_tasks",JSON.stringify(tasks));localStorage.setItem("buildos_expenses",JSON.stringify(expenses));localStorage.setItem("buildos_incomes",JSON.stringify(incomes));localStorage.setItem("buildos_workers",JSON.stringify(workers));localStorage.setItem("buildos_objects",JSON.stringify(objects))}
+function showView(id,btn){
+ document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+ const v=document.getElementById(id); if(v)v.classList.add("active");
+ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("nav-active"));
+ const nav=document.getElementById("nav-"+id); if(nav)nav.classList.add("nav-active");
+ if(id==="home")renderHome(); if(id==="objects")renderObjects(); if(id==="tasks")renderTasks(); if(id==="expenses")renderExpenses(); if(id==="finance")renderFinance(); if(id==="workers")renderWorkers(); if(id==="reports")renderReports();
+ window.scrollTo(0,0);
+}
+function money(n){return Number(n||0).toLocaleString("ru-RU")+" ₽"}
+function objectOptions(id){
+ document.getElementById(id).innerHTML=objects.map((o,i)=>`<option value="${o.name}">${o.name}</option>`).join("");
+}
+function renderHome(){
+ document.getElementById("homeObjects").innerHTML=objects.map((o,i)=>objectCard(o,i,true)).join("");
+ const open=tasks.filter(t=>!t.done).length;
+ const overdue=tasks.filter(t=>!t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date()).length;
+ document.getElementById("todayCount").textContent=open;
+ document.getElementById("overdue").textContent=overdue;
+ document.getElementById("expenseTotal").textContent=expenses.reduce((s,e)=>s+Number(e.amount||0),0).toLocaleString("ru-RU");
+ document.getElementById("workersTotal").textContent=workers.length||objects.reduce((s,o)=>s+Number(o.workers||0),0);
+ const income=totalIncome(), spent=totalExpenses(), profit=income-spent;
+ document.getElementById("homeIncome").textContent=money(income);
+ document.getElementById("homeExpenses").textContent=money(spent);
+ const hp=document.getElementById("homeProfit");hp.textContent=money(profit);hp.className=profit<0?"danger-text":"";
+ document.getElementById("homeOverdue").textContent=overdue;
+}
+function objectCard(o,i,home=false){
+ return `<div class="card object-card">
+   <div class="object-top"><div class="icon">${o.icon}</div><div><div class="object-name">${o.name}</div><div class="object-meta">${o.area} м² · срок ${o.days} дней</div></div></div>
+   <div class="progress"><i style="width:${o.progress}%"></i></div>
+   <div class="status ${o.issues?'bad':'ok'}">${o.issues?'⚠️ '+o.issues+' проблем':'🟢 Всё по плану'} · выполнено ${o.progress}%</div>
+   <button class="primary" style="margin-top:16px" onclick="openObject(${i})">Открыть объект →</button>
+ </div>`;
+}
+
+function openObjectModal(){
+ ["objectName","objectClient","objectArea","objectBudget","objectDays","objectStage"].forEach(id=>document.getElementById(id).value="");
+ document.getElementById("objectCity").value="Москва";
+ document.getElementById("objectModal").classList.add("show");
+ setTimeout(()=>document.getElementById("objectName").focus(),50);
+}
+function addObject(){
+ const name=document.getElementById("objectName").value.trim(); if(!name)return;
+ if(objects.some(o=>o.name===name)){alert("Объект с таким названием уже есть");return}
+ objects.push({
+   name,client:document.getElementById("objectClient").value.trim(),city:document.getElementById("objectCity").value.trim()||"Москва",
+   area:Number(document.getElementById("objectArea").value)||0,budget:Number(document.getElementById("objectBudget").value)||0,
+   days:Number(document.getElementById("objectDays").value)||0,progress:0,stage:document.getElementById("objectStage").value.trim()||"Подготовка",
+   workers:0,start:new Date().toLocaleDateString("ru-RU"),finish:"",issues:0,icon:"🏠",tasks:[]
+ });
+ save();closeModal("objectModal");renderObjects();renderHome();objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");objectOptions("workerObject");
+}
+
+function renderObjects(){document.getElementById("objectList").innerHTML=objects.map((o,i)=>objectCard(o,i)).join("")||'<div class="empty">Объектов пока нет</div>'}
+function openObject(i){
+ const o=objects[i];
+ try{ window.bfCurrentProject=String(o.id||o.name||""); window.bfCurrentProjectName=String(o.name||""); }catch(e){}
+ const objExpenses=expenses.filter(e=>e.object===o.name);
+ const spent=objExpenses.reduce((s,e)=>s+Number(e.amount||0),0);
+ const remaining=Math.max(0,Number(o.budget||0)-spent);
+ const percent=o.budget?Math.min(100,Math.round(spent/Number(o.budget)*100)):0;
+ const objTasks=tasks.filter(t=>t.object===o.name);
+ document.getElementById("detail").innerHTML=`<div class="card">
+ <button class="secondary" onclick="showView('objects')">← Все объекты</button>
+ <div class="object-top" style="margin-top:14px"><div class="icon">${o.icon}</div><div><div class="detail-title">${o.name}</div><div class="object-meta">${o.city} · ${o.area} м²</div></div></div>
+ <div class="progress"><i style="width:${o.progress}%"></i></div><div style="margin-top:12px;font-size:18px;font-weight:800">Готовность ${o.progress}%</div>
+ </div>
+
+ <div class="detail-card"><h3>💰 Финансы объекта</h3>
+   <div class="budget-summary">
+    <div class="budget-box"><div class="budget-label">Бюджет</div><div class="budget-value">${money(o.budget)}</div></div>
+    <div class="budget-box"><div class="budget-label">Потрачено</div><div class="budget-value ${spent>o.budget?'red':''}">${money(spent)}</div></div>
+    <div class="budget-box"><div class="budget-label">Осталось</div><div class="budget-value ${remaining<o.budget*.1?'red':'green'}">${money(remaining)}</div></div>
+    <div class="budget-box"><div class="budget-label">Освоено</div><div class="budget-value">${percent}%</div></div>
+   </div>
+   <div class="progress"><i style="width:${percent}%;background:${percent>90?'var(--red)':'var(--green)'}"></i></div>
+   <button class="primary" style="margin-top:12px" onclick="openExpenseModal('${o.name}')">+ Добавить расход</button>
+ </div>
+
+ <div class="detail-card"><h3>🧾 Расходы</h3>
+   ${objExpenses.length?objExpenses.slice().reverse().map(e=>`<div class="expense-item"><div><div class="expense-name">${e.category||"Расход"}</div><div class="expense-meta">${e.comment||"Без комментария"} · ${e.date}</div></div><div class="expense-amount">${money(e.amount)}</div></div>`).join(""):'<div class="empty">Расходов по объекту пока нет.</div>'}
+ </div>
+
+ <div class="detail-card">
+   <div class="beq">
+     <div class="beq-scroll">
+       <button class="active" onclick="beOpenEstimate(${i})">📋 Смета</button>
+       <button onclick="bePurchaseList(${i})">🛒 Закупки</button>
+       <button onclick="beEstimateCheck(${i})">🤖 Проверка</button>
+     </div>
+   </div>
+   ${o.estimateItems&&o.estimateItems.length?
+     (()=>{const total=o.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const purchased=o.estimateItems.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);const work=o.estimateItems.filter(x=>x.status==="work").length;const done=o.estimateItems.filter(x=>x.status==="done").length;const buy=o.estimateItems.filter(x=>window.beType(x.name)==="Материалы"&&(+x.purchasedQty||0)<(+x.qty||0)).length;return `
+       <h3>📋 Смета объекта</h3>
+       <div class="be-summary">
+         <div class="be-stat"><span>Сумма сметы</span><b>${beMoney(total)}</b></div>
+         <div class="be-stat"><span>Потрачено по смете</span><b>${beMoney(purchased)}</b></div>
+         <div class="be-stat"><span>В работе</span><b>${work}</b></div>
+         <div class="be-stat"><span>Выполнено</span><b>${done}</b></div>
+       </div>
+       <div class="be-progress"><i style="width:${total?Math.min(100,Math.round(purchased/total*100)):0}%"></i></div>
+       <div class="be-muted" style="margin-top:6px">${o.estimateItems.length} позиций · ${buy} материалов требуют закупки</div>
+       <div class="be-actions">
+         <button class="primary" onclick="beOpenEstimate(${i})">Открыть смету →</button>
+         <button onclick="bePurchaseList(${i})">🛒 Что купить</button>
+       </div>
+     `})()
+     :'<h3>📋 Смета объекта</h3><div class="empty">Смета по объекту пока не загружена.</div><button class="primary" style="width:100%;margin-top:10px" onclick="bfOpenImport(\'estimate\')">📥 Загрузить смету</button>'}
+ </div>
+
+ </div>
+
+ <div class="detail-card"><h3>📅 График работ</h3>
+ ${o.schedule&&o.schedule.length?
+   o.schedule.slice(0,12).map(x=>`<div class="expense-item"><div><div class="expense-name">${esc(x.title||x.name)}</div><div class="expense-meta">${x.start||"—"} → ${x.end||"—"} · ${esc(x.assignee||"Ответственный не указан")}</div></div></div>`).join("")
+   :'<div class="empty">График по объекту пока не загружен.</div>'}
+ </div>
+
+ <div class="detail-card"><h3>📋 Основная информация</h3>
+ <div class="row"><span>Клиент</span><b>${o.client}</b></div><div class="row"><span>Этап</span><span>${o.stage}</span></div><div class="row"><span>Рабочие</span><span>${o.workers} человек</span></div><div class="row"><span>Начало</span><span>${o.start}</span></div><div class="row"><span>Сдача</span><span>${o.finish}</span></div></div>
+
+ <div class="detail-card"><h3>📋 Задачи объекта</h3>
+ ${objTasks.length?objTasks.map(t=>`<div class="row"><span>${t.done?'✅':'⬜'} ${t.title}<br><span class="small">${t.assignee||"Не назначен"} · ${t.due||"Без срока"}</span></span></div>`).join(""):'<div class="empty">Задач пока нет.</div>'}
+ <button class="secondary" style="width:100%;margin-top:10px" onclick="openTaskModal('${o.name}')">+ Добавить задачу</button></div>`;
+ showView("objectDetail");
+}
+function setTaskFilter(f,btn){taskFilter=f;document.querySelectorAll(".task-filter").forEach(b=>b.classList.remove("active"));btn.classList.add("active");renderTasks()}
+function priorityLabel(p){return p==="high"?"Высокий":p==="low"?"Низкий":"Средний"}
+
+function openWorkerModal(){
+ document.getElementById("workerName").value="";document.getElementById("workerRole").value="";document.getElementById("workerRate").value="";
+ objectOptions("workerObject");document.getElementById("workerModal").classList.add("show");
+ setTimeout(()=>document.getElementById("workerName").focus(),50);
+}
+function renderWorkers(){
+ const total=workers.length;
+ document.getElementById("workersPageTotal").textContent=total;
+ document.getElementById("workerList").innerHTML=workers.length?workers.map((w,i)=>`<div class="card worker-card">
+   <div class="worker-avatar">👷</div><div><div class="worker-name">${w.name}</div><div class="worker-role">${w.role||"Рабочий"} · ${w.object||"Без объекта"}</div></div>
+   <div class="worker-money">${money(w.rate)}<small>за день</small></div>
+ </div><div class="task-tools" style="margin-top:-6px;margin-bottom:10px"><button class="secondary danger-btn" onclick="deleteWorker(${i})">Удалить</button></div>`).join(""):'<div class="empty">Рабочих пока нет. Добавь первого.</div>';
+}
+function addWorker(){
+ const name=document.getElementById("workerName").value.trim();if(!name)return;
+ workers.push({name,role:document.getElementById("workerRole").value.trim(),object:document.getElementById("workerObject").value,rate:Number(document.getElementById("workerRate").value)||0});
+ save();closeModal("workerModal");showView("workers");
+}
+function deleteWorker(i){if(!confirm("Удалить рабочего?"))return;workers.splice(i,1);save();renderWorkers();renderHome()}
+
+function renderTasks(){
+ let list=tasks.filter(t=>taskFilter==="all"?true:taskFilter==="done"?t.done:!t.done);
+ const open=tasks.filter(t=>!t.done).length, done=tasks.filter(t=>t.done).length;
+ document.getElementById("taskSummary").textContent=`Всего: ${tasks.length} · В работе: ${open} · Выполнено: ${done}`;
+ document.getElementById("taskList").innerHTML=list.length?list.map((t)=>{
+  const i=tasks.indexOf(t),due=t.due?new Date(t.due+"T00:00:00").toLocaleDateString("ru-RU"):"без срока";
+  return `<div class="card task-card ${t.done?'done':''}">
+   <div class="check" onclick="toggleTask(${i})"></div>
+   <div class="task-main" onclick="toggleTask(${i})"><div class="task-title">${t.title}</div><div class="task-meta">🏗️ ${t.object} · 👷 ${t.assignee||"Не назначен"} · 📅 ${due}</div><div class="task-status">${t.done?"✓ Выполнено":"В работе"} · ${priorityLabel(t.priority)} приоритет</div></div>
+   <button class="secondary danger-btn" style="width:auto;padding:9px 12px" onclick="event.stopPropagation();deleteTask(${i})">×</button>
+ </div>`;
+ }).join(""):'<div class="empty">Задач в этом разделе нет.</div>';
+ renderHome();
+}
+function toggleTask(i){tasks[i].done=!tasks[i].done;save();renderTasks()}
+function deleteTask(i){if(!confirm("Удалить задачу?"))return;tasks.splice(i,1);save();renderTasks()}
+function openTaskModal(objectName){
+ objectOptions("taskObject");if(objectName)document.getElementById("taskObject").value=objectName;
+ document.getElementById("taskTitle").value="";document.getElementById("taskAssignee").value="";document.getElementById("taskDue").value="";document.getElementById("taskPriority").value="medium";
+ document.getElementById("taskModal").classList.add("show");setTimeout(()=>document.getElementById("taskTitle").focus(),50);
+}
+function addTask(){
+ const title=document.getElementById("taskTitle").value.trim();if(!title)return;
+ tasks.unshift({title,object:document.getElementById("taskObject").value,assignee:document.getElementById("taskAssignee").value.trim(),due:document.getElementById("taskDue").value,priority:document.getElementById("taskPriority").value,done:false});
+ save();closeModal("taskModal");showView("tasks");
+}
+
+function totalIncome(){return incomes.reduce((s,e)=>s+Number(e.amount||0),0)}
+function totalExpenses(){return expenses.reduce((s,e)=>s+Number(e.amount||0),0)}
+function renderFinance(){
+  const income=totalIncome(), spent=totalExpenses(), profit=income-spent;
+  document.getElementById("financeIncome").textContent=money(income);
+  document.getElementById("financeExpenses").textContent=money(spent);
+  const p=document.getElementById("financeProfit");p.textContent=money(profit);p.style.color=profit<0?"#fca5a5":"#fff";
+  document.getElementById("financeObjects").textContent=objects.length;
+  document.getElementById("financeMargin").textContent=income?Math.round(profit/income*100)+"%":"0%";
+
+  document.getElementById("financeObjectList").innerHTML=objects.map(o=>{
+    const inc=incomes.filter(e=>e.object===o.name).reduce((s,e)=>s+Number(e.amount||0),0);
+    const exp=expenses.filter(e=>e.object===o.name).reduce((s,e)=>s+Number(e.amount||0),0);
+    const pr=inc-exp;
+    return `<div class="row"><span><b>${o.name}</b><br><span class="small">Доход ${money(inc)} · Расход ${money(exp)}</span></span><b style="color:${pr<0?'var(--red)':'var(--green)'}">${money(pr)}</b></div>`;
+  }).join("")||'<div class="empty">Объектов пока нет.</div>';
+
+  document.getElementById("incomeList").innerHTML=incomes.length?incomes.slice().reverse().map((e,ri)=>{const i=incomes.length-1-ri;return `<div class="income-item"><div><div class="income-name">${e.category||"Доход"}</div><div class="income-meta">${e.object}${e.comment?" · "+e.comment:""} · ${e.date}</div></div><div style="text-align:right"><div class="income-amount">${money(e.amount)}</div><button class="secondary danger-btn" style="margin-top:6px;padding:5px 9px" onclick="deleteIncome(${i})">Удалить</button></div></div>`}).join(""):'<div class="empty">Доходов пока нет.</div>';
+
+  document.getElementById("financeExpenseList").innerHTML=expenses.length?expenses.slice().reverse().map((e,ri)=>{const i=expenses.length-1-ri;return `<div class="card"><div class="row"><span>${e.category||"Расход"}</span><b>${money(e.amount)}</b></div><div class="small">${e.object}${e.comment?" · "+e.comment:""} · ${e.date}</div><button class="secondary danger-btn" style="margin-top:8px;padding:6px 10px" onclick="deleteExpense(${i})">Удалить</button></div>`}).join(""):'<div class="empty">Расходов пока нет.</div>';
+}
+function openIncomeModal(objectName){
+  objectOptions("incomeObject");
+  if(objectName)document.getElementById("incomeObject").value=objectName;
+  document.getElementById("incomeCategory").value="";
+  document.getElementById("incomeAmount").value="";
+  document.getElementById("incomeDate").value=new Date().toISOString().slice(0,10);
+  document.getElementById("incomeComment").value="";
+  document.getElementById("incomeModal").classList.add("show");
+}
+function addIncome(){
+  const amount=Number(document.getElementById("incomeAmount").value);if(!amount)return;
+  const rawDate=document.getElementById("incomeDate").value;
+  const date=rawDate?new Date(rawDate+"T00:00:00").toLocaleDateString("ru-RU"):new Date().toLocaleDateString("ru-RU");
+  incomes.push({object:document.getElementById("incomeObject").value,category:document.getElementById("incomeCategory").value.trim()||"Доход",amount,comment:document.getElementById("incomeComment").value.trim(),date});
+  save();closeModal("incomeModal");showView("finance");
+}
+
+
+function deleteIncome(i){if(!confirm("Удалить доход?"))return;incomes.splice(i,1);save();renderFinance();renderHome()}
+function deleteExpense(i){if(!confirm("Удалить расход?"))return;expenses.splice(i,1);save();renderExpenses();renderFinance();renderHome()}
+
+function renderExpenses(){
+ const total=expenses.reduce((s,e)=>s+Number(e.amount||0),0);
+ document.getElementById("expensePageTotal").textContent=money(total);
+ document.getElementById("expenseList").innerHTML=expenses.length?expenses.slice().reverse().map(e=>`<div class="card"><div class="row"><span>${e.category||"Расход"}</span><b>${money(e.amount)}</b></div><div class="small">${e.object}${e.comment?" · "+e.comment:""} · ${e.date}</div></div>`).join(""):'<div class="empty">Расходов пока нет.</div>';
+}
+function openExpenseModal(objectName){objectOptions("expenseObject");if(objectName)document.getElementById("expenseObject").value=objectName;document.getElementById("expenseCategory").value="";document.getElementById("expenseAmount").value="";document.getElementById("expenseDate").value=new Date().toISOString().slice(0,10);document.getElementById("expenseComment").value="";document.getElementById("expenseModal").classList.add("show")}
+function addExpense(){
+ const amount=Number(document.getElementById("expenseAmount").value);if(!amount)return;
+ const rawDate=document.getElementById("expenseDate").value;
+ const date=rawDate?new Date(rawDate+"T00:00:00").toLocaleDateString("ru-RU"):new Date().toLocaleDateString("ru-RU");
+ expenses.push({object:document.getElementById("expenseObject").value,category:document.getElementById("expenseCategory").value.trim()||"Расход",amount,comment:document.getElementById("expenseComment").value.trim(),date});
+ save();closeModal("expenseModal");showView("expenses");
+}
+function closeModal(id){document.getElementById(id).classList.remove("show")}
+function askAI(){
+ const q=document.getElementById("aiInput").value.toLowerCase().trim(),a=document.getElementById("aiAnswer");
+ if(q.includes("просроч")){const n=tasks.filter(t=>!t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date()).length;a.innerHTML=`Просроченных задач: <b>${n}</b>.`;return}
+ if(q.includes("расход")){a.innerHTML=`Всего расходов: <b>${money(expenses.reduce((s,e)=>s+Number(e.amount||0),0))}</b>.`;return}
+ if(q.includes("завтра")){a.innerHTML=`На данный момент в задачах нет отдельного планировщика уведомлений. Задачи со сроками сохраняются в приложении.`;return}
+ a.innerHTML=`Сейчас я могу помочь с быстрым анализом: <b>просроченных задач</b>, <b>расходов</b> и текущего списка задач.`;
+}
+
+
+function currentMonthKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`}
+function entryMonthKey(e){
+ if(!e.date)return "";
+ const parts=e.date.split(".");
+ if(parts.length===3)return `${parts[2]}-${parts[1].padStart(2,"0")}`;
+ const iso=e.date.slice(0,7);return iso;
+}
+function renderReports(){
+ const key=currentMonthKey();
+ const inc=incomes.filter(e=>entryMonthKey(e)===key).reduce((s,e)=>s+Number(e.amount||0),0);
+ const exp=expenses.filter(e=>entryMonthKey(e)===key).reduce((s,e)=>s+Number(e.amount||0),0);
+ const profit=inc-exp;
+ document.getElementById("reportIncome").textContent=money(inc);
+ document.getElementById("reportExpenses").textContent=money(exp);
+ document.getElementById("reportProfit").textContent=money(profit);
+ document.getElementById("reportMargin").textContent=inc?Math.round(profit/inc*100)+"%":"0%";
+
+ document.getElementById("reportObjects").innerHTML=objects.map(o=>{
+   const oi=incomes.filter(e=>e.object===o.name).reduce((s,e)=>s+Number(e.amount||0),0);
+   const oe=expenses.filter(e=>e.object===o.name).reduce((s,e)=>s+Number(e.amount||0),0);
+   const op=oi-oe;
+   return `<div class="report-row"><div class="row"><span><b>${o.name}</b><br><span class="small">${money(oi)} доход · ${money(oe)} расход</span></span><b class="${op<0?'danger-text':''}">${money(op)}</b></div><div class="report-bar" style="margin-top:8px"><i style="width:${Math.min(100,o.progress||0)}%"></i></div><div class="small" style="margin-top:4px">Готовность ${o.progress||0}%</div></div>`;
+ }).join("")||'<div class="empty">Объектов пока нет.</div>';
+
+ const open=tasks.filter(t=>!t.done).length,done=tasks.filter(t=>t.done).length;
+ const overdue=tasks.filter(t=>!t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date()).length;
+ document.getElementById("reportTasks").innerHTML=`<div class="kpi-grid"><div class="kpi"><span class="small">Всего</span><b>${tasks.length}</b></div><div class="kpi"><span class="small">В работе</span><b>${open}</b></div><div class="kpi"><span class="small">Выполнено</span><b>${done}</b></div><div class="kpi"><span class="small">Просрочено</span><b class="${overdue?'danger-text':''}">${overdue}</b></div></div>`;
+}
+
+
+function exportBackup(){
+ const data={version:4,createdAt:new Date().toISOString(),objects,tasks,expenses,incomes,workers};
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="BUILDOS_backup_"+new Date().toISOString().slice(0,10)+".json";a.click();
+ setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function importBackup(event){
+ const file=event.target.files[0];if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{try{
+   const d=JSON.parse(reader.result);
+   if(!Array.isArray(d.objects)||!Array.isArray(d.tasks))throw new Error("Неверный файл");
+   objects=d.objects;tasks=d.tasks;expenses=Array.isArray(d.expenses)?d.expenses:[];incomes=Array.isArray(d.incomes)?d.incomes:[];workers=Array.isArray(d.workers)?d.workers:[];
+   save();alert("Данные восстановлены");renderHome();renderObjects();renderTasks();renderExpenses();renderFinance();renderWorkers();
+ }catch(e){alert("Не удалось восстановить файл")}};
+ reader.readAsText(file);
+ event.target.value="";
+}
+function resetBuildos(){
+ if(!confirm("Точно удалить сохранённые данные?"))return;
+ ["buildos_tasks","buildos_expenses","buildos_incomes","buildos_workers","buildos_objects"].forEach(k=>localStorage.removeItem(k));
+ location.reload();
+}
+
+function openMoreMenu(){document.getElementById("moreModal").classList.add("show")}
+function closeMoreMenu(){document.getElementById("moreModal").classList.remove("show")}
+
+function init(){objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");objectOptions("workerObject");renderHome();renderObjects();renderTasks();renderExpenses();renderFinance();renderWorkers();renderReports()}
+init();
+</script>
+
+<style>
+#bfLaunch{position:fixed;right:16px;bottom:90px;z-index:5000;width:54px;height:54px;border:0;border-radius:50%;background:#2878ed;color:#fff;font-size:24px;box-shadow:0 6px 20px rgba(40,120,237,.3)}
+.bf-modal{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:9999;display:none;align-items:flex-end}.bf-modal.show{display:flex}
+.bf-sheet{background:#fff;border-radius:28px 28px 0 0;width:100%;max-width:760px;margin:auto;max-height:92vh;overflow:auto;padding:20px 17px calc(22px + env(safe-area-inset-bottom));font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+.bf-sheet h2{margin:0 0 15px;font-size:26px}.bf-field{margin:11px 0}.bf-field label{display:block;color:#6e7787;font-weight:700;margin-bottom:6px}.bf-field input,.bf-field select,.bf-field textarea{width:100%;box-sizing:border-box;border:1px solid #d8dee7;border-radius:14px;padding:13px;background:#fff;font:inherit}.bf-field textarea{min-height:90px}
+.bf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bf-stat{background:#f6f8fb;border:1px solid #e4e8ef;border-radius:18px;padding:14px}.bf-stat b{display:block;font-size:22px;margin-top:5px}.bf-stat span{color:#70798a;font-size:13px}
+.bf-card{background:#fff;border:1px solid #e2e6ec;border-radius:22px;padding:16px;margin:10px 0}.bf-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #e6e9ee}.bf-row:last-child{border-bottom:0}.bf-muted{color:#737c8c;font-size:13px}.bf-btn{border:1px solid #dce1e8;background:#fff;border-radius:15px;padding:13px;font-weight:750}.bf-primary{background:#2878ed;color:#fff;border-color:#2878ed}.bf-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+</style>
+<div id="bfModal" class="bf-modal" onclick="if(event.target===this)bfClose()"><div id="bfSheet" class="bf-sheet"></div></div>
+<script>
+(function(){
+const K="buildos_final_v1", oldK="buildos_data";
+let S; try{S=JSON.parse(localStorage.getItem(K)||"{}")}catch(e){S={}}
+for(const k of ["projects","tasks","workers","materials","expenses","incomes","timesheets","clients","events","estimates","documents","notes"])S[k]=S[k]||[];
+const save=()=>localStorage.setItem(K,JSON.stringify(S)), id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+const esc=x=>String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const money=x=>new Intl.NumberFormat("ru-RU").format(Number(x)||0)+" ₽", today=()=>new Date().toISOString().slice(0,10);
+function sync(){if(S.projects.length||S.tasks.length||S.workers.length)return;try{let o=JSON.parse(localStorage.getItem(oldK)||"{}");S.projects=(o.objects||[]).map((x,i)=>({id:x.id||id(),name:x.name||"Объект "+(i+1),client:x.client||"",address:x.address||"",area:+x.area||0,budget:+x.budget||0,progress:+x.progress||0,stage:x.stage||""}));S.tasks=(o.tasks||[]).map(x=>({id:x.id||id(),title:x.title||x.name||"Задача",projectId:S.projects.find(p=>p.name===x.object)?.id||S.projects[0]?.id||"",assignee:x.assignee||"",due:x.due||"",priority:x.priority||"medium",done:!!x.done}));S.workers=(o.workers||[]).map(x=>({id:x.id||id(),name:x.name||"",role:x.role||"",rate:+x.rate||0,projectId:S.projects.find(p=>p.name===x.object)?.id||S.projects[0]?.id||""}));save()}catch(e){}}
+sync();
+function open(t,b,a){document.getElementById("bfSheet").innerHTML=`<button class="bf-btn" style="float:right;border-radius:50%" onclick="bfClose()">×</button><h2>${t}</h2>${b}<div class="bf-actions">${a||'<button class="bf-btn" onclick="bfClose()">Закрыть</button>'}</div>`;document.getElementById("bfModal").classList.add("show")}
+window.bfClose=()=>document.getElementById("bfModal").classList.remove("show");
+const p=id=>S.projects.find(x=>x.id===id);
+function calc(pid){let ex=S.expenses.filter(x=>x.projectId===pid).reduce((a,x)=>a+(+x.amount||0),0),inc=S.incomes.filter(x=>x.projectId===pid).reduce((a,x)=>a+(+x.amount||0),0),mat=S.materials.filter(x=>x.projectId===pid).reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0),sal=S.timesheets.filter(x=>x.projectId===pid&&x.status==="worked").reduce((a,x)=>a+(+x.rate||0),0),spent=ex+mat+sal,planned=+(p(pid)?.budget)||0;return{ex,inc,mat,sal,spent,planned,left:planned-spent,profit:inc-spent}}
+window.bfOpenProject=pid=>{let o=p(pid),c=calc(pid);window.bfCurrentProject=pid;open("🏗️ "+esc(o.name),`<div id="bfObjectQuickAdd">
+<button class="main" onclick="bfAddOpen('${pid}')">＋ Добавить</button>
+<button onclick="bfOpenImport('estimate')">📋 Смета</button>
+<button onclick="bfOpenImport('schedule')">📅 График</button>
+<button onclick="bfFinance('${pid}')">💰 Финансы</button>
+<button onclick="bfEstimate('${pid}')">🧾 Смета</button>
+<button onclick="bfOpenProject('${pid}')">🔄</button>
+</div><div class="bf-card"><b>${esc(o.client||"Клиент не указан")}</b><div class="bf-muted">${esc(o.address||"")} · ${o.area||0} м²</div><div style="margin:12px 0;height:9px;background:#e5eaf1;border-radius:99px;overflow:hidden"><i style="display:block;height:100%;width:${o.progress||0}%;background:#2878ed"></i></div><b>${o.progress||0}% готовности</b></div><div class="bf-grid">${[['Бюджет',c.planned],['Расходы',c.spent],['Получено',c.inc],['Прибыль',c.profit]].map(x=>`<div class="bf-stat"><span>${x[0]}</span><b>${money(x[1])}</b></div>`).join("")}</div><div class="bf-actions"><button class="bf-btn bf-primary" onclick="bfFinance('${pid}')">💰 Финансы</button><button class="bf-btn" onclick="bfStages('${pid}')">🧱 Этапы</button><button class="bf-btn" onclick="bfTask('${pid}')">📋 Задача</button><button class="bf-btn" onclick="bfMaterial('${pid}')">📦 Материал</button><button class="bf-btn" onclick="bfWorker('${pid}')">👷 Рабочий</button><button class="bf-btn" onclick="bfEstimate('${pid}')">📋 Смета</button><button class="bf-btn" onclick="bfJournal('${pid}')">📓 Журнал</button><button class="bf-btn" onclick="bfReport('${pid}')">📊 Отчёт</button></div>`)}
+window.bfFinance=pid=>{let c=calc(pid);open("💰 Финансы",`<div class="bf-grid">${[['План',c.planned],['Факт',c.spent],['Остаток',c.left],['Прибыль',c.profit]].map(x=>`<div class="bf-stat"><span>${x[0]}</span><b>${money(x[1])}</b></div>`).join("")}</div><div class="bf-card"><div class="bf-row"><span>Расходы</span><b>${money(c.ex)}</b></div><div class="bf-row"><span>Материалы</span><b>${money(c.mat)}</b></div><div class="bf-row"><span>Зарплата</span><b>${money(c.sal)}</b></div><div class="bf-row"><span>Приходы</span><b>${money(c.inc)}</b></div></div>`,`<button class="bf-btn" onclick="bfExpense('${pid}')">＋ Расход</button><button class="bf-btn bf-primary" onclick="bfIncome('${pid}')">＋ Приход</button>`)};
+window.bfExpense=pid=>open("💸 Расход",`<div class="bf-field"><label>Статья</label><input id="b1"></div><div class="bf-field"><label>Сумма</label><input id="b2" type="number"></div><div class="bf-field"><label>Дата</label><input id="b3" type="date" value="${today()}"></div>`,`<button class="bf-btn" onclick="bfClose()">Отмена</button><button class="bf-btn bf-primary" onclick="S.expenses.push({id:id(),projectId:'${pid}',category:document.getElementById('b1').value,amount:+document.getElementById('b2').value||0,date:document.getElementById('b3').value});save();bfFinance('${pid}')">Добавить</button>`);
+window.bfIncome=pid=>open("💳 Приход",`<div class="bf-field"><label>Сумма</label><input id="i1" type="number"></div><div class="bf-field"><label>Дата</label><input id="i2" type="date" value="${today()}"></div>`,`<button class="bf-btn" onclick="bfClose()">Отмена</button><button class="bf-btn bf-primary" onclick="S.incomes.push({id:id(),projectId:'${pid}',amount:+document.getElementById('i1').value||0,date:document.getElementById('i2').value});save();bfFinance('${pid}')">Добавить</button>`);
+const stages=["Подготовка","Демонтаж","Черновые","Электрика","Сантехника","Стены/потолки","Плитка","Полы","Двери","Мебель","Финиш","Сдача"];
+window.bfStages=pid=>{let o=p(pid);o.stages=o.stages||stages.map(n=>({name:n,percent:0,done:false}));open("🧱 Этапы",o.stages.map((x,i)=>`<div class="bf-card"><div class="bf-row"><span><b>${esc(x.name)}</b><div class="bf-muted">${x.percent}%</div></span><button class="bf-btn" onclick="o=p('${pid}');o.stages[${i}].done=!o.stages[${i}].done;o.stages[${i}].percent=o.stages[${i}].done?100:0;o.progress=Math.round(o.stages.reduce((a,x)=>a+x.percent,0)/o.stages.length);save();bfStages('${pid}')">${x.done?"✓":"○"}</button></div></div>`).join("")) ;save()};
+window.bfTask=pid=>open("📋 Задача",`<div class="bf-field"><label>Название</label><input id="t1"></div><div class="bf-field"><label>Ответственный</label><input id="t2"></div><div class="bf-field"><label>Срок</label><input id="t3" type="date"></div>`,`<button class="bf-btn" onclick="bfOpenProject('${pid}')">Отмена</button><button class="bf-btn bf-primary" onclick="S.tasks.push({id:id(),projectId:'${pid}',title:document.getElementById('t1').value,assignee:document.getElementById('t2').value,due:document.getElementById('t3').value,priority:'medium',done:false});save();bfOpenProject('${pid}')">Добавить</button>`);
+window.bfMaterial=pid=>open("📦 Материал",`<div class="bf-field"><label>Название</label><input id="m1"></div><div class="bf-grid"><div class="bf-field"><label>Количество</label><input id="m2" type="number" value="1"></div><div class="bf-field"><label>Цена</label><input id="m3" type="number"></div></div><div class="bf-field"><label>Поставщик</label><input id="m4"></div>`,`<button class="bf-btn" onclick="bfOpenProject('${pid}')">Отмена</button><button class="bf-btn bf-primary" onclick="S.materials.push({id:id(),projectId:'${pid}',name:document.getElementById('m1').value,qty:+document.getElementById('m2').value||0,price:+document.getElementById('m3').value||0,supplier:document.getElementById('m4').value});save();bfOpenProject('${pid}')">Добавить</button>`);
+window.bfWorker=pid=>open("👷 Рабочий",`<div class="bf-field"><label>ФИО</label><input id="w1"></div><div class="bf-field"><label>Специальность</label><input id="w2"></div><div class="bf-field"><label>Ставка/день</label><input id="w3" type="number"></div>`,`<button class="bf-btn" onclick="bfOpenProject('${pid}')">Отмена</button><button class="bf-btn bf-primary" onclick="S.workers.push({id:id(),projectId:'${pid}',name:document.getElementById('w1').value,role:document.getElementById('w2').value,rate:+document.getElementById('w3').value||0});save();bfOpenProject('${pid}')">Добавить</button>`);
+window.bfEstimate=pid=>{let e=S.estimates.find(x=>x.projectId===pid);if(!e){e={id:id(),projectId:pid,name:"Смета объекта",items:[]};S.estimates.push(e)}let total=e.items.reduce((a,x)=>a+x.qty*x.price,0);open("📋 Смета",`<div class="bf-stat"><span>Итого</span><b>${money(total)}</b></div>${e.items.map(x=>`<div class="bf-row"><span>${esc(x.name)}<div class="bf-muted">${x.qty} ${x.unit} × ${money(x.price)}</div></span><b>${money(x.qty*x.price)}</b></div>`).join("")||'<div class="bf-muted">Позиций пока нет.</div>'}`,`<button class="bf-btn" onclick="bfEstimateItem('${pid}')">＋ Позиция</button><button class="bf-btn bf-primary" onclick="bfOpenProject('${pid}')">Готово</button>`);save()};
+window.bfEstimateItem=pid=>open("Позиция сметы",`<div class="bf-field"><label>Название</label><input id="e1"></div><div class="bf-grid"><div class="bf-field"><label>Количество</label><input id="e2" type="number" value="1"></div><div class="bf-field"><label>Цена</label><input id="e3" type="number"></div></div>`,`<button class="bf-btn" onclick="bfEstimate('${pid}')">Отмена</button><button class="bf-btn bf-primary" onclick="let e=S.estimates.find(x=>x.projectId==='${pid}');e.items.push({name:document.getElementById('e1').value,qty:+document.getElementById('e2').value||0,unit:'шт',price:+document.getElementById('e3').value||0});save();bfEstimate('${pid}')">Добавить</button>`);
+window.bfJournal=pid=>open("📓 Журнал",S.notes.filter(x=>x.projectId===pid).map(x=>`<div class="bf-card"><b>${x.date}</b><div>${esc(x.text)}</div></div>`).join("")||'<div class="bf-muted">Записей нет.</div>',`<button class="bf-btn" onclick="bfNote('${pid}')">＋ Запись</button><button class="bf-btn bf-primary" onclick="bfOpenProject('${pid}')">Готово</button>`);
+window.bfNote=pid=>open("Новая запись",`<div class="bf-field"><label>Текст</label><textarea id="n1"></textarea></div>`,`<button class="bf-btn" onclick="bfJournal('${pid}')">Отмена</button><button class="bf-btn bf-primary" onclick="S.notes.push({id:id(),projectId:'${pid}',date:today(),text:document.getElementById('n1').value});save();bfJournal('${pid}')">Сохранить</button>`);
+window.bfReport=pid=>{let o=p(pid),c=calc(pid);let txt=`BUILDOS — ОТЧЁТ ПО ОБЪЕКТУ\n${o.name}\nГотовность: ${o.progress||0}%\nБюджет: ${c.planned}\nРасходы: ${c.spent}\nОстаток: ${c.left}\nПолучено: ${c.inc}\nПрибыль: ${c.profit}`;open("📊 Отчёт",`<pre style="white-space:pre-wrap;background:#111827;color:#fff;padding:14px;border-radius:15px">${esc(txt)}</pre>`,`<button class="bf-btn" onclick="navigator.clipboard?.writeText(${JSON.stringify(txt)});alert('Скопировано')">Копировать</button><button class="bf-btn bf-primary" onclick="bfClose()">Закрыть</button>`)};
+window.bfDashboard=()=>open("🚀 BUILDOS PRO",`<div class="bf-grid"><div class="bf-stat"><span>Объекты</span><b>${S.projects.length}</b></div><div class="bf-stat"><span>Задачи</span><b>${S.tasks.filter(x=>!x.done).length}</b></div><div class="bf-stat"><span>Получено</span><b>${money(S.incomes.reduce((a,x)=>a+x.amount,0))}</b></div><div class="bf-stat"><span>Расходы</span><b>${money(S.expenses.reduce((a,x)=>a+x.amount,0))}</b></div></div>${S.projects.map(o=>`<div class="bf-row"><span><b>${esc(o.name)}</b><div class="bf-muted">${o.progress||0}%</div></span><button class="bf-btn" onclick="bfOpenProject('${o.id}')">Открыть</button></div>`).join("")}`);
+function mount(){if(document.getElementById("bfLaunch"))return;let b=document.createElement("button");b.id="bfLaunch";b.textContent="🚀";b.onclick=bfDashboard;document.body.appendChild(b);window.BUILDOS_FINAL={data:S,save};save()}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mount);else mount();
+})();
+</script>
+
+
+<style>
+.bf-import-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10001;display:none;align-items:flex-end}
+.bf-import-modal.show{display:flex}
+.bf-import-sheet{background:#fff;width:100%;max-width:780px;margin:auto;max-height:94vh;overflow:auto;border-radius:28px 28px 0 0;padding:20px 17px calc(24px + env(safe-area-inset-bottom));font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+.bf-import-sheet h2{margin:0 0 8px;font-size:26px}.bf-import-sheet select{appearance:auto;min-height:54px;font-weight:700}.bf-import-muted{color:#70798a;font-size:13px}
+.bf-upload{border:2px dashed #cbd5e1;border-radius:20px;padding:22px;text-align:center;margin:14px 0;background:#f8fafc}
+.bf-upload input{width:100%;font-size:16px}
+.bf-import-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.bf-import-tab{padding:12px;border:1px solid #dce1e8;background:#fff;border-radius:14px;font-weight:800}
+.bf-import-tab.active{background:#2878ed;color:#fff;border-color:#2878ed}
+.bf-import-preview{border:1px solid #e1e6ed;border-radius:18px;padding:12px;max-height:300px;overflow:auto;margin-top:12px}
+.bf-import-table{width:100%;border-collapse:collapse;font-size:13px}.bf-import-table th,.bf-import-table td{border-bottom:1px solid #e7eaf0;padding:8px;text-align:left}
+.bf-import-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+.bf-warn{background:#fff7e6;border:1px solid #f3d28b;border-radius:15px;padding:12px;margin-top:12px;font-size:13px}
+.bf-ok{background:#eefaf2;border:1px solid #b9e2c5;border-radius:15px;padding:12px;margin-top:12px;font-size:13px}
+.bf-calendar-line{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #e7eaf0}
+.bf-datebox{font-weight:800;font-size:13px}.bf-bar{height:10px;background:#e9edf3;border-radius:99px;overflow:hidden}.bf-bar i{display:block;height:100%;background:#2878ed}
+</style>
+
+<div id="bfImportModal" class="bf-import-modal" onclick="if(event.target===this)bfImportClose()">
+  <div class="bf-import-sheet">
+    <button class="bf-btn" style="float:right;border-radius:50%" onclick="bfImportClose()">×</button>
+    <h2>📥 Импорт документов</h2>
+    <div class="bf-import-muted">Загрузи смету или график — BUILDOS разберёт позиции и сроки и привяжет их к объекту.</div>
+
+    <div class="bf-import-tabs">
+      <button id="bfTabEstimate" class="bf-import-tab active" onclick="bfImportMode('estimate')">📋 Смета</button>
+      <button id="bfTabSchedule" class="bf-import-tab" onclick="bfImportMode('schedule')">📅 График</button>
+    </div>
+
+    <div class="bf-field"><label>Объект</label><select id="bfImportProject"></select></div>
+
+    <div class="bf-upload">
+      <div style="font-size:34px">📄</div>
+      <b>Выбери файл</b>
+      <div class="bf-import-muted" style="margin:7px 0 12px">PDF, Excel, CSV, TXT или JSON</div>
+      <input id="bfImportFile" type="file" accept=".pdf,.xlsx,.xls,.csv,.txt,.json">
+    </div>
+
+    <div class="bf-field">
+      <label>Или вставь текст из документа</label>
+      <textarea id="bfImportText" style="width:100%;box-sizing:border-box;min-height:130px;border:1px solid #d8dee7;border-radius:14px;padding:13px;font:inherit" placeholder="Например:
+Плитка керамогранит 52 м2 1850
+Клей плиточный 28 меш 620
+Демонтаж 24.08 28.08
+Электрика 29.08 05.09"></textarea>
+    </div>
+
+    <!-- TOP COMMIT ACTION: shown immediately after analysis -->
+    <div id="bfImportTopAction" style="display:none;margin:14px 0 16px">
+      <button id="bfImportCommitBtn"
+              class="bf-btn bf-primary"
+              style="display:block;width:100%;min-height:58px;font-size:19px;font-weight:800"
+              onclick="bfImportCommit()">➕ Добавить в объект</button>
+    </div>
+
+    <div id="bfImportStatus"></div>
+    <div id="bfImportPreview"></div>
+
+    <div class="bf-import-actions">
+      <button class="bf-btn" onclick="bfImportClose()">Отмена</button>
+      <button class="bf-btn bf-primary" onclick="bfImportAnalyze()">🔍 Анализировать</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  if(window.BUILDOS_IMPORT_V2)return;
+  window.BUILDOS_IMPORT_V2=true;
+
+  const K="buildos_final_v1";
+  function getS(){try{return JSON.parse(localStorage.getItem(K)||"{}")}catch(e){return {}}}
+  function saveS(s){localStorage.setItem(K,JSON.stringify(s))}
+  const esc=x=>String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  const money=x=>new Intl.NumberFormat("ru-RU").format(Number(x)||0)+" ₽";
+  const today=()=>new Date().toISOString().slice(0,10);
+  const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+  let mode="estimate", parsed=null, selectedFileName="";
+
+  function projects(){
+    const s=getS();
+    s.projects=Array.isArray(s.projects)?s.projects:[];
+    const source=[];
+    const add=(arr)=>{ if(Array.isArray(arr)) arr.forEach(o=>{ if(o) source.push(o); }); };
+
+    // Primary source: the actual main BUILDOS object storage.
+    try{ add(JSON.parse(localStorage.getItem("buildos_objects")||"[]")); }catch(e){}
+    // Secondary source: BUILDOS PRO data.
+    try{ add((JSON.parse(localStorage.getItem(K)||"{}").projects)||[]); }catch(e){}
+    // Runtime/global sources when available.
+    try{ if(typeof objects!=="undefined") add(objects); }catch(e){}
+    try{ if(window.BUILDOS_FINAL && window.BUILDOS_FINAL.data) add(window.BUILDOS_FINAL.data.projects); }catch(e){}
+
+    const byId=new Map(), byName=new Map();
+    s.projects.forEach(p=>{ if(p&&p.name){ byName.set(String(p.name),p); if(p.id)byId.set(String(p.id),p); } });
+
+    source.forEach((o,i)=>{
+      const name=String(o.name||o.title||("Объект "+(i+1))).trim();
+      if(!name)return;
+      const oid=o.id!=null?String(o.id):"";
+      let p=(oid&&byId.get(oid))||byName.get(name);
+      if(!p){
+        p={id:oid||("main_"+encodeURIComponent(name)),name,client:o.client||"",address:o.address||"",area:+o.area||0,budget:+o.budget||0,progress:+o.progress||0,stage:o.stage||""};
+        s.projects.push(p); byName.set(name,p); if(oid)byId.set(oid,p);
+      }else{
+        p.name=name;
+        if(o.client)p.client=o.client;
+        if(o.address)p.address=o.address;
+        if(+o.area)p.area=+o.area;
+        if(+o.budget)p.budget=+o.budget;
+        if(o.progress!=null)p.progress=+o.progress||0;
+        if(o.stage)p.stage=o.stage;
+      }
+    });
+    saveS(s);
+    return s.projects.filter(x=>x&&x.name);
+  }
+  function fillProjects(){
+    const sel=document.getElementById("bfImportProject");
+    if(!sel)return;
+    const list=projects();
+    if(!list.length){
+      sel.innerHTML="<option value=''>Объектов пока нет</option>";
+      sel.disabled=true;
+      return;
+    }
+    sel.disabled=false;
+    sel.innerHTML="<option value=''>Выбери объект</option>"+list.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
+    const wanted=window.bfCurrentProject!=null?String(window.bfCurrentProject):"";
+    const wantedName=String(window.bfCurrentProjectName||"");
+    if(wanted || wantedName){
+      let opt=[...sel.options].find(o=>String(o.value)===wanted);
+      if(!opt && wantedName){
+        const p=list.find(x=>String(x.name)===wantedName);
+        if(p) opt=[...sel.options].find(o=>String(o.value)===String(p.id));
+      }
+      if(opt)sel.value=opt.value;
+    }
+  }
+  window.bfOpenImport=function(initial="estimate"){
+    mode=initial; parsed=null; selectedFileName="";
+    document.getElementById("bfImportText").value="";
+    document.getElementById("bfImportFile").value="";
+    fillProjects();
+    if(window.bfCurrentProject){
+      const sel=document.getElementById("bfImportProject");
+      if(sel && [...sel.options].some(o=>o.value===window.bfCurrentProject)){
+        sel.value=window.bfCurrentProject;
+      }
+    }
+    bfImportMode(initial); bfImportStatus(""); bfImportPreview("");
+    const top=document.getElementById("bfImportTopAction");
+    const btn=document.getElementById("bfImportCommitBtn");
+    if(top) top.style.display="none";
+    if(btn){btn.disabled=false;btn.style.opacity="1";btn.textContent=initial==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";}
+    document.getElementById("bfImportModal").classList.add("show");
+  };
+  window.bfImportClose=function(){document.getElementById("bfImportModal").classList.remove("show")};
+  window.bfImportMode=function(m){
+    mode=m;
+    document.getElementById("bfTabEstimate").classList.toggle("active",m==="estimate");
+    document.getElementById("bfTabSchedule").classList.toggle("active",m==="schedule");
+    bfImportStatus("");
+    bfImportPreview("");
+    const top=document.getElementById("bfImportTopAction");
+    const b=document.getElementById("bfImportCommitBtn");
+    if(top) top.style.display="none";
+    if(b){b.disabled=false;b.style.opacity="1";b.textContent=m==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";}
+  };
+  function bfImportStatus(html){document.getElementById("bfImportStatus").innerHTML=html||""}
+  function bfImportPreview(html){document.getElementById("bfImportPreview").innerHTML=html||""}
+
+  document.getElementById("bfImportFile").addEventListener("change", async function(){
+    const f=this.files&&this.files[0]; if(!f)return;
+    selectedFileName=f.name;
+    const ext=f.name.toLowerCase().split(".").pop();
+    if(ext==="csv"||ext==="txt"||ext==="json"){
+      const text=await f.text();
+      document.getElementById("bfImportText").value=text;
+      bfImportStatus(`<div class="bf-ok">Файл <b>${esc(f.name)}</b> прочитан. Нажми «Анализировать».</div>`);
+      return;
+    }
+    if(ext==="pdf"||ext==="xlsx"||ext==="xls"){
+      bfImportStatus(`<div class="bf-warn">Файл <b>${esc(f.name)}</b> выбран. BUILDOS попробует распознать его. Если формат не удастся прочитать прямо на телефоне, ниже появится вариант вставить текст/таблицу.</div>`);
+      try{
+        if(ext==="pdf") await readPDF(f);
+        else await readXLSX(f);
+      }catch(e){
+        bfImportStatus(`<div class="bf-warn">Не удалось автоматически прочитать файл в этом браузере. Открой его и вставь таблицу/текст в поле ниже — BUILDOS всё равно сможет разобрать позиции.</div>`);
+      }
+    }
+  });
+
+  async function loadScript(url){
+    return new Promise((resolve,reject)=>{
+      const sc=document.createElement("script");sc.src=url;sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc);
+    });
+  }
+
+  async function readXLSX(file){
+    if(!window.XLSX) await loadScript("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js");
+    if(!window.XLSX)throw Error("XLSX unavailable");
+    const data=await file.arrayBuffer();
+    const wb=XLSX.read(data,{type:"array"});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+    document.getElementById("bfImportText").value=rows.map(r=>r.join("\t")).join("\n");
+    bfImportStatus(`<div class="bf-ok">Excel прочитан: лист <b>${esc(wb.SheetNames[0])}</b>. Найдено строк: <b>${rows.length}</b>.</div>`);
+  }
+
+  async function readPDF(file){
+    if(!window.pdfjsLib){
+      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");
+      if(window.pdfjsLib)window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+    if(!window.pdfjsLib)throw Error("PDF unavailable");
+    const buf=await file.arrayBuffer(), pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let out=[];
+    for(let n=1;n<=pdf.numPages;n++){
+      const page=await pdf.getPage(n), content=await page.getTextContent();
+      out.push(content.items.map(x=>x.str).join(" "));
+    }
+    document.getElementById("bfImportText").value=out.join("\n");
+    bfImportStatus(`<div class="bf-ok">PDF прочитан: <b>${pdf.numPages}</b> стр. Теперь BUILDOS может разобрать его.</div>`);
+  }
+
+  function parseLines(text){
+    return text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  }
+  function norm(s){return String(s||"").toLowerCase().replace(/ё/g,"е").trim()}
+  function numberNear(str){
+    const m=String(str).replace(",",".").match(/(\d+(?:\.\d+)?)/);
+    return m?Number(m[1]):0;
+  }
+  function parseEstimate(text){
+    const lines=parseLines(text), items=[], categories=[];
+    for(const line of lines){
+      if(/^(итого|всего|сумма|раздел|материалы|работы)\b/i.test(line))continue;
+      const nums=[...line.replace(/,/g,".").matchAll(/(\d+(?:\.\d+)?)/g)].map(m=>Number(m[1]));
+      if(!nums.length)continue;
+      const lower=norm(line);
+      const units=["м2","м²","м","м.п","шт","меш","мешок","л","кг","компл","рул","лист","уп","пог.м","день"];
+      const unit=(line.match(new RegExp("\\b("+units.map(x=>x.replace(".","\\.")).join("|")+")\\b","i"))||[])[1]||"шт";
+      let qty=nums[0], price=nums.length>1?nums[1]:0;
+      let name=line.replace(/\d+(?:[.,]\d+)?/g," ").replace(new RegExp("\\b"+unit+"\\b","ig")," ").replace(/\s{2,}/g," ").trim();
+      if(!name||name.length<2)name=line;
+      const total=nums.length>=3?nums[nums.length-1]:qty*price;
+      const likelyMaterial=/(плит|клей|грунт|штукатур|гипс|профил|кабел|провод|розет|выключ|смес|труба|ламин|паркет|краск|цемент|шпаклев|гермет|двер|плинтус|сух|утепл|минват|фанер|мдф|дсп|керам|обои|светиль|силикон|саморез|дюбел|арматур|песок)/i.test(lower);
+      if(likelyMaterial || mode==="estimate")items.push({id:id(),name,qty,unit,price,total:nums.length>=3?total:qty*price,category:likelyMaterial?"Материалы":"Проверить"});
+    }
+    // Merge duplicates by normalized name + unit.
+    const map=new Map();
+    for(const x of items){
+      const key=norm(x.name)+"|"+norm(x.unit);
+      if(map.has(key)){const a=map.get(key);a.qty+=x.qty;a.total+=x.total;if(!a.price&&x.price)a.price=x.price}
+      else map.set(key,{...x});
+    }
+    return [...map.values()];
+  }
+  function dateFromText(x){
+    const m=String(x).match(/(\d{1,2})[.\-/](\d{1,2})(?:[.\-/](\d{2,4}))?/);
+    if(!m)return "";
+    let y=m[3]?Number(m[3]):new Date().getFullYear();if(y<100)y+=2000;
+    return `${y}-${String(m[2]).padStart(2,"0")}-${String(m[1]).padStart(2,"0")}`;
+  }
+  function parseSchedule(text){
+    const lines=parseLines(text), out=[];
+    for(let i=0;i<lines.length;i++){
+      const line=lines[i], dates=[...line.matchAll(/(\d{1,2}[.\-/]\d{1,2}(?:[.\-/]\d{2,4})?)/g)].map(m=>m[1]);
+      if(!dates.length)continue;
+      const start=dateFromText(dates[0]), end=dateFromText(dates[1]||dates[0]);
+      let name=line.replace(/(\d{1,2}[.\-/]\d{1,2}(?:[.\-/]\d{2,4})?)/g," ").replace(/\s{2,}/g," ").trim();
+      if(!name)name="Этап "+(out.length+1);
+      out.push({id:id(),name,start,end,assignee:"",status:"Запланировано"});
+    }
+    // If no dates, support "Этап | 2026-08-24 | 2026-08-28"
+    if(!out.length){
+      lines.forEach(line=>{
+        const parts=line.split(/\t|;|\|/).map(x=>x.trim());
+        if(parts.length>=3){
+          const a=dateFromText(parts[1])||parts[1], b=dateFromText(parts[2])||parts[2];
+          if(a&&b)out.push({id:id(),name:parts[0],start:a,end:b,assignee:parts[3]||"",status:"Запланировано"});
+        }
+      });
+    }
+    return out;
+  }
+  window.bfImportAnalyze=function(){
+    const text=document.getElementById("bfImportText").value.trim();
+    const top=document.getElementById("bfImportTopAction");
+    const btn=document.getElementById("bfImportCommitBtn");
+    if(top) top.style.display="none";
+    if(btn){
+      btn.disabled=false;
+      btn.style.opacity="1";
+      btn.textContent=mode==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";
+    }
+    if(!text){
+      bfImportStatus('<div class="bf-warn">Добавь файл или вставь текст.</div>');
+      return;
+    }
+    parsed=mode==="estimate"?parseEstimate(text):parseSchedule(text);
+    if(mode==="estimate") renderEstimatePreview(parsed);
+    else renderSchedulePreview(parsed);
+    if(top && parsed && parsed.length){
+      top.style.display="block";
+      top.style.position="sticky";
+      top.style.top="0";
+      top.style.zIndex="30";
+      top.style.background="#fff";
+      top.style.paddingTop="8px";
+      top.scrollIntoView({behavior:"smooth",block:"nearest"});
+    }
+  };
+  function renderEstimatePreview(items){
+    const total=items.reduce((a,x)=>a+x.total,0);
+    bfImportStatus(`<div class="bf-ok">Найдено <b>${items.length}</b> сводных позиций. Ориентировочная сумма: <b>${money(total)}</b>.</div>`);
+    bfImportPreview(items.length?`<table class="bf-import-table"><thead><tr><th>Материал</th><th>Объём</th><th>Цена</th><th>Сумма</th></tr></thead><tbody>${items.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.qty} ${esc(x.unit)}</td><td>${money(x.price)}</td><td>${money(x.total)}</td></tr>`).join("")}</tbody></table>`:"<div class='bf-import-muted'>Позиции не распознаны. Попробуй вставить текст таблицы.</div>");
+  }
+  function renderSchedulePreview(items){
+    bfImportStatus(`<div class="bf-ok">Найдено этапов: <b>${items.length}</b>. Они будут добавлены в календарь объекта.</div>`);
+    bfImportPreview(items.length?items.map(x=>`<div class="bf-calendar-line"><div class="bf-datebox">${x.start}<br>↓<br>${x.end}</div><div><b>${esc(x.name)}</b><div class="bf-muted">${esc(x.assignee||"Ответственный не указан")}</div></div></div>`).join(""):"<div class='bf-import-muted'>Сроки не распознаны.</div>");
+  }
+
+  window.bfImportCommit=function(){
+    const topAction=document.getElementById("bfImportTopAction");
+    const commitBtn=document.getElementById("bfImportCommitBtn");
+    if(topAction) topAction.style.display="block";
+
+    try{
+      const s=getS(), pid=document.getElementById("bfImportProject").value;
+      if(!pid){
+        if(commitBtn){commitBtn.disabled=false;commitBtn.textContent="➕ Добавить в объект";commitBtn.style.opacity="1";}
+        bfImportStatus('<div class="bf-warn">Сначала выбери объект в поле «Объект».</div>');
+        return;
+      }
+      if(!parsed||!parsed.length){
+        if(commitBtn){commitBtn.disabled=false;commitBtn.textContent="➕ Добавить в объект";commitBtn.style.opacity="1";}
+        bfImportStatus('<div class="bf-warn">Сначала нажми «Анализировать».</div>');
+        return;
+      }
+      if(commitBtn){commitBtn.disabled=true;commitBtn.textContent="⏳ Добавляем...";}
+      s.materials=s.materials||[]; s.estimates=s.estimates||[];
+      if(mode==="estimate"){
+        for(const x of parsed){
+          const ex=s.materials.find(m=>m.projectId===pid&&norm(m.name)===norm(x.name)&&norm(m.unit||"шт")===norm(x.unit));
+          if(ex){ex.qty=(+ex.qty||0)+(+x.qty||0);if(!ex.price)ex.price=x.price}
+          else s.materials.push({id:x.id||id(),projectId:pid,name:x.name,qty:x.qty,unit:x.unit,price:x.price,supplier:"",status:"Нужно купить"});
+        }
+        let e=s.estimates.find(x=>x.projectId===pid);
+        if(!e){e={id:id(),projectId:pid,name:"Импортированная смета",items:[]};s.estimates.push(e)}
+        e.items=e.items||[];
+        parsed.forEach(x=>e.items.push({id:id(),name:x.name,qty:x.qty,unit:x.unit,price:x.price}));
+        e.amount=e.items.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
+      }else{
+        s.events=s.events||[];s.tasks=s.tasks||[];
+        parsed.forEach(x=>{
+          s.events.push({id:x.id||id(),projectId:pid,title:x.name,start:x.start,end:x.end,status:x.status,assignee:x.assignee});
+          s.tasks.push({id:id(),projectId:pid,title:x.name,assignee:x.assignee,due:x.end,priority:"medium",done:false});
+        });
+      }
+      saveS(s);
+
+      // Sync imported data into the main BUILDOS app storage as well.
+      // IMPORTANT: the importer and the main screen may use different object IDs.
+      // Always resolve the real object by ID OR exact name, then update both the
+      // persisted array and the live `objects` array used by openObject().
+      try{
+        const mainObjects=JSON.parse(localStorage.getItem("buildos_objects")||"[]");
+        const project=s.projects.find(p=>String(p.id)===String(pid));
+        const projectName=String(project?.name||window.bfCurrentProjectName||"").trim();
+        const matches=(o)=>{
+          if(!o) return false;
+          const oid=String(o.id||"");
+          const oname=String(o.name||o.title||"").trim();
+          return (project && oid && oid===String(project.id)) || (!!projectName && oname===projectName);
+        };
+
+        const matched=[];
+        if(Array.isArray(mainObjects)){
+          mainObjects.forEach(o=>{if(matches(o)) matched.push(o);});
+        }
+
+        // If the object exists only in runtime, include that exact object too.
+        try{
+          if(typeof objects!=="undefined" && Array.isArray(objects)){
+            objects.forEach(o=>{if(matches(o) && !matched.includes(o)) matched.push(o);});
+          }
+        }catch(e){}
+
+        if(matched.length){
+          matched.forEach(mainObj=>{
+            if(mode==="estimate"){
+              mainObj.estimateItems=Array.isArray(mainObj.estimateItems)?mainObj.estimateItems:[];
+              const byKey=(x)=>norm(x.name)+"|"+norm(x.unit||"шт");
+              parsed.forEach(x=>{
+                const key=byKey(x);
+                const ex=mainObj.estimateItems.find(m=>byKey(m)===key);
+                if(ex){
+                  ex.qty=(+ex.qty||0)+(+x.qty||0);
+                  ex.price=+x.price||ex.price||0;
+                  ex.total=(+ex.qty||0)*(+ex.price||0);
+                }else{
+                  mainObj.estimateItems.push({id:x.id||id(),name:x.name,qty:+x.qty||0,unit:x.unit||"шт",price:+x.price||0,total:(+x.qty||0)*(+x.price||0),purchasedQty:0,status:"todo"});
+                }
+              });
+              mainObj.estimateTotal=mainObj.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
+            }else{
+              mainObj.schedule=Array.isArray(mainObj.schedule)?mainObj.schedule:[];
+              parsed.forEach(x=>mainObj.schedule.push({id:x.id||id(),title:x.name,start:x.start,end:x.end,assignee:x.assignee||"",status:x.status||"Запланировано"}));
+            }
+          });
+          localStorage.setItem("buildos_objects",JSON.stringify(mainObjects));
+
+          // Force the currently visible object to contain exactly the persisted data.
+          try{
+            if(typeof objects!=="undefined" && Array.isArray(objects)){
+              objects.forEach(liveObj=>{
+                if(!matches(liveObj)) return;
+                const source=matched.find(x=>String(x.id||"")===String(liveObj.id||""))||matched[0];
+                if(mode==="estimate") {
+                  liveObj.estimateItems=JSON.parse(JSON.stringify(source.estimateItems||[]));
+                  liveObj.estimateTotal=+source.estimateTotal||0;
+                } else {
+                  liveObj.schedule=JSON.parse(JSON.stringify(source.schedule||[]));
+                }
+              });
+              save();
+            }
+          }catch(liveErr){ console.warn("BUILDOS live object refresh failed",liveErr); }
+        }else{
+          console.warn("BUILDOS object not found for import",{pid,projectName});
+        }
+      }catch(syncErr){ console.warn("BUILDOS import sync failed",syncErr); }
+
+        // Also mirror schedule tasks into the main Tasks screen.
+        if(mode==="schedule"){
+          const mainTasks=JSON.parse(localStorage.getItem("buildos_tasks")||"[]");
+          const projectName=project?.name||"";
+          parsed.forEach(x=>mainTasks.push({
+            title:x.name,object:projectName,assignee:x.assignee||"",
+            due:x.end||"",priority:"medium",done:false
+          }));
+          localStorage.setItem("buildos_tasks",JSON.stringify(mainTasks));
+        }
+
+      bfImportStatus('<div class="bf-ok">✅ Готово! Смета сохранена и привязана к объекту.</div>');
+      const b=document.getElementById("bfImportCommitBtn");
+      if(topAction){ topAction.style.display="block"; topAction.style.position="sticky"; topAction.style.top="0"; topAction.style.zIndex="30"; topAction.style.background="#fff"; }
+      if(b){b.textContent="✅ Добавлено";b.disabled=true;b.style.opacity=".6";}
+
+      // Refresh the object detail immediately after import.
+      try{
+        if(typeof objects!=="undefined" && Array.isArray(objects)){
+          const chosenName=(s.projects.find(p=>String(p.id)===String(pid))||{}).name||"";
+          const liveIndex=objects.findIndex(o=>o.name===chosenName);
+          if(liveIndex>=0 && typeof openObject==="function"){
+            openObject(liveIndex);
+          }
+        }
+      }catch(refreshErr){console.warn("Object detail refresh failed",refreshErr);}
+    }catch(err){bfImportStatus('<div class="bf-warn">Ошибка сохранения: '+esc(err.message||err)+'</div>')}
+    if(commitBtn){commitBtn.disabled=true;commitBtn.textContent="✅ Добавлено в объект";commitBtn.style.opacity=".65";}
+
+  };
+
+  // Add an "Импорт" button to the BUILDOS PRO dashboard without touching the stable app.
+  const oldDash=window.bfDashboard;
+  window.bfDashboard=function(){
+    oldDash();
+    setTimeout(()=>{
+      const sheet=document.getElementById("bfSheet");
+      if(!sheet)return;
+      const actions=sheet.querySelector(".bf-actions");
+      if(!actions)return;
+      const b1=document.createElement("button");b1.className="bf-btn";b1.textContent="📥 Загрузить смету";b1.onclick=()=>bfOpenImport("estimate");
+      const b2=document.createElement("button");b2.className="bf-btn";b2.textContent="📅 Загрузить график";b2.onclick=()=>bfOpenImport("schedule");
+      actions.appendChild(b1);actions.appendChild(b2);
+    },30);
+  };
+
+  // Commit button is added inside the importer after analysis.
+  const oldAnalyze=window.bfImportAnalyze;
+  window.bfImportAnalyze=function(){oldAnalyze();setTimeout(()=>{
+    const b=document.getElementById("bfImportCommitBtn");
+    if(b){b.style.display=(parsed&&parsed.length)?"block":"none";b.textContent=mode==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";b.disabled=false;b.style.opacity="1";}
+  },50)};
+
+  // Convenience launch buttons.
+  window.bfOpenEstimateImport=()=>bfOpenImport("estimate");
+  window.bfOpenScheduleImport=()=>bfOpenImport("schedule");
+})();
+</script>
+
+
+<script>
+(function(){
+  function addImportButtons(){
+    if(document.getElementById("bfImportQuick")) return;
+    var wrap=document.createElement("div");
+    wrap.id="bfImportQuick";
+    wrap.style.cssText="position:fixed;right:16px;bottom:154px;z-index:5001;display:flex;flex-direction:column;gap:8px;align-items:flex-end";
+    wrap.innerHTML=
+      '<button style="border:0;border-radius:15px;padding:11px 14px;background:#fff;box-shadow:0 4px 18px rgba(0,0,0,.14);font-weight:800;font-size:14px" onclick="bfOpenImport(\'estimate\')">📋 Загрузить смету</button>'+
+      '<button style="border:0;border-radius:15px;padding:11px 14px;background:#fff;box-shadow:0 4px 18px rgba(0,0,0,.14);font-weight:800;font-size:14px" onclick="bfOpenImport(\'schedule\')">📅 Загрузить график</button>';
+    document.body.appendChild(wrap);
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",function(){setTimeout(addImportButtons,300)});
+  else setTimeout(addImportButtons,300);
+})();
+</script>
+
+<style>
+#bfObjectQuickAdd{position:sticky;top:0;z-index:4000;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid #e5e8ed;padding:8px 10px;margin:0 -10px 10px;display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#bfObjectQuickAdd button{white-space:nowrap;border:1px solid #dce1e8;background:#fff;border-radius:13px;padding:10px 12px;font-weight:800;font-size:13px}
+#bfObjectQuickAdd .main{background:#2878ed;color:#fff;border-color:#2878ed}
+#bfAddSheet{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:10003;display:none;align-items:flex-end}
+#bfAddSheet.show{display:flex}
+#bfAddSheetInner{background:#fff;width:100%;max-width:760px;margin:auto;border-radius:28px 28px 0 0;padding:20px 17px calc(22px + env(safe-area-inset-bottom));font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+.bf-add-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.bf-add-grid button{border:1px solid #dce1e8;background:#fff;border-radius:16px;padding:15px 10px;font-weight:800;font-size:14px}
+</style>
+<div id="bfAddSheet" onclick="if(event.target===this)bfAddClose()">
+<div id="bfAddSheetInner">
+<button class="bf-btn" style="float:right;border-radius:50%" onclick="bfAddClose()">×</button>
+<h2 style="margin:0 0 6px">＋ Добавить</h2>
+<div id="bfAddObjectName" class="bf-import-muted" style="margin-bottom:15px"></div>
+<div class="bf-add-grid">
+<button onclick="bfAddClose();bfOpenImport('estimate')">📋<br>Загрузить смету</button>
+<button onclick="bfAddClose();bfOpenImport('schedule')">📅<br>Загрузить график</button>
+<button onclick="bfAddClose();bfTask(window.bfCurrentProject)">📋<br>Задачу</button>
+<button onclick="bfAddClose();bfMaterial(window.bfCurrentProject)">📦<br>Материал</button>
+<button onclick="bfAddClose();bfWorker(window.bfCurrentProject)">👷<br>Рабочего</button>
+<button onclick="bfAddClose();bfFinance(window.bfCurrentProject)">💸<br>Расход / приход</button>
+<button onclick="bfAddClose();bfJournal(window.bfCurrentProject)">📓<br>Запись</button>
+<button onclick="bfAddClose();bfEstimate(window.bfCurrentProject)">🧾<br>Позицию сметы</button>
+</div>
+</div></div>
+
+<script>
+window.bfAddOpen=function(pid){
+ window.bfCurrentProject=pid;
+ var o=(JSON.parse(localStorage.getItem("buildos_final_v1")||"{}").projects||[]).find(x=>x.id===pid);
+ document.getElementById("bfAddObjectName").textContent=o?o.name:"Объект";
+ document.getElementById("bfAddSheet").classList.add("show");
+};
+window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.remove("show")};
+</script>
+
+<style id="buildosEstimateMobileCSS">
+.beq{position:sticky;top:0;z-index:3500;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);padding:8px 0 10px;margin-bottom:10px}
+.beq-scroll{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px}
+.beq-scroll button{white-space:nowrap;border:1px solid #dbe1e9;background:#fff;border-radius:13px;padding:10px 12px;font-weight:800;font-size:13px}
+.beq-scroll .active{background:#2878ed;color:#fff;border-color:#2878ed}
+.be-summary{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.be-stat{background:#f6f8fb;border:1px solid #e3e8ef;border-radius:17px;padding:13px}
+.be-stat span{display:block;color:#6f7888;font-size:12px}.be-stat b{display:block;font-size:20px;margin-top:4px}
+.be-good{color:#168a4b}.be-bad{color:#c62828}.be-warn{color:#b06b00}
+.be-progress{height:9px;background:#e8edf3;border-radius:99px;overflow:hidden;margin-top:10px}.be-progress i{height:100%;display:block;background:#2878ed;border-radius:99px}
+.be-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
+.be-actions button{border:1px solid #dbe1e9;background:#fff;border-radius:15px;padding:13px 10px;font-weight:800}
+.be-actions .primary{background:#2878ed;color:#fff;border-color:#2878ed}
+.be-filter{display:flex;gap:7px;overflow:auto;margin:11px 0}.be-filter button{white-space:nowrap;border:1px solid #dbe1e9;background:#fff;border-radius:12px;padding:9px 11px;font-weight:800;font-size:12px}.be-filter .active{background:#eef4ff;color:#2878ed;border-color:#9fc0ff}
+.be-search{width:100%;box-sizing:border-box;border:1px solid #d8dee7;border-radius:14px;padding:12px;font:inherit;margin-top:8px}
+.be-item{background:#fff;border:1px solid #e2e6ec;border-radius:18px;padding:13px;margin:8px 0}
+.be-item-top{display:flex;justify-content:space-between;gap:10px}.be-name{font-weight:800;font-size:16px;line-height:1.25}.be-muted{color:#717a8a;font-size:12px;margin-top:3px}.be-amount{font-weight:850;font-size:16px;white-space:nowrap}.be-status{display:inline-flex;align-items:center;gap:5px;border-radius:9px;padding:5px 8px;font-size:11px;font-weight:800;margin-top:8px}.be-status.todo{background:#fff3df;color:#ad6900}.be-status.work{background:#eef4ff;color:#2863b8}.be-status.done{background:#eaf8ef;color:#19834a}.be-purchase{background:#fff8e8;border:1px solid #f0d28d;border-radius:16px;padding:13px;margin-top:10px}.be-purchase b{font-size:16px}
+.be-modal{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:10010;display:none;align-items:flex-end}.be-modal.show{display:flex}
+.be-sheet{width:100%;max-width:760px;max-height:92vh;overflow:auto;background:#fff;border-radius:28px 28px 0 0;padding:18px 16px calc(22px + env(safe-area-inset-bottom));font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+.be-sheet h2{margin:0 0 6px;font-size:25px}.be-sheet .close{float:right;border:1px solid #dbe1e9;background:#fff;border-radius:50%;width:38px;height:38px;font-size:20px}
+.be-field input,.be-field select{width:100%;box-sizing:border-box;border:1px solid #d8dee7;border-radius:13px;padding:12px;font:inherit}
+.be-field{margin:11px 0}.be-field label{display:block;font-weight:700;color:#6f7888;margin-bottom:6px}
+.be-line{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #e7eaf0}.be-line:last-child{border-bottom:0}
+.be-cat{font-size:12px;font-weight:800;color:#2863b8}.be-big{font-size:26px;font-weight:900}
+</style>
+<div id="beEstimateModal" class="be-modal" onclick="if(event.target===this)beCloseEstimate()"><div class="be-sheet" id="beEstimateSheet"></div></div>
+
+<script>
+(function(){
+  window.beCloseEstimate=function(){document.getElementById("beEstimateModal").classList.remove("show");};
+  function beMoney(x){return new Intl.NumberFormat("ru-RU").format(Number(x)||0)+" ₽";}
+  function beEsc(x){return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+  window.beType=function(name){
+    const n=String(name||"").toLowerCase();
+    if(/плит|клей|грунт|краск|штукатур|шпаклев|гипс|профил|кабел|провод|розет|выключ|смес|труб|ламин|паркет|цемент|саморез|дюбел|гермет|утепл|минват|фанер|мдф|дсп|керам|обои|светиль|силикон/.test(n))return "Материалы";
+    return "Работы";
+  };
+  function beStatus(x){
+    const st=x.status||"todo";
+    if(st==="done")return ["done","✅ Выполнено"];
+    if(st==="work")return ["work","🟡 В работе"];
+    return ["todo","⚪ Не начато"];
+  }
+  function beGetObj(i){
+    try{return objects[i]}catch(e){return null}
+  }
+  function beRefresh(i){
+    if(typeof openObject==="function")openObject(i);
+  }
+  window.beOpenEstimate=function(i){
+    const o=beGetObj(i); if(!o)return;
+    o.estimateItems=o.estimateItems||[];
+    const items=o.estimateItems;
+    const q=(o.beEstimateFilter||"all"), search=o.beEstimateSearch||"";
+    const filtered=items.filter(x=>(q==="all"||window.beType(x.name)===q||x.status===q)&&String(x.name||"").toLowerCase().includes(search.toLowerCase()));
+    const total=items.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
+    const purchased=items.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);
+    const left=Math.max(0,total-purchased);
+    const done=items.filter(x=>x.status==="done").length;
+    const work=items.filter(x=>x.status==="work").length;
+    const buy=items.filter(x=>(+x.purchasedQty||0)<(+x.qty||0));
+    document.getElementById("beEstimateSheet").innerHTML=`
+      <button class="close" onclick="beCloseEstimate()">×</button>
+      <h2>📋 Смета</h2>
+      <div style="color:#717a8a;font-size:13px">${beEsc(o.name)} · ${items.length} позиций</div>
+      <div class="be-summary" style="margin-top:14px">
+        <div class="be-stat"><span>По смете</span><b>${beMoney(total)}</b></div>
+        <div class="be-stat"><span>Куплено</span><b>${beMoney(purchased)}</b></div>
+        <div class="be-stat"><span>Осталось</span><b class="${left<0?'be-bad':'be-good'}">${beMoney(left)}</b></div>
+        <div class="be-stat"><span>Статус</span><b>${done}/${items.length}</b><span>${work} в работе</span></div>
+      </div>
+      <div class="be-progress"><i style="width:${total?Math.min(100,Math.round(purchased/total*100)):0}%"></i></div>
+      <input class="be-search" placeholder="🔎 Поиск по смете" value="${beEsc(search)}" oninput="objects[${i}].beEstimateSearch=this.value;beOpenEstimate(${i})">
+      <div class="be-filter">
+        ${[["all","Все"],["Материалы","Материалы"],["Работы","Работы"],["work","В работе"],["done","Выполнено"]].map(f=>`<button class="${q===f[0]?'active':''}" onclick="objects[${i}].beEstimateFilter='${f[0]}';beOpenEstimate(${i})">${f[1]}</button>`).join("")}
+      </div>
+      <div class="be-actions">
+        <button class="primary" onclick="bePurchaseList(${i})">🛒 Что купить</button>
+        <button onclick="beEstimateCheck(${i})">🤖 Проверить</button>
+      </div>
+      <div style="margin-top:12px">
+        ${filtered.map((x,j)=>{const realIndex=items.indexOf(x), st=beStatus(x), sum=(+x.qty||0)*(+x.price||0), rem=Math.max(0,(+x.qty||0)-(+x.purchasedQty||0));return `
+          <div class="be-item" onclick="beItem(${i},${realIndex})">
+            <div class="be-item-top"><div><div class="be-name">${beEsc(x.name)}</div><div class="be-muted">${window.beType(x.name)} · ${x.qty||0} ${beEsc(x.unit||"шт")} · ${beMoney(x.price||0)}/${beEsc(x.unit||"шт")}</div></div><div class="be-amount">${beMoney(sum)}</div></div>
+            <span class="be-status ${st[0]}">${st[1]}</span>
+            ${window.beType(x.name)==="Материалы"&&rem>0?`<div class="be-muted" style="margin-top:7px">🛒 Купить ещё: <b>${rem} ${beEsc(x.unit||"шт")}</b></div>`:""}
+          </div>`}).join("")||'<div class="be-muted" style="padding:20px 0">Ничего не найдено.</div>'}
+      </div>`;
+    document.getElementById("beEstimateModal").classList.add("show");
+  };
+  window.beItem=function(oi,ii){
+    const o=beGetObj(oi),x=o.estimateItems[ii]; if(!x)return;
+    const sum=(+x.qty||0)*(+x.price||0),st=beStatus(x);
+    document.getElementById("beEstimateSheet").innerHTML=`
+      <button class="close" onclick="beOpenEstimate(${oi})">×</button>
+      <h2>${beEsc(x.name)}</h2>
+      <div class="be-cat">${window.beType(x.name)}</div>
+      <div class="be-summary" style="margin-top:14px">
+        <div class="be-stat"><span>Количество</span><b>${x.qty||0} ${beEsc(x.unit||"шт")}</b></div>
+        <div class="be-stat"><span>Цена</span><b>${beMoney(x.price||0)}</b></div>
+        <div class="be-stat"><span>Сумма</span><b>${beMoney(sum)}</b></div>
+        <div class="be-stat"><span>Куплено</span><b>${x.purchasedQty||0} ${beEsc(x.unit||"шт")}</b></div>
+      </div>
+      <div class="be-field"><label>Статус</label><select id="beItemStatus"><option value="todo">Не начато</option><option value="work">В работе</option><option value="done">Выполнено</option></select></div>
+      <div class="be-field"><label>Куплено</label><input id="beItemPurchased" type="number" min="0" value="${x.purchasedQty||0}"></div>
+      <div class="be-field"><label>Комментарий</label><input id="beItemNote" value="${beEsc(x.note||"")}" placeholder="Например: заказали у Петровича"></div>
+      <div class="be-actions">
+        <button onclick="beSaveItem(${oi},${ii})" class="primary">Сохранить</button>
+        <button onclick="beOpenEstimate(${oi})">← К смете</button>
+      </div>`;
+    document.getElementById("beItemStatus").value=x.status||"todo";
+    document.getElementById("beEstimateModal").classList.add("show");
+  };
+  window.beSaveItem=function(oi,ii){
+    const o=beGetObj(oi),x=o.estimateItems[ii];if(!x)return;
+    x.status=document.getElementById("beItemStatus").value;
+    x.purchasedQty=Math.max(0,Number(document.getElementById("beItemPurchased").value)||0);
+    x.note=document.getElementById("beItemNote").value||"";
+    save();
+    beOpenEstimate(oi);
+    try{if(typeof renderObjects==="function")renderObjects();if(typeof renderHome==="function")renderHome()}catch(e){}
+  };
+  window.bePurchaseList=function(i){
+    const o=beGetObj(i),items=o.estimateItems||[];
+    const buy=items.filter(x=>window.beType(x.name)==="Материалы"&&(+x.purchasedQty||0)<(+x.qty||0));
+    const total=buy.reduce((a,x)=>a+(Math.max(0,(+x.qty||0)-(+x.purchasedQty||0))*(+x.price||0)),0);
+    document.getElementById("beEstimateSheet").innerHTML=`
+      <button class="close" onclick="beOpenEstimate(${i})">×</button>
+      <h2>🛒 Что нужно купить</h2>
+      <div class="be-stat"><span>Ориентировочно на закупку</span><div class="be-big">${beMoney(total)}</div></div>
+      ${buy.map((x,idx)=>{const rem=Math.max(0,(+x.qty||0)-(+x.purchasedQty||0));return `<div class="be-line"><div><b>${beEsc(x.name)}</b><div class="be-muted">${rem} ${beEsc(x.unit||"шт")} × ${beMoney(x.price||0)}</div></div><b>${beMoney(rem*(+x.price||0))}</b></div>`}).join("")||'<div class="be-muted" style="padding:20px 0">Все материалы закуплены.</div>'}
+      <div class="be-actions"><button class="primary" onclick="beMarkAllPurchased(${i})">Отметить всё купленным</button><button onclick="beOpenEstimate(${i})">← К смете</button></div>`;
+  };
+  window.beMarkAllPurchased=function(i){
+    const o=beGetObj(i);(o.estimateItems||[]).forEach(x=>{if(window.beType(x.name)==="Материалы"){x.purchasedQty=+x.qty||0;x.status="done"}});save();bePurchaseList(i);
+  };
+  window.beEstimateCheck=function(i){
+    const o=beGetObj(i),items=o.estimateItems||[], issues=[];
+    items.forEach(x=>{
+      const q=+x.qty||0,p=+x.price||0;
+      if(q<=0)issues.push(`⚠️ ${x.name}: нулевой объём`);
+      if(p<=0)issues.push(`⚠️ ${x.name}: цена не распознана`);
+    });
+    const byName={};items.forEach(x=>{const k=String(x.name||"").toLowerCase();byName[k]=(byName[k]||0)+1});
+    Object.keys(byName).forEach(k=>{if(byName[k]>1)issues.push(`🔁 Дубликат позиции: ${k}`)});
+    document.getElementById("beEstimateSheet").innerHTML=`
+      <button class="close" onclick="beOpenEstimate(${i})">×</button>
+      <h2>🤖 Проверка сметы</h2>
+      ${issues.length?issues.map(x=>`<div class="be-purchase" style="margin:8px 0">${beEsc(x)}</div>`):'<div class="be-stat"><span>Проверка</span><b class="be-good">✅ Явных проблем не найдено</b><div class="be-muted">Проверь объёмы и цены, которые могли быть распознаны из исходного файла.</div></div>'}
+      <div class="be-actions"><button class="primary" onclick="beOpenEstimate(${i})">← К смете</button></div>`;
+  };
+})();
+</script>
+
+<script>
+if(typeof window.beType!=="function"){
+  window.beType=function(name){
+    const n=String(name||"").toLowerCase();
+    return /плит|клей|грунт|краск|штукатур|шпаклев|гипс|профил|кабел|провод|розет|выключ|смес|труб|ламин|паркет|цемент|саморез|дюбел|гермет|утепл|минват|фанер|мдф|дсп|керам|обои|светиль|силикон/.test(n)?"Материалы":"Работы";
+  };
+}
+</script>
+
+</body>
+</html>
