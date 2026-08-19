@@ -799,8 +799,10 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       if(sel) sel.value=window.bfCurrentProject;
     }
     bfImportMode(initial); bfImportStatus(""); bfImportPreview("");
+    const top=document.getElementById("bfImportTopAction");
     const b=document.getElementById("bfImportCommitBtn");
-    if(b){b.style.display="none";b.disabled=false;b.textContent=initial==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";b.style.opacity="1";}
+    if(top) top.style.display="none";
+    if(b){b.disabled=false;b.textContent=initial==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";b.style.opacity="1";}
     document.getElementById("bfImportModal").classList.add("show");
   };
   window.bfImportClose=function(){document.getElementById("bfImportModal").classList.remove("show")};
@@ -955,6 +957,11 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
   }
 
   window.bfImportCommit=function(){
+    const top=document.getElementById("bfImportTopAction");
+    const commitBtn=document.getElementById("bfImportCommitBtn");
+    if(top) top.style.display="block";
+    if(commitBtn){commitBtn.disabled=true;commitBtn.textContent="⏳ Добавляем...";}
+
     try{
       const s=getS(), pid=document.getElementById("bfImportProject").value;
       if(!pid){bfImportStatus('<div class="bf-warn">Сначала выбери объект.</div>');return}
@@ -985,6 +992,8 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       if(top) top.style.display="block";
       if(b){b.textContent="✅ Добавлено";b.disabled=true;b.style.opacity=".6";}
     }catch(err){bfImportStatus('<div class="bf-warn">Ошибка сохранения: '+esc(err.message||err)+'</div>')}
+    if(commitBtn){commitBtn.disabled=true;commitBtn.textContent="✅ Добавлено в объект";commitBtn.style.opacity=".65";}
+
   };
 
   // Add an "Импорт" button to the BUILDOS PRO dashboard without touching the stable app.
