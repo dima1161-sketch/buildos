@@ -811,10 +811,6 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
     const btn=document.getElementById("bfImportCommitBtn");
     if(top) top.style.display="none";
     if(btn){btn.disabled=false;btn.style.opacity="1";btn.textContent=initial==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";}
-    const top=document.getElementById("bfImportTopAction");
-    const b=document.getElementById("bfImportCommitBtn");
-    if(top) top.style.display="none";
-    if(b){b.disabled=false;b.textContent=initial==="estimate"?"➕ Добавить в объект":"📅 Добавить в график";b.style.opacity="1";}
     document.getElementById("bfImportModal").classList.add("show");
   };
   window.bfImportClose=function(){document.getElementById("bfImportModal").classList.remove("show")};
