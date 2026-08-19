@@ -681,7 +681,14 @@ function open(t,b,a){document.getElementById("bfSheet").innerHTML=`<button class
 window.bfClose=()=>document.getElementById("bfModal").classList.remove("show");
 const p=id=>S.projects.find(x=>x.id===id);
 function calc(pid){let ex=S.expenses.filter(x=>x.projectId===pid).reduce((a,x)=>a+(+x.amount||0),0),inc=S.incomes.filter(x=>x.projectId===pid).reduce((a,x)=>a+(+x.amount||0),0),mat=S.materials.filter(x=>x.projectId===pid).reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0),sal=S.timesheets.filter(x=>x.projectId===pid&&x.status==="worked").reduce((a,x)=>a+(+x.rate||0),0),spent=ex+mat+sal,planned=+(p(pid)?.budget)||0;return{ex,inc,mat,sal,spent,planned,left:planned-spent,profit:inc-spent}}
-window.bfOpenProject=pid=>{let o=p(pid),c=calc(pid);open("🏗️ "+esc(o.name),`<div class="bf-card"><b>${esc(o.client||"Клиент не указан")}</b><div class="bf-muted">${esc(o.address||"")} · ${o.area||0} м²</div><div style="margin:12px 0;height:9px;background:#e5eaf1;border-radius:99px;overflow:hidden"><i style="display:block;height:100%;width:${o.progress||0}%;background:#2878ed"></i></div><b>${o.progress||0}% готовности</b></div><div class="bf-grid">${[['Бюджет',c.planned],['Расходы',c.spent],['Получено',c.inc],['Прибыль',c.profit]].map(x=>`<div class="bf-stat"><span>${x[0]}</span><b>${money(x[1])}</b></div>`).join("")}</div><div class="bf-actions"><button class="bf-btn bf-primary" onclick="bfFinance('${pid}')">💰 Финансы</button><button class="bf-btn" onclick="bfStages('${pid}')">🧱 Этапы</button><button class="bf-btn" onclick="bfTask('${pid}')">📋 Задача</button><button class="bf-btn" onclick="bfMaterial('${pid}')">📦 Материал</button><button class="bf-btn" onclick="bfWorker('${pid}')">👷 Рабочий</button><button class="bf-btn" onclick="bfEstimate('${pid}')">📋 Смета</button><button class="bf-btn" onclick="bfJournal('${pid}')">📓 Журнал</button><button class="bf-btn" onclick="bfReport('${pid}')">📊 Отчёт</button></div>`)}
+window.bfOpenProject=pid=>{let o=p(pid),c=calc(pid);window.bfCurrentProject=pid;open("🏗️ "+esc(o.name),`<div id="bfObjectQuickAdd">
+<button class="main" onclick="bfAddOpen('${pid}')">＋ Добавить</button>
+<button onclick="bfOpenImport('estimate')">📋 Смета</button>
+<button onclick="bfOpenImport('schedule')">📅 График</button>
+<button onclick="bfFinance('${pid}')">💰 Финансы</button>
+<button onclick="bfEstimate('${pid}')">🧾 Смета</button>
+<button onclick="bfOpenProject('${pid}')">🔄</button>
+</div><div class="bf-card"><b>${esc(o.client||"Клиент не указан")}</b><div class="bf-muted">${esc(o.address||"")} · ${o.area||0} м²</div><div style="margin:12px 0;height:9px;background:#e5eaf1;border-radius:99px;overflow:hidden"><i style="display:block;height:100%;width:${o.progress||0}%;background:#2878ed"></i></div><b>${o.progress||0}% готовности</b></div><div class="bf-grid">${[['Бюджет',c.planned],['Расходы',c.spent],['Получено',c.inc],['Прибыль',c.profit]].map(x=>`<div class="bf-stat"><span>${x[0]}</span><b>${money(x[1])}</b></div>`).join("")}</div><div class="bf-actions"><button class="bf-btn bf-primary" onclick="bfFinance('${pid}')">💰 Финансы</button><button class="bf-btn" onclick="bfStages('${pid}')">🧱 Этапы</button><button class="bf-btn" onclick="bfTask('${pid}')">📋 Задача</button><button class="bf-btn" onclick="bfMaterial('${pid}')">📦 Материал</button><button class="bf-btn" onclick="bfWorker('${pid}')">👷 Рабочий</button><button class="bf-btn" onclick="bfEstimate('${pid}')">📋 Смета</button><button class="bf-btn" onclick="bfJournal('${pid}')">📓 Журнал</button><button class="bf-btn" onclick="bfReport('${pid}')">📊 Отчёт</button></div>`)}
 window.bfFinance=pid=>{let c=calc(pid);open("💰 Финансы",`<div class="bf-grid">${[['План',c.planned],['Факт',c.spent],['Остаток',c.left],['Прибыль',c.profit]].map(x=>`<div class="bf-stat"><span>${x[0]}</span><b>${money(x[1])}</b></div>`).join("")}</div><div class="bf-card"><div class="bf-row"><span>Расходы</span><b>${money(c.ex)}</b></div><div class="bf-row"><span>Материалы</span><b>${money(c.mat)}</b></div><div class="bf-row"><span>Зарплата</span><b>${money(c.sal)}</b></div><div class="bf-row"><span>Приходы</span><b>${money(c.inc)}</b></div></div>`,`<button class="bf-btn" onclick="bfExpense('${pid}')">＋ Расход</button><button class="bf-btn bf-primary" onclick="bfIncome('${pid}')">＋ Приход</button>`)};
 window.bfExpense=pid=>open("💸 Расход",`<div class="bf-field"><label>Статья</label><input id="b1"></div><div class="bf-field"><label>Сумма</label><input id="b2" type="number"></div><div class="bf-field"><label>Дата</label><input id="b3" type="date" value="${today()}"></div>`,`<button class="bf-btn" onclick="bfClose()">Отмена</button><button class="bf-btn bf-primary" onclick="S.expenses.push({id:id(),projectId:'${pid}',category:document.getElementById('b1').value,amount:+document.getElementById('b2').value||0,date:document.getElementById('b3').value});save();bfFinance('${pid}')">Добавить</button>`);
 window.bfIncome=pid=>open("💳 Приход",`<div class="bf-field"><label>Сумма</label><input id="i1" type="number"></div><div class="bf-field"><label>Дата</label><input id="i2" type="date" value="${today()}"></div>`,`<button class="bf-btn" onclick="bfClose()">Отмена</button><button class="bf-btn bf-primary" onclick="S.incomes.push({id:id(),projectId:'${pid}',amount:+document.getElementById('i1').value||0,date:document.getElementById('i2').value});save();bfFinance('${pid}')">Добавить</button>`);
@@ -1019,6 +1026,43 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",function(){setTimeout(addImportButtons,300)});
   else setTimeout(addImportButtons,300);
 })();
+</script>
+
+<style>
+#bfObjectQuickAdd{position:sticky;top:0;z-index:4000;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid #e5e8ed;padding:8px 10px;margin:0 -10px 10px;display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#bfObjectQuickAdd button{white-space:nowrap;border:1px solid #dce1e8;background:#fff;border-radius:13px;padding:10px 12px;font-weight:800;font-size:13px}
+#bfObjectQuickAdd .main{background:#2878ed;color:#fff;border-color:#2878ed}
+#bfAddSheet{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:10003;display:none;align-items:flex-end}
+#bfAddSheet.show{display:flex}
+#bfAddSheetInner{background:#fff;width:100%;max-width:760px;margin:auto;border-radius:28px 28px 0 0;padding:20px 17px calc(22px + env(safe-area-inset-bottom));font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+.bf-add-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.bf-add-grid button{border:1px solid #dce1e8;background:#fff;border-radius:16px;padding:15px 10px;font-weight:800;font-size:14px}
+</style>
+<div id="bfAddSheet" onclick="if(event.target===this)bfAddClose()">
+<div id="bfAddSheetInner">
+<button class="bf-btn" style="float:right;border-radius:50%" onclick="bfAddClose()">×</button>
+<h2 style="margin:0 0 6px">＋ Добавить</h2>
+<div id="bfAddObjectName" class="bf-import-muted" style="margin-bottom:15px"></div>
+<div class="bf-add-grid">
+<button onclick="bfAddClose();bfOpenImport('estimate')">📋<br>Загрузить смету</button>
+<button onclick="bfAddClose();bfOpenImport('schedule')">📅<br>Загрузить график</button>
+<button onclick="bfAddClose();bfTask(window.bfCurrentProject)">📋<br>Задачу</button>
+<button onclick="bfAddClose();bfMaterial(window.bfCurrentProject)">📦<br>Материал</button>
+<button onclick="bfAddClose();bfWorker(window.bfCurrentProject)">👷<br>Рабочего</button>
+<button onclick="bfAddClose();bfFinance(window.bfCurrentProject)">💸<br>Расход / приход</button>
+<button onclick="bfAddClose();bfJournal(window.bfCurrentProject)">📓<br>Запись</button>
+<button onclick="bfAddClose();bfEstimate(window.bfCurrentProject)">🧾<br>Позицию сметы</button>
+</div>
+</div></div>
+
+<script>
+window.bfAddOpen=function(pid){
+ window.bfCurrentProject=pid;
+ var o=(JSON.parse(localStorage.getItem("buildos_final_v1")||"{}").projects||[]).find(x=>x.id===pid);
+ document.getElementById("bfAddObjectName").textContent=o?o.name:"Объект";
+ document.getElementById("bfAddSheet").classList.add("show");
+};
+window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.remove("show")};
 </script>
 </body>
 </html>
