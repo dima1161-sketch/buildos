@@ -487,8 +487,8 @@ function openObject(i){
      (()=>{const total=o.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const purchased=o.estimateItems.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);const work=o.estimateItems.filter(x=>x.status==="work").length;const done=o.estimateItems.filter(x=>x.status==="done").length;const buy=o.estimateItems.filter(x=>window.beType(x.name)==="Материалы"&&(+x.purchasedQty||0)<(+x.qty||0)).length;return `
        <h3>📋 Смета объекта</h3>
        <div class="be-summary">
-         <div class="be-stat"><span>Сумма сметы</span><b>${beMoney(total)}</b></div>
-         <div class="be-stat"><span>Потрачено по смете</span><b>${beMoney(purchased)}</b></div>
+         <div class="be-stat"><span>Сумма сметы</span><b>${window.beMoney(total)}</b></div>
+         <div class="be-stat"><span>Потрачено по смете</span><b>${window.beMoney(purchased)}</b></div>
          <div class="be-stat"><span>В работе</span><b>${work}</b></div>
          <div class="be-stat"><span>Выполнено</span><b>${done}</b></div>
        </div>
@@ -1326,7 +1326,8 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
 <script>
 (function(){
   window.beCloseEstimate=function(){document.getElementById("beEstimateModal").classList.remove("show");};
-  function beMoney(x){return new Intl.NumberFormat("ru-RU").format(Number(x)||0)+" ₽";}
+  window.beMoney=function(x){return new Intl.NumberFormat("ru-RU").format(Number(x)||0)+" ₽";}
+  const beMoney=window.beMoney;
   function beEsc(x){return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
   window.beType=function(name){
     const n=String(name||"").toLowerCase();
@@ -1362,9 +1363,9 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
       <h2>📋 Смета</h2>
       <div style="color:#717a8a;font-size:13px">${beEsc(o.name)} · ${items.length} позиций</div>
       <div class="be-summary" style="margin-top:14px">
-        <div class="be-stat"><span>По смете</span><b>${beMoney(total)}</b></div>
-        <div class="be-stat"><span>Куплено</span><b>${beMoney(purchased)}</b></div>
-        <div class="be-stat"><span>Осталось</span><b class="${left<0?'be-bad':'be-good'}">${beMoney(left)}</b></div>
+        <div class="be-stat"><span>По смете</span><b>${window.beMoney(total)}</b></div>
+        <div class="be-stat"><span>Куплено</span><b>${window.beMoney(purchased)}</b></div>
+        <div class="be-stat"><span>Осталось</span><b class="${left<0?'be-bad':'be-good'}">${window.beMoney(left)}</b></div>
         <div class="be-stat"><span>Статус</span><b>${done}/${items.length}</b><span>${work} в работе</span></div>
       </div>
       <div class="be-progress"><i style="width:${total?Math.min(100,Math.round(purchased/total*100)):0}%"></i></div>
@@ -1425,7 +1426,7 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
     document.getElementById("beEstimateSheet").innerHTML=`
       <button class="close" onclick="beOpenEstimate(${i})">×</button>
       <h2>🛒 Что нужно купить</h2>
-      <div class="be-stat"><span>Ориентировочно на закупку</span><div class="be-big">${beMoney(total)}</div></div>
+      <div class="be-stat"><span>Ориентировочно на закупку</span><div class="be-big">${window.beMoney(total)}</div></div>
       ${buy.map((x,idx)=>{const rem=Math.max(0,(+x.qty||0)-(+x.purchasedQty||0));return `<div class="be-line"><div><b>${beEsc(x.name)}</b><div class="be-muted">${rem} ${beEsc(x.unit||"шт")} × ${beMoney(x.price||0)}</div></div><b>${beMoney(rem*(+x.price||0))}</b></div>`}).join("")||'<div class="be-muted" style="padding:20px 0">Все материалы закуплены.</div>'}
       <div class="be-actions"><button class="primary" onclick="beMarkAllPurchased(${i})">Отметить всё купленным</button><button onclick="beOpenEstimate(${i})">← К смете</button></div>`;
   };
@@ -1459,5 +1460,9 @@ if(typeof window.beType!=="function"){
 }
 </script>
 
+
+<script>
+window.beMoney=window.beMoney||function(x){return new Intl.NumberFormat("ru-RU").format(Number(x)||0)+" ₽";};
+</script>
 </body>
 </html>
