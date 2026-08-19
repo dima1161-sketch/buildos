@@ -3,436 +3,659 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f5f7fa">
-<title>BUILDOS — Big Update 2</title>
+<title>BUILDOS</title>
 <style>
-:root{
- --bg:#f5f7fa;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e1e5eb;
- --blue:#2878ed;--green:#16a34a;--red:#dc2626;--orange:#f59e0b;--dark:#111827;
- --shadow:0 2px 12px rgba(17,24,39,.05);
-}
+:root{--bg:#f5f7fa;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--blue:#2875ed;--green:#16a34a;--red:#dc2626;--orange:#f59e0b}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
-body{padding-bottom:92px}
-button,input,select,textarea{font:inherit}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+body{min-height:100vh}
+button,input,select{font:inherit}
 button{cursor:pointer}
-.app{max-width:760px;margin:auto}
-header{
- background:#fff;padding:30px 18px 24px;border-bottom:1px solid var(--line);
-}
-.brand{font-size:25px;font-weight:900;letter-spacing:-1px}.brand span{color:#d99016}
-.greeting{font-size:32px;font-weight:850;margin-top:38px;letter-spacing:-1px}
-.subtitle{font-size:22px;color:var(--muted);margin-top:10px}
+.app{max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:92px}
+header{background:#fff;padding:24px 18px 18px;border-bottom:1px solid var(--line)}
+.brand{font-size:25px;font-weight:850;letter-spacing:-1px}.brand span{color:#f2a21a}
+.greeting{margin-top:20px;font-size:25px;font-weight:800}.subtitle{margin-top:8px;font-size:17px;color:var(--muted)}
 .content{padding:18px 16px}
-.pills{display:flex;gap:10px;overflow:auto;padding:2px 0 18px}
-.pill{white-space:nowrap;background:#fff;border:1px solid var(--line);border-radius:25px;padding:10px 16px;font-weight:700}
-.card{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
-.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 0 18px}
-h1{font-size:38px;margin:0;letter-spacing:-1px}h2{font-size:27px;margin:0 0 16px}h3{font-size:20px;margin:0 0 12px}
-.muted{color:var(--muted)}.small{font-size:14px;color:var(--muted)}
-.primary,.danger,.secondary{
- border-radius:20px;padding:15px 18px;border:1px solid var(--line);font-weight:800
-}
-.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
-.secondary{background:#fff;color:var(--text)}
-.danger{background:#fff;color:var(--red);border-color:#fecaca}
-.full{width:100%}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stat{background:#fff;border:1px solid var(--line);border-radius:25px;padding:18px}
-.stat .icon{font-size:30px}.stat .value{font-size:34px;font-weight:850;margin-top:8px}.stat .label{font-size:17px;color:var(--muted);margin-top:4px}
-.progress{height:10px;background:#e8edf5;border-radius:99px;overflow:hidden}.progress i{display:block;height:100%;background:var(--blue);border-radius:99px}
-.row{display:flex;justify-content:space-between;gap:16px;padding:13px 0;border-bottom:1px solid var(--line)}
-.row:last-child{border-bottom:0}.row b{font-weight:800;text-align:right}
-.task{display:flex;gap:12px;padding:15px 0;border-bottom:1px solid var(--line);align-items:flex-start}
-.check{width:27px;height:27px;border:2px solid #cbd5e1;border-radius:8px;flex:0 0 auto;margin-top:1px}
-.check.done{background:var(--green);border-color:var(--green);color:#fff;text-align:center}.check.done:after{content:"✓";font-weight:900}
-.task-main{flex:1;min-width:0}.task-title{font-size:18px;font-weight:750}.task-meta{color:var(--muted);font-size:14px;margin-top:5px}
-.badge{display:inline-block;padding:5px 9px;border-radius:10px;font-size:12px;font-weight:800}
-.badge.high{background:#fee2e2;color:#991b1b}.badge.medium{background:#fef3c7;color:#92400e}.badge.low{background:#dcfce7;color:#166534}
-.done-text{text-decoration:line-through;color:var(--muted)}
-.money{font-size:30px;font-weight:850}.money.green{color:var(--green)}.money.red{color:var(--red)}
-.toolbar{display:flex;gap:8px;overflow:auto;margin-bottom:14px}.filter{padding:9px 13px;border:1px solid var(--line);background:#fff;border-radius:18px;font-weight:700;white-space:nowrap}.filter.active{background:#eaf2ff;color:var(--blue);border-color:#9fc2ff}
-.empty{text-align:center;color:var(--muted);padding:34px 10px}
-.quick{font-size:18px;font-weight:800;padding:20px 12px}
-.list-card{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:22px;padding:17px;margin-bottom:10px}
-.list-card:active{transform:scale(.99)}
-nav{position:fixed;z-index:20;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:8px max(8px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(5,1fr);max-width:760px;margin:auto;backdrop-filter:blur(14px)}
-nav button{border:0;background:none;color:#6b7280;font-weight:700;font-size:13px;padding:4px 2px}.navicon{font-size:25px;display:block;margin-bottom:3px}.active-nav{color:var(--blue)}
-.modal{position:fixed;z-index:50;inset:0;background:rgba(0,0,0,.42);display:none;align-items:flex-end}
-.modal.show{display:flex}.sheet{background:#fff;border-radius:30px 30px 0 0;width:100%;max-width:760px;margin:auto;padding:24px 18px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
-.sheet h2{font-size:30px}.field{margin:13px 0}.field label{display:block;font-weight:750;color:#6b7280;margin-bottom:7px}
-.field input,.field select,.field textarea{width:100%;border:1px solid #d8dee8;border-radius:17px;padding:15px;background:#fff;outline:none}
-.field textarea{min-height:90px;resize:vertical}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
-.close-x{float:right;border:0;background:#f1f3f6;border-radius:50%;width:38px;height:38px;font-size:22px}
-.timeline{border-left:3px solid #cfe0ff;padding-left:15px}.event{padding:8px 0 16px}.event b{display:block}
-.table{overflow:auto}.table table{width:100%;border-collapse:collapse;min-width:520px}.table th,.table td{text-align:left;padding:11px;border-bottom:1px solid var(--line)}
-.notice{padding:14px;border-radius:16px;background:#eef6ff;color:#245a9a;margin-bottom:12px}
-@media(max-width:520px){.greeting{font-size:30px}.grid3{grid-template-columns:1fr 1fr}.stat .value{font-size:30px}}
+.view{display:none}.view.active{display:block}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+h2{font-size:28px;margin:0;font-weight:850}
+h3{margin:0 0 12px;font-size:22px}
+.card,.detail-card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(17,24,39,.04)}
+.object-card{cursor:pointer}
+.object-top{display:flex;gap:14px;align-items:center}
+.icon{width:68px;height:68px;border-radius:20px;background:#e8eef7;display:grid;place-items:center;font-size:38px;flex:none}
+.object-name{font-size:23px;font-weight:850}.object-meta{font-size:16px;color:var(--muted);margin-top:4px}
+.progress{height:9px;background:#e9edf3;border-radius:99px;overflow:hidden;margin-top:18px}.progress i{display:block;height:100%;background:var(--blue);border-radius:99px}
+.status{font-size:15px;font-weight:750;margin-top:10px}.status.ok{color:var(--green)}.status.bad{color:#ef4444}
+.primary{width:100%;border:0;background:var(--blue);color:#fff;border-radius:18px;padding:15px 18px;font-size:20px;font-weight:800}
+.secondary{border:1px solid var(--line);background:#fff;border-radius:16px;padding:12px 14px;color:var(--text);font-weight:700}
+.danger{border:1px solid #fecaca;background:#fff;color:var(--red);border-radius:16px;padding:12px 14px;font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid .secondary{width:100%;min-height:50px}
+.detail-title{font-size:25px;font-weight:850}
+.row{display:flex;justify-content:space-between;gap:15px;padding:13px 0;border-bottom:1px solid var(--line);font-size:17px}.row:last-child{border-bottom:0}.row b{font-weight:800}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:800}
+.badge.red{background:#fee2e2;color:#b91c1c}.badge.orange{background:#fff7ed;color:#c2410c}.badge.green{background:#ecfdf5;color:#15803d}
+.task-tools{display:flex;gap:8px;margin-bottom:12px;overflow:auto}.task-filter{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 16px;font-weight:750}.task-filter.active{background:#eef4ff;color:var(--blue);border-color:#93c5fd}
+.task-card{display:flex;gap:12px;align-items:flex-start;cursor:pointer}.check{width:28px;height:28px;border:3px solid #b8c2d1;border-radius:9px;flex:none;margin-top:1px}.task-card.done .check{background:#16a34a;border-color:#16a34a;position:relative}.task-card.done .check:after{content:"✓";color:white;font-weight:900;position:absolute;left:4px;top:-4px;font-size:22px}.task-card.done .task-title{text-decoration:line-through;color:#6b7280}
+.task-main{flex:1;min-width:0}.task-title{font-size:18px;font-weight:800}.task-meta{font-size:13px;color:var(--muted);margin-top:5px}.task-status{font-size:13px;font-weight:750;color:var(--muted);margin-top:5px}
+.summary{font-size:14px;color:var(--muted);margin:0 0 12px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}.stat{background:#fff;border:1px solid var(--line);border-radius:24px;padding:18px;min-height:145px}.stat-icon{font-size:30px}.stat-num{font-size:48px;font-weight:850;line-height:1.05;margin-top:8px}.stat-label{font-size:18px;color:var(--muted);margin-top:4px}
+.quick{background:#fff;border:1px solid var(--line);border-radius:24px;padding:18px;margin-top:12px}.quick h3{margin-bottom:14px}
+nav{position:fixed;z-index:20;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:10px 8px calc(10px + env(safe-area-inset-bottom))}
+nav button{border:0;background:none;color:#6b7280;font-size:13px;padding:3px 0}.nav-icon{display:block;font-size:28px;line-height:1.1;margin-bottom:3px}.nav-active{color:var(--blue)!important;font-weight:800}
+.modal{position:fixed;z-index:50;inset:0;background:rgba(0,0,0,.42);display:none;align-items:flex-end;justify-content:center}.modal.show{display:flex}.sheet{width:min(430px,100%);background:#fff;border-radius:28px 28px 0 0;padding:26px 18px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}.sheet h2{margin-bottom:20px}
+label{display:block;color:var(--muted);font-weight:750;margin:0 0 7px;font-size:15px}.field{margin-bottom:14px}input,select{width:100%;border:1px solid #d7dde7;border-radius:16px;background:#fff;padding:15px 14px;font-size:17px;outline:none}input:focus,select:focus{border-color:#75b8ff;box-shadow:0 0 0 3px #dbeeff}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}.actions button{min-height:54px}
+.empty{padding:28px 10px;text-align:center;color:var(--muted)}
+.ai-box{background:#111827;color:#fff;border-radius:22px;padding:18px}.ai-box input{background:#fff}.ai-answer{margin-top:14px;line-height:1.5}
+.small{font-size:13px;color:var(--muted)}
+@media(min-width:700px){body{padding:20px}.app{box-shadow:0 5px 30px rgba(0,0,0,.08);border-radius:24px;overflow:hidden}}
+
+.budget-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.budget-box{border:1px solid var(--line);border-radius:16px;padding:13px;background:#fafbfc}.budget-label{font-size:12px;color:var(--muted)}.budget-value{font-size:20px;font-weight:850;margin-top:4px}.budget-value.red{color:var(--red)}.budget-value.green{color:var(--green)}
+.expense-item{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}.expense-item:last-child{border-bottom:0}.expense-name{font-weight:750}.expense-meta{font-size:12px;color:var(--muted);margin-top:4px}.expense-amount{font-weight:850;white-space:nowrap}
+
+
+.finance-hero{background:#111827;color:#fff;border-radius:24px;padding:20px;margin-bottom:14px}
+.finance-hero .finance-label{color:#cbd5e1;font-size:14px}
+.finance-hero .finance-profit{font-size:38px;font-weight:850;margin-top:6px}
+.finance-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.finance-stat{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px}
+.finance-stat .label{font-size:13px;color:var(--muted)}
+.finance-stat .value{font-size:24px;font-weight:850;margin-top:5px}
+.finance-stat .value.green{color:var(--green)}.finance-stat .value.red{color:var(--red)}
+.income-item{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.income-item:last-child{border-bottom:0}.income-name{font-weight:750}.income-meta{font-size:12px;color:var(--muted);margin-top:4px}.income-amount{font-weight:850;white-space:nowrap;color:var(--green)}
+
+
+.more-sheet{width:min(430px,100%);background:#fff;border-radius:28px 28px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
+.more-title{font-size:24px;font-weight:850;margin:4px 0 16px}
+.more-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.more-item{border:1px solid var(--line);background:#fff;border-radius:18px;padding:16px 10px;text-align:center;font:inherit;cursor:pointer;color:var(--text);min-height:82px}
+.more-item .more-icon{display:block;font-size:28px;line-height:1.1;margin-bottom:6px}
+.more-item b{font-size:15px}
+.more-close{width:100%;margin-top:12px;min-height:52px}
+nav{grid-template-columns:repeat(5,1fr)}
+nav button{font-size:12px;min-width:0}
+nav .nav-icon{font-size:25px}
+
+
+.section-actions{display:flex;gap:8px;align-items:center}
+.worker-card{display:flex;align-items:center;gap:14px}
+.worker-avatar{width:54px;height:54px;border-radius:16px;background:#eef4ff;display:flex;align-items:center;justify-content:center;font-size:28px;flex:none}
+.worker-name{font-weight:800;font-size:17px}.worker-role{font-size:13px;color:var(--muted);margin-top:3px}
+.worker-money{margin-left:auto;text-align:right;font-weight:800}.worker-money small{display:block;color:var(--muted);font-weight:500}
+.report-bar{height:12px;background:#e9edf3;border-radius:99px;overflow:hidden}.report-bar i{display:block;height:100%;background:#3b82f6;border-radius:99px}
+.report-row{padding:12px 0;border-bottom:1px solid var(--line)}.report-row:last-child{border-bottom:0}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kpi{border:1px solid var(--line);border-radius:18px;padding:14px;background:#fff}.kpi b{font-size:22px;display:block;margin-top:5px}
+.danger-text{color:#dc2626!important}.danger-btn{border:1px solid #fecaca;background:#fff;color:#dc2626!important}
+.backup-note{font-size:13px;color:var(--muted);line-height:1.45}
+@media(max-width:380px){.more-grid{grid-template-columns:1fr}.kpi-grid{grid-template-columns:1fr}}
+
+</style>
+
+<style>
+#bootError{display:none;position:fixed;inset:0;background:#fff;padding:28px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#111;z-index:99999}
+#bootError h2{font-size:24px;margin:0 0 12px}#bootError pre{white-space:pre-wrap;background:#f3f4f6;padding:12px;border-radius:12px;font-size:13px}
 </style>
 </head>
 <body>
-<div class="app" id="app"></div>
-
-<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
-
+<div id="bootError"><h2>BUILDOS не загрузился</h2>
+<div>Произошла ошибка при запуске. Пришли мне этот экран — по нему я сразу найду проблему.</div>
+<pre id="bootErrorText"></pre></div>
 <script>
-const KEY="buildos_state_v3";
-const oldKey="buildos_data";
-const defaultState={
- objects:[{
-  id:"obj1",name:"ЖК Хорошевский",city:"Москва",area:142,budget:3200000,
-  client:"Иван",stage:"Черновые работы",workersCount:6,start:"2026-08-12",finish:"2026-10-25",progress:64,
-  issues:0
- }],
- tasks:[
-  {id:"t1",title:"Проверить электрику",objectId:"obj1",assignee:"",due:"",priority:"high",done:false},
-  {id:"t2",title:"Согласовать плитку",objectId:"obj1",assignee:"",due:"",priority:"medium",done:true},
-  {id:"t3",title:"Фотоотчёт заказчику",objectId:"obj1",assignee:"",due:"",priority:"medium",done:false}
- ],
- expenses:[],
- workers:[],
- materials:[],
- events:[],
- clients:[],
- salaries:[],
- estimates:[],
- docs:[],
- timesheets:[]
-};
-let state=loadState(), view="home", selectedObjectId=state.objects[0]?.id||null, selectedWorkerId=null, taskFilter="all";
+window.addEventListener('error',function(e){
+  var b=document.getElementById('bootError'),t=document.getElementById('bootErrorText');
+  if(b&&t){b.style.display='block';t.textContent=(e.message||'Ошибка JavaScript')+'\n'+(e.filename||'')+':'+(e.lineno||'');}
+});
+window.addEventListener('unhandledrejection',function(e){
+  var b=document.getElementById('bootError'),t=document.getElementById('bootErrorText');
+  if(b&&t){b.style.display='block';t.textContent='Promise error: '+(e.reason&&e.reason.message?e.reason.message:e.reason);}
+});
+</script>
 
-function loadState(){
- try{
-  const raw=localStorage.getItem(KEY);
-  if(raw)const d=JSON.parse(raw);
-   return {...structuredClone(defaultState),...d,
-    timesheets:d.timesheets||[],materials:d.materials||[],events:d.events||[],clients:d.clients||[],salaries:d.salaries||[],estimates:d.estimates||[],docs:d.docs||[]};
-  const old=localStorage.getItem(oldKey);
-  if(old){
-   const d=JSON.parse(old);
-   return {...defaultState,tasks:d.tasks||defaultState.tasks,objects:d.objects||defaultState.objects};
-  }
- }catch(e){}
- return structuredClone(defaultState);
-}
-function save(){localStorage.setItem(KEY,JSON.stringify(state));}
-function money(n){return new Intl.NumberFormat("ru-RU").format(Math.round(n||0))+" ₽"}
-function dateRu(s){if(!s)return"Без срока";try{return new Date(s+"T00:00:00").toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}catch(e){return s}}
-function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function obj(id){return state.objects.find(x=>x.id===id)}
-function expensesFor(id){return state.expenses.filter(x=>x.objectId===id)}
-function totalSpent(id){return expensesFor(id).reduce((s,x)=>s+Number(x.amount||0),0)}
-function openTasks(id){return state.tasks.filter(t=>t.objectId===id&&!t.done)}
-function render(){
- document.getElementById("app").innerHTML=`
- <header>
+<div class="app">
+<header>
   <div class="brand">BUILD<span>OS</span></div>
   <div class="greeting">Добрый день, Дмитрий 👋</div>
   <div class="subtitle">Вот что происходит на объектах</div>
- </header>
- <main class="content">${page()}</main>${nav()}
- `;
-}
-function nav(){
- const items=[["home","🏠","Главная"],["objects","🏗️","Объекты"],["tasks","✅","Задачи"],["finance","💰","Финансы"],["more","•••","Ещё"]];
- return `<nav>${items.map(x=>`<button class="${view===x[0]?"active-nav":""}" onclick="go('${x[0]}')"><span class="navicon">${x[1]}</span>${x[2]}</button>`).join("")}</nav>`;
-}
-function topPills(){
- const profit=state.objects.reduce((s,o)=>s+o.budget-totalSpent(o.id),0);
- const workers=state.workers.length||state.objects.reduce((s,o)=>s+(o.workersCount||0),0);
- const issues=state.objects.reduce((s,o)=>s+(o.issues||0),0);
- return `<div class="pills"><span class="pill">BUILDOS</span><span class="pill">Остаток ${money(profit)}</span><span class="pill">👷 ${workers}</span><span class="pill">⚠️ ${issues}</span></div>`;
-}
-function page(){
- if(view==="home")return home();
- if(view==="objects")return objectsPage();
- if(view==="object")return objectPage();
- if(view==="tasks")return tasksPage();
- if(view==="finance")return financePage();
- if(view==="workers")return workersPage();
- if(view==="worker")return workerDetailPage();
- if(view==="calendar")return calendarPage();
- if(view==="materials")return materialsPage();
- if(view==="reports")return reportsPage();
- if(view==="clients")return simpleListPage("👤 Клиенты",state.clients,["Имя","Телефон","Комментарий"],"client");
- if(view==="estimates")return estimatesPage();
- if(view==="docs")return simpleListPage("📁 Документы",state.docs,["Название","Тип","Объект"],"doc");
- if(view==="salary")return salaryPage();
- if(view==="more")return morePage();
- if(view==="ai")return aiPage();
- return home();
-}
-function home(){
- const open=state.tasks.filter(t=>!t.done).length, overdue=state.tasks.filter(t=>!t.done&&t.due&&t.due<new Date().toISOString().slice(0,10)).length;
- const spent=state.expenses.reduce((s,x)=>s+Number(x.amount||0),0);
- const workers=state.workers.length||state.objects.reduce((s,o)=>s+(o.workersCount||0),0);
- return `${topPills()}
- <div class="section-head"><h1>Сегодня</h1></div>
- <div class="grid2">
-  ${stat("🔴",overdue,"просрочено")}${stat("📋",open,"в работе")}
-  ${stat("💰",money(spent),"расходы")}${stat("👷",workers,"рабочих")}
- </div>
- <div class="card" style="margin-top:16px"><h2>⚡ Быстрые действия</h2>
-  <div class="grid2">
-   <button class="secondary quick" onclick="openTask()">＋ Задача</button>
-   <button class="secondary quick" onclick="go('objects')">🏗️ Объекты</button>
-   <button class="secondary quick" onclick="openExpense()">💸 Расход</button>
-   <button class="secondary quick" onclick="go('calendar')">📅 Календарь</button>
+</header>
+
+<main class="content">
+  <section id="home" class="view active">
+    <div class="section-head"><h2>Мои объекты</h2><button class="secondary" onclick="showView('objects')">Все объекты →</button></div>
+    <div id="homeObjects"></div>
+    <h2 style="margin:28px 0 14px">Сегодня</h2>
+    <div class="stats">
+      <div class="stat"><div class="stat-icon">🔴</div><div id="overdue" class="stat-num">0</div><div class="stat-label">просрочено</div></div>
+      <div class="stat"><div class="stat-icon">📋</div><div id="todayCount" class="stat-num">0</div><div class="stat-label">в работе</div></div>
+      <div class="stat"><div class="stat-icon">💰</div><div id="expenseTotal" class="stat-num">0</div><div class="stat-label">расходы</div></div>
+      <div class="stat"><div class="stat-icon">👷</div><div id="workersTotal" class="stat-num">0</div><div class="stat-label">рабочих</div></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="section-head" style="margin-bottom:10px"><h3 style="margin:0">📊 Сейчас по бизнесу</h3><button class="secondary" onclick="showView('reports')">Отчёты →</button></div>
+      <div class="kpi-grid">
+        <div class="kpi"><span class="small">Доходы</span><b id="homeIncome">0 ₽</b></div>
+        <div class="kpi"><span class="small">Прибыль</span><b id="homeProfit">0 ₽</b></div>
+        <div class="kpi"><span class="small">Расходы</span><b id="homeExpenses">0 ₽</b></div>
+        <div class="kpi"><span class="small">Задач просрочено</span><b id="homeOverdue">0</b></div>
+      </div>
+    </div>
+
+    <div class="quick">
+      <h3>⚡ Быстрые действия</h3>
+      <div class="grid">
+        <button class="secondary" onclick="openTaskModal()">➕ Задача</button>
+        <button class="secondary" onclick="showView('objects')">🏗️ Объекты</button>
+        <button class="secondary" onclick="showView('finance')">💰 Финансы</button>
+        <button class="secondary" onclick="showView('ai')">🤖 Спросить AI</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="objects" class="view">
+    <div class="section-head"><h2>Мои объекты</h2><button class="primary" style="width:auto" onclick="openObjectModal()">+ Добавить</button></div>
+    <div id="objectList"></div>
+  </section>
+
+  <section id="objectDetail" class="view">
+    <div id="detail"></div>
+  </section>
+
+  <section id="tasks" class="view">
+    <div class="section-head"><h2>Задачи</h2><button class="primary" style="width:auto" onclick="openTaskModal()">+ Добавить</button></div>
+    <div class="task-tools">
+      <button class="task-filter active" data-filter="all" onclick="setTaskFilter('all',this)">Все</button>
+      <button class="task-filter" data-filter="open" onclick="setTaskFilter('open',this)">В работе</button>
+      <button class="task-filter" data-filter="done" onclick="setTaskFilter('done',this)">Выполнены</button>
+    </div>
+    <p id="taskSummary" class="summary"></p>
+    <div id="taskList"></div>
+  </section>
+
+  <section id="expenses" class="view">
+    <div class="section-head"><h2>Расходы</h2><button class="primary" style="width:auto" onclick="openExpenseModal()">+ Добавить</button></div>
+    <div class="card"><div class="row"><span>Всего расходов</span><b id="expensePageTotal">0 ₽</b></div></div>
+    <div id="expenseList"></div>
+  </section>
+
+
+  <section id="finance" class="view">
+    <div class="section-head"><h2>Финансы</h2></div>
+
+    <div class="finance-hero">
+      <div class="finance-label">Прибыль по внесённым данным</div>
+      <div id="financeProfit" class="finance-profit">0 ₽</div>
+      <div class="small" style="color:#cbd5e1;margin-top:5px">Доходы − расходы</div>
+    </div>
+
+    <div class="finance-grid">
+      <div class="finance-stat"><div class="label">💚 Доходы</div><div id="financeIncome" class="value green">0 ₽</div></div>
+      <div class="finance-stat"><div class="label">💸 Расходы</div><div id="financeExpenses" class="value red">0 ₽</div></div>
+      <div class="finance-stat"><div class="label">🏗️ Объектов</div><div id="financeObjects" class="value">0</div></div>
+      <div class="finance-stat"><div class="label">📊 Средняя маржа</div><div id="financeMargin" class="value">0%</div></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="section-head" style="margin-bottom:8px">
+        <h3 style="margin:0">По объектам</h3>
+        <button class="secondary" onclick="openIncomeModal()">+ Доход</button>
+      </div>
+      <div id="financeObjectList"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head" style="margin-bottom:8px">
+        <h3 style="margin:0">Доходы</h3>
+        <button class="secondary" onclick="openIncomeModal()">+ Добавить</button>
+      </div>
+      <div id="incomeList"></div>
+    </div>
+
+    <div class="section-head" style="margin-top:18px">
+      <h3 style="margin:0">Расходы</h3>
+      <button class="primary" style="width:auto" onclick="openExpenseModal()">+ Добавить</button>
+    </div>
+    <div id="financeExpenseList"></div>
+  </section>
+
+
+  <section id="workers" class="view">
+    <div class="section-head"><h2>Рабочие</h2><button class="primary" style="width:auto" onclick="openWorkerModal()">+ Добавить</button></div>
+    <div class="card"><div class="row"><span>Всего рабочих</span><b id="workersPageTotal">0</b></div></div>
+    <div id="workerList"></div>
+  </section>
+
+  <section id="reports" class="view">
+    <div class="section-head"><h2>Отчёты</h2><button class="secondary" onclick="renderReports()">Обновить</button></div>
+    <div class="card">
+      <h3 style="margin-top:0">📅 За текущий месяц</h3>
+      <div class="kpi-grid">
+        <div class="kpi"><span class="small">Доходы</span><b id="reportIncome">0 ₽</b></div>
+        <div class="kpi"><span class="small">Расходы</span><b id="reportExpenses">0 ₽</b></div>
+        <div class="kpi"><span class="small">Прибыль</span><b id="reportProfit">0 ₽</b></div>
+        <div class="kpi"><span class="small">Маржа</span><b id="reportMargin">0%</b></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🏗️ Объекты</h3>
+      <div id="reportObjects"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">📋 Задачи</h3>
+      <div id="reportTasks"></div>
+    </div>
+  </section>
+
+  <section id="backup" class="view">
+    <div class="section-head"><h2>Данные</h2></div>
+    <div class="card">
+      <h3 style="margin-top:0">💾 Резервная копия</h3>
+      <p class="backup-note">Скачать все объекты, задачи, доходы, расходы и рабочих одним JSON-файлом. Потом этот файл можно восстановить на этом устройстве.</p>
+      <button class="primary" onclick="exportBackup()">Скачать резервную копию</button>
+      <input id="backupFile" type="file" accept=".json,application/json" style="display:none" onchange="importBackup(event)">
+      <button class="secondary" style="margin-top:10px" onclick="document.getElementById('backupFile').click()">Восстановить из файла</button>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">⚠️ Сброс данных</h3>
+      <p class="backup-note">Удалит сохранённые данные приложения на этом устройстве. Используй только после резервной копии.</p>
+      <button class="secondary danger-btn" onclick="resetBuildos()">Сбросить сохранённые данные</button>
+    </div>
+  </section>
+
+  <section id="ai" class="view">
+    <div class="section-head"><h2>AI-помощник</h2></div>
+    <div class="ai-box">
+      <div style="font-size:20px;font-weight:800">🤖 Чем помочь?</div>
+      <div class="small" style="color:#cbd5e1;margin:7px 0 14px">Спроси про задачи, сроки или расходы.</div>
+      <input id="aiInput" placeholder="Например: что просрочено?">
+      <button class="primary" style="margin-top:10px" onclick="askAI()">Спросить</button>
+      <div id="aiAnswer" class="ai-answer"></div>
+    </div>
+  </section>
+</main>
+</div>
+
+<nav>
+  <button id="nav-home" class="nav-active" onclick="showView('home',this)"><span class="nav-icon">🏠</span>Главная</button>
+  <button id="nav-objects" onclick="showView('objects',this)"><span class="nav-icon">🏗️</span>Объекты</button>
+  <button id="nav-tasks" onclick="showView('tasks',this)"><span class="nav-icon">✅</span>Задачи</button>
+  <button id="nav-finance" onclick="showView('finance',this)"><span class="nav-icon">💰</span>Финансы</button>
+  <button id="nav-more" onclick="openMoreMenu()"><span class="nav-icon">•••</span>Ещё</button>
+</nav>
+
+
+<div id="moreModal" class="modal" onclick="if(event.target===this)closeMoreMenu()">
+  <div class="more-sheet">
+    <div class="more-title">Ещё</div>
+    <div class="more-grid">
+      <button class="more-item" onclick="closeMoreMenu();showView('ai',document.getElementById('nav-more'))">
+        <span class="more-icon">🤖</span><b>AI-помощник</b>
+      </button>
+      <button class="more-item" onclick="closeMoreMenu();showView('expenses')">
+        <span class="more-icon">💸</span><b>Расходы</b>
+      </button>
+      <button class="more-item" onclick="closeMoreMenu();showView('workers')">
+        <span class="more-icon">👷</span><b>Рабочие</b>
+      </button>
+      <button class="more-item" onclick="closeMoreMenu();showView('reports')">
+        <span class="more-icon">📊</span><b>Отчёты</b>
+      </button>
+      <button class="more-item" onclick="closeMoreMenu();showView('backup')">
+        <span class="more-icon">💾</span><b>Данные</b>
+      </button>
+    </div>
+    <button class="secondary more-close" onclick="closeMoreMenu()">Закрыть</button>
   </div>
- </div>
- <div class="card"><h2>🏗️ Объекты</h2>${state.objects.map(o=>`
-  <button class="list-card" onclick="selectedObjectId='${o.id}';go('object')">
-   <b style="font-size:19px">${esc(o.name)}</b><div class="muted">${esc(o.city)} · ${o.area} м²</div>
-   <div style="margin:12px 0" class="progress"><i style="width:${o.progress||0}%"></i></div>
-   <b>Готовность ${o.progress||0}%</b>
-  </button>`).join("")}</div>`;
+</div>
+
+
+<div id="workerModal" class="modal" onclick="if(event.target===this)closeModal('workerModal')">
+  <div class="sheet">
+    <h2>Новый рабочий</h2>
+    <div class="field"><label>Имя</label><input id="workerName" placeholder="Например: Сергей"></div>
+    <div class="field"><label>Специальность</label><input id="workerRole" placeholder="Электрик, отделочник..."></div>
+    <div class="field"><label>Объект</label><select id="workerObject"></select></div>
+    <div class="field"><label>Ставка за день</label><input id="workerRate" type="number" inputmode="decimal" placeholder="5000"></div>
+    <div class="actions"><button class="secondary" onclick="closeModal('workerModal')">Отмена</button><button class="primary" onclick="addWorker()">Добавить</button></div>
+  </div>
+</div>
+
+<div id="taskModal" class="modal" onclick="if(event.target===this)closeModal('taskModal')">
+  <div class="sheet">
+    <h2>Новая задача</h2>
+    <div class="field"><label>Задача</label><input id="taskTitle" placeholder="Например: проверить электрику"></div>
+    <div class="field"><label>Объект</label><select id="taskObject"></select></div>
+    <div class="field"><label>Ответственный</label><input id="taskAssignee" placeholder="Например: Сергей"></div>
+    <div class="field"><label>Срок</label><input id="taskDue" type="date"></div>
+    <div class="field"><label>Приоритет</label><select id="taskPriority"><option value="high">🔴 Высокий</option><option value="medium" selected>🟠 Средний</option><option value="low">🟢 Низкий</option></select></div>
+    <div class="actions"><button class="secondary" onclick="closeModal('taskModal')">Отмена</button><button class="primary" onclick="addTask()">Сохранить</button></div>
+  </div>
+</div>
+
+
+
+<div id="objectModal" class="modal" onclick="if(event.target===this)closeModal('objectModal')">
+  <div class="sheet">
+    <h2>Новый объект</h2>
+    <div class="field"><label>Название</label><input id="objectName" placeholder="Например: Квартира №35"></div>
+    <div class="field"><label>Клиент</label><input id="objectClient" placeholder="Имя клиента"></div>
+    <div class="field"><label>Город</label><input id="objectCity" value="Москва"></div>
+    <div class="field"><label>Площадь, м²</label><input id="objectArea" type="number" inputmode="decimal" placeholder="80"></div>
+    <div class="field"><label>Бюджет</label><input id="objectBudget" type="number" inputmode="decimal" placeholder="2500000"></div>
+    <div class="field"><label>Срок, дней</label><input id="objectDays" type="number" inputmode="numeric" placeholder="90"></div>
+    <div class="field"><label>Этап</label><input id="objectStage" placeholder="Черновые работы"></div>
+    <div class="actions"><button class="secondary" onclick="closeModal('objectModal')">Отмена</button><button class="primary" onclick="addObject()">Добавить</button></div>
+  </div>
+</div>
+
+<div id="incomeModal" class="modal" onclick="if(event.target===this)closeModal('incomeModal')">
+  <div class="sheet">
+    <h2>Новый доход</h2>
+    <div class="field"><label>Объект</label><select id="incomeObject"></select></div>
+    <div class="field"><label>Статья</label><input id="incomeCategory" placeholder="Оплата клиента, аванс, допработы..."></div>
+    <div class="field"><label>Сумма</label><input id="incomeAmount" type="number" inputmode="decimal" placeholder="500000"></div>
+    <div class="field"><label>Дата</label><input id="incomeDate" type="date"></div>
+    <div class="field"><label>Комментарий</label><input id="incomeComment" placeholder="За какой этап / что оплачено?"></div>
+    <div class="actions"><button class="secondary" onclick="closeModal('incomeModal')">Отмена</button><button class="primary" onclick="addIncome()">Добавить</button></div>
+  </div>
+</div>
+
+<div id="expenseModal" class="modal" onclick="if(event.target===this)closeModal('expenseModal')">
+  <div class="sheet">
+    <h2>Новый расход</h2>
+    <div class="field"><label>Объект</label><select id="expenseObject"></select></div>
+    <div class="field"><label>Статья</label><input id="expenseCategory" placeholder="Материалы, рабочие, доставка..."></div>
+    <div class="field"><label>Сумма</label><input id="expenseAmount" type="number" inputmode="decimal" placeholder="50000"></div>
+    <div class="field"><label>Дата</label><input id="expenseDate" type="date"></div>
+    <div class="field"><label>Комментарий</label><input id="expenseComment" placeholder="Что купили?"></div>
+    <div class="actions"><button class="secondary" onclick="closeModal('expenseModal')">Отмена</button><button class="primary" onclick="addExpense()">Добавить</button></div>
+  </div>
+</div>
+
+<script>
+const defaultObjects=[
+ {name:"ЖК Хорошевский",city:"Москва",client:"Иван",budget:3200000,area:142,days:74,progress:64,stage:"Черновые работы",workers:6,start:"12 августа",finish:"25 октября",issues:2,icon:"🏗️",tasks:["Проверить электрику","Согласовать плитку","Фотоотчёт заказчику"]},
+ {name:"Квартира №27",city:"Москва",client:"Анна",budget:1850000,area:87,days:61,progress:41,stage:"Подготовка",workers:4,start:"1 сентября",finish:"31 октября",issues:0,icon:"🏠",tasks:["Заказать сантехнику","Подготовить стены"]}
+];
+let objects=JSON.parse(localStorage.getItem("buildos_objects")||"null")||defaultObjects;
+let tasks=JSON.parse(localStorage.getItem("buildos_tasks")||"null")||[
+ {title:"Проверить электрику",object:"ЖК Хорошевский",assignee:"",due:"",priority:"high",done:false},
+ {title:"Согласовать плитку",object:"ЖК Хорошевский",assignee:"",due:"",priority:"medium",done:true},
+ {title:"Заказать сантехнику",object:"Квартира №27",assignee:"",due:"",priority:"medium",done:true},
+ {title:"Подготовить стены",object:"Квартира №27",assignee:"",due:"",priority:"low",done:false},
+ {title:"Фотоотчёт заказчику",object:"ЖК Хорошевский",assignee:"",due:"",priority:"medium",done:false}
+];
+let expenses=JSON.parse(localStorage.getItem("buildos_expenses")||"[]");
+let incomes=JSON.parse(localStorage.getItem("buildos_incomes")||"[]");
+let workers=JSON.parse(localStorage.getItem("buildos_workers")||"[]");
+let taskFilter="all";
+
+function save(){localStorage.setItem("buildos_tasks",JSON.stringify(tasks));localStorage.setItem("buildos_expenses",JSON.stringify(expenses));localStorage.setItem("buildos_incomes",JSON.stringify(incomes));localStorage.setItem("buildos_workers",JSON.stringify(workers));localStorage.setItem("buildos_objects",JSON.stringify(objects))}
+function showView(id,btn){
+ document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+ const v=document.getElementById(id); if(v)v.classList.add("active");
+ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("nav-active"));
+ const nav=document.getElementById("nav-"+id); if(nav)nav.classList.add("nav-active");
+ if(id==="home")renderHome(); if(id==="objects")renderObjects(); if(id==="tasks")renderTasks(); if(id==="expenses")renderExpenses(); if(id==="finance")renderFinance(); if(id==="workers")renderWorkers(); if(id==="reports")renderReports();
+ window.scrollTo(0,0);
 }
-function stat(i,v,l){return `<div class="stat"><div class="icon">${i}</div><div class="value">${v}</div><div class="label">${l}</div></div>`}
-function objectsPage(){
- return `${topPills()}<div class="section-head"><h1>Объекты</h1><button class="primary" onclick="openObject()">＋ Добавить</button></div>
- ${state.objects.map(o=>`<button class="list-card" onclick="selectedObjectId='${o.id}';go('object')">
- <div style="display:flex;gap:14px;align-items:center"><div style="font-size:45px">🏗️</div><div><b style="font-size:24px">${esc(o.name)}</b><div class="muted">${esc(o.city)} · ${o.area} м²</div></div></div>
- <div style="margin:14px 0" class="progress"><i style="width:${o.progress||0}%"></i></div>
- <b>Готовность ${o.progress||0}%</b><div class="small">${o.stage||""} · бюджет ${money(o.budget)}</div></button>`).join("")}`;
+function money(n){return Number(n||0).toLocaleString("ru-RU")+" ₽"}
+function objectOptions(id){
+ document.getElementById(id).innerHTML=objects.map((o,i)=>`<option value="${o.name}">${o.name}</option>`).join("");
 }
-function objectPage(){
- const o=obj(selectedObjectId); if(!o)return objectsPage();
- const spent=totalSpent(o.id), remaining=o.budget-spent, tasks=openTasks(o.id);
- return `${topPills()}
- <div class="card"><button class="secondary" onclick="go('objects')">← Все объекты</button>
- <div style="display:flex;gap:15px;align-items:center;margin:22px 0"><div style="font-size:54px">🏗️</div><div><h1 style="font-size:34px">${esc(o.name)}</h1><div class="muted">${esc(o.city)} · ${o.area} м²</div></div></div>
- <div class="progress"><i style="width:${o.progress}%"></i></div><h2 style="margin-top:12px">Готовность ${o.progress}%</h2></div>
- <div class="card"><h2>💰 Финансы объекта</h2><div class="grid2">
- ${stat("",""+money(o.budget),"бюджет")}${stat("",money(spent),"потрачено")}
- ${stat("",money(remaining),remaining>=0?"осталось":"перерасход")}${stat("",""+(o.budget?Math.round(spent/o.budget*100):0)+"%","освоено")}
- </div><div style="margin:16px 0" class="progress"><i style="width:${Math.min(100,o.budget?spent/o.budget*100:0)}%"></i></div>
- <button class="primary full" onclick="openExpense('${o.id}')">＋ Добавить расход</button></div>
- <div class="card"><h2>📋 Основная информация</h2>
- ${row("Клиент",o.client)}${row("Этап",o.stage)}${row("Рабочие",o.workersCount+" человек")}${row("Начало",dateRu(o.start))}${row("Сдача",dateRu(o.finish))}</div>
- <div class="card"><div class="section-head"><h2>📋 Задачи объекта</h2><button class="secondary" onclick="openTask('${o.id}')">＋</button></div>
- ${tasks.length?tasks.map(taskHtml).join(""):"<div class='empty'>Все задачи выполнены 🎉</div>"}</div>
- <div class="grid2"><button class="secondary" onclick="go('calendar')">📅 Календарь</button><button class="secondary" onclick="go('materials')">📦 Материалы</button></div>`;
+function renderHome(){
+ document.getElementById("homeObjects").innerHTML=objects.map((o,i)=>objectCard(o,i,true)).join("");
+ const open=tasks.filter(t=>!t.done).length;
+ const overdue=tasks.filter(t=>!t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date()).length;
+ document.getElementById("todayCount").textContent=open;
+ document.getElementById("overdue").textContent=overdue;
+ document.getElementById("expenseTotal").textContent=expenses.reduce((s,e)=>s+Number(e.amount||0),0).toLocaleString("ru-RU");
+ document.getElementById("workersTotal").textContent=workers.length||objects.reduce((s,o)=>s+Number(o.workers||0),0);
+ const income=totalIncome(), spent=totalExpenses(), profit=income-spent;
+ document.getElementById("homeIncome").textContent=money(income);
+ document.getElementById("homeExpenses").textContent=money(spent);
+ const hp=document.getElementById("homeProfit");hp.textContent=money(profit);hp.className=profit<0?"danger-text":"";
+ document.getElementById("homeOverdue").textContent=overdue;
 }
-function row(a,b){return `<div class="row"><span>${a}</span><b>${esc(b)}</b></div>`}
-function tasksPage(){
- let list=state.tasks.filter(t=>taskFilter==="all"||(taskFilter==="done"?t.done:!t.done));
- return `${topPills()}<div class="section-head"><h1>Задачи</h1><button class="primary" onclick="openTask()">＋ Добавить</button></div>
- <div class="toolbar">${["all","open","done"].map(f=>`<button class="filter ${taskFilter===f?"active":""}" onclick="taskFilter='${f}';render()">${f==="all"?"Все":f==="open"?"В работе":"Выполнены"}</button>`).join("")}</div>
- <div class="card"><div class="muted">Всего: ${state.tasks.length} · В работе: ${state.tasks.filter(t=>!t.done).length} · Выполнено: ${state.tasks.filter(t=>t.done).length}</div>
- ${list.length?list.map(taskHtml).join(""):"<div class='empty'>Задач нет.</div>"}</div>`;
-}
-function taskHtml(t){
- const o=obj(t.objectId);
- return `<div class="task" onclick="editTask('${t.id}')"><div class="check ${t.done?"done":""}" onclick="event.stopPropagation();toggleTask('${t.id}')"></div>
- <div class="task-main"><div class="task-title ${t.done?"done-text":""}">${esc(t.title)}</div>
- <div class="task-meta">🏗️ ${esc(o?.name||"Без объекта")} · 👷 ${esc(t.assignee||"Не назначен")} · 📅 ${dateRu(t.due)}</div>
- <span class="badge ${t.priority||"medium"}">${t.priority==="high"?"Высокий":t.priority==="low"?"Низкий":"Средний"}</span>
- </div></div>`;
-}
-function financePage(){
- const total=state.expenses.reduce((s,x)=>s+Number(x.amount||0),0);
- return `${topPills()}<div class="section-head"><h1>Финансы</h1><button class="primary" onclick="openExpense()">＋ Расход</button></div>
- <div class="grid2">${stat("💰",money(total),"все расходы")}${stat("📊",state.expenses.length,"операций")}</div>
- <div class="card"><h2>Расходы</h2>${state.expenses.length?state.expenses.slice().reverse().map(e=>`
- <div class="row"><div><b>${esc(e.category)}</b><div class="small">${esc(obj(e.objectId)?.name||"Без объекта")} · ${dateRu(e.date)}</div>${e.comment?`<div class="small">${esc(e.comment)}</div>`:""}</div><b class="money red">− ${money(e.amount)}</b></div>`).join(""):"<div class='empty'>Расходов пока нет.</div>"}</div>`;
-}
-function workerStats(w){
- const days=state.timesheets.filter(x=>x.workerId===w.id&&x.status==="worked").length;
- const advances=state.salaries.filter(x=>x.workerId===w.id).reduce((s,x)=>s+Number(x.amount||0),0);
- const earned=days*Number(w.rate||0);
- return {days,advances,earned,balance:earned-advances};
-}
-function workersPage(){
- return `${topPills()}<div class="section-head"><h1>Рабочие</h1><button class="primary" onclick="openWorker()">＋ Добавить</button></div>
- <div class="grid2"><div class="stat"><div class="icon">👷</div><div class="value">${state.workers.length}</div><div class="label">рабочих</div></div>
- <div class="stat"><div class="icon">📅</div><div class="value">${state.timesheets.filter(x=>x.status==="worked").length}</div><div class="label">отработано дней</div></div></div>
- <div class="card" style="margin-top:16px"><h2>👷 Команда</h2>
- ${state.workers.length?state.workers.map(w=>{const s=workerStats(w);return `<button class="list-card" onclick="workerDetail('${w.id}')">
- <div style="display:flex;justify-content:space-between;gap:12px"><div><b style="font-size:20px">${esc(w.name)}</b><div class="muted">${esc(w.role||"Рабочий")}</div></div><b>${money(w.rate||0)} / день</b></div>
- <div class="grid3" style="margin-top:14px"><div><div class="small">Дни</div><b>${s.days}</b></div><div><div class="small">Начислено</div><b>${money(s.earned)}</b></div><div><div class="small">Баланс</div><b class="${s.balance<0?"money red":"money green"}" style="font-size:16px">${money(s.balance)}</b></div></div>
- <div class="small" style="margin-top:8px">🏗️ ${esc(obj(w.objectId)?.name||"—")}</div></button>`}).join(""):"<div class='empty'>Рабочих пока нет. Добавь первого.</div>"}
+function objectCard(o,i,home=false){
+ return `<div class="card object-card">
+   <div class="object-top"><div class="icon">${o.icon}</div><div><div class="object-name">${o.name}</div><div class="object-meta">${o.area} м² · срок ${o.days} дней</div></div></div>
+   <div class="progress"><i style="width:${o.progress}%"></i></div>
+   <div class="status ${o.issues?'bad':'ok'}">${o.issues?'⚠️ '+o.issues+' проблем':'🟢 Всё по плану'} · выполнено ${o.progress}%</div>
+   <button class="primary" style="margin-top:16px" onclick="openObject(${i})">Открыть объект →</button>
  </div>`;
 }
-function calendarPage(){
- const ev=[...state.events.map(e=>({...e,type:"event"})),...state.tasks.filter(t=>t.due).map(t=>({date:t.due,title:t.title,type:"task"}))].sort((a,b)=>(a.date||"").localeCompare(b.date||""));
- return `${topPills()}<div class="section-head"><h1>Календарь</h1><button class="primary" onclick="openEvent()">＋ Событие</button></div>
- <div class="card"><div class="timeline">${ev.length?ev.map(e=>`<div class="event"><b>${dateRu(e.date)} · ${e.type==="task"?"📋":"📅"}</b><span>${esc(e.title)}</span><div class="small">${esc(e.comment||"")}</div></div>`).join(""):"<div class='empty'>Событий и задач со сроком пока нет.</div>"}</div></div>`;
+
+function openObjectModal(){
+ ["objectName","objectClient","objectArea","objectBudget","objectDays","objectStage"].forEach(id=>document.getElementById(id).value="");
+ document.getElementById("objectCity").value="Москва";
+ document.getElementById("objectModal").classList.add("show");
+ setTimeout(()=>document.getElementById("objectName").focus(),50);
 }
-function materialsPage(){
- return `${topPills()}<div class="section-head"><h1>Материалы</h1><button class="primary" onclick="openMaterial()">＋ Добавить</button></div>
- <div class="card">${state.materials.length?state.materials.map(m=>`<div class="row"><div><b>${esc(m.name)}</b><div class="small">${esc(obj(m.objectId)?.name||"—")} · ${esc(m.supplier||"Без поставщика")}</div><div class="small">${m.qty} ${esc(m.unit||"шт")} · ${dateRu(m.date)}</div></div><b>${money(m.amount)}</b></div>`).join(""):"<div class='empty'>Материалов пока нет.</div>"}</div>`;
+function addObject(){
+ const name=document.getElementById("objectName").value.trim(); if(!name)return;
+ if(objects.some(o=>o.name===name)){alert("Объект с таким названием уже есть");return}
+ objects.push({
+   name,client:document.getElementById("objectClient").value.trim(),city:document.getElementById("objectCity").value.trim()||"Москва",
+   area:Number(document.getElementById("objectArea").value)||0,budget:Number(document.getElementById("objectBudget").value)||0,
+   days:Number(document.getElementById("objectDays").value)||0,progress:0,stage:document.getElementById("objectStage").value.trim()||"Подготовка",
+   workers:0,start:new Date().toLocaleDateString("ru-RU"),finish:"",issues:0,icon:"🏠",tasks:[]
+ });
+ save();closeModal("objectModal");renderObjects();renderHome();objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");objectOptions("workerObject");
 }
-function reportsPage(){
- const totalBudget=state.objects.reduce((s,o)=>s+o.budget,0), spent=state.expenses.reduce((s,e)=>s+Number(e.amount||0),0);
- return `${topPills()}<div class="section-head"><h1>Отчёты</h1></div>
- <div class="card"><h2>📊 Сводка по проектам</h2>${row("Объектов",state.objects.length)}${row("Общий бюджет",money(totalBudget))}${row("Потрачено",money(spent))}${row("Остаток",money(totalBudget-spent))}${row("Задач всего",state.tasks.length)}${row("Задач в работе",state.tasks.filter(t=>!t.done).length)}</div>
- <div class="card"><h2>🏗️ По объектам</h2>${state.objects.map(o=>{let s=totalSpent(o.id);return `<div class="row"><div><b>${esc(o.name)}</b><div class="small">${o.progress}% готовности</div></div><b>${money(s)} / ${money(o.budget)}</b></div>`}).join("")}</div>`;
+
+function renderObjects(){document.getElementById("objectList").innerHTML=objects.map((o,i)=>objectCard(o,i)).join("")||'<div class="empty">Объектов пока нет</div>'}
+function openObject(i){
+ const o=objects[i];
+ const objExpenses=expenses.filter(e=>e.object===o.name);
+ const spent=objExpenses.reduce((s,e)=>s+Number(e.amount||0),0);
+ const remaining=Math.max(0,Number(o.budget||0)-spent);
+ const percent=o.budget?Math.min(100,Math.round(spent/Number(o.budget)*100)):0;
+ const objTasks=tasks.filter(t=>t.object===o.name);
+ document.getElementById("detail").innerHTML=`<div class="card">
+ <button class="secondary" onclick="showView('objects')">← Все объекты</button>
+ <div class="object-top" style="margin-top:14px"><div class="icon">${o.icon}</div><div><div class="detail-title">${o.name}</div><div class="object-meta">${o.city} · ${o.area} м²</div></div></div>
+ <div class="progress"><i style="width:${o.progress}%"></i></div><div style="margin-top:12px;font-size:18px;font-weight:800">Готовность ${o.progress}%</div>
+ </div>
+
+ <div class="detail-card"><h3>💰 Финансы объекта</h3>
+   <div class="budget-summary">
+    <div class="budget-box"><div class="budget-label">Бюджет</div><div class="budget-value">${money(o.budget)}</div></div>
+    <div class="budget-box"><div class="budget-label">Потрачено</div><div class="budget-value ${spent>o.budget?'red':''}">${money(spent)}</div></div>
+    <div class="budget-box"><div class="budget-label">Осталось</div><div class="budget-value ${remaining<o.budget*.1?'red':'green'}">${money(remaining)}</div></div>
+    <div class="budget-box"><div class="budget-label">Освоено</div><div class="budget-value">${percent}%</div></div>
+   </div>
+   <div class="progress"><i style="width:${percent}%;background:${percent>90?'var(--red)':'var(--green)'}"></i></div>
+   <button class="primary" style="margin-top:12px" onclick="openExpenseModal('${o.name}')">+ Добавить расход</button>
+ </div>
+
+ <div class="detail-card"><h3>🧾 Расходы</h3>
+   ${objExpenses.length?objExpenses.slice().reverse().map(e=>`<div class="expense-item"><div><div class="expense-name">${e.category||"Расход"}</div><div class="expense-meta">${e.comment||"Без комментария"} · ${e.date}</div></div><div class="expense-amount">${money(e.amount)}</div></div>`).join(""):'<div class="empty">Расходов по объекту пока нет.</div>'}
+ </div>
+
+ <div class="detail-card"><h3>📋 Основная информация</h3>
+ <div class="row"><span>Клиент</span><b>${o.client}</b></div><div class="row"><span>Этап</span><span>${o.stage}</span></div><div class="row"><span>Рабочие</span><span>${o.workers} человек</span></div><div class="row"><span>Начало</span><span>${o.start}</span></div><div class="row"><span>Сдача</span><span>${o.finish}</span></div></div>
+
+ <div class="detail-card"><h3>📋 Задачи объекта</h3>
+ ${objTasks.length?objTasks.map(t=>`<div class="row"><span>${t.done?'✅':'⬜'} ${t.title}<br><span class="small">${t.assignee||"Не назначен"} · ${t.due||"Без срока"}</span></span></div>`).join(""):'<div class="empty">Задач пока нет.</div>'}
+ <button class="secondary" style="width:100%;margin-top:10px" onclick="openTaskModal('${o.name}')">+ Добавить задачу</button></div>`;
+ showView("objectDetail");
 }
-function simpleListPage(title,data,labels,type){
- return `${topPills()}<div class="section-head"><h1>${title}</h1><button class="primary" onclick="openSimple('${type}')">＋ Добавить</button></div>
- <div class="card">${data.length?data.map((x,i)=>`<div class="row"><div><b>${esc(x.name||x.title||"Без названия")}</b><div class="small">${esc(x.phone||x.type||x.objectId&&obj(x.objectId)?.name||"")}</div></div><b>${money(x.amount||0)}</b></div>`).join(""):"<div class='empty'>Пока пусто.</div>"}</div>`;
+function setTaskFilter(f,btn){taskFilter=f;document.querySelectorAll(".task-filter").forEach(b=>b.classList.remove("active"));btn.classList.add("active");renderTasks()}
+function priorityLabel(p){return p==="high"?"Высокий":p==="low"?"Низкий":"Средний"}
+
+function openWorkerModal(){
+ document.getElementById("workerName").value="";document.getElementById("workerRole").value="";document.getElementById("workerRate").value="";
+ objectOptions("workerObject");document.getElementById("workerModal").classList.add("show");
+ setTimeout(()=>document.getElementById("workerName").focus(),50);
 }
-function salaryPage(){
- const total=state.salaries.reduce((s,x)=>s+Number(x.amount||0),0);
- return `${topPills()}<div class="section-head"><h1>Зарплата</h1><button class="primary" onclick="openSalary()">＋ Выплата</button></div>
- <div class="card"><h2>💵 Выплачено</h2><div class="money">${money(total)}</div></div>
- <div class="card">${state.salaries.length?state.salaries.map(x=>`<div class="row"><div><b>${esc(state.workers.find(w=>w.id===x.workerId)?.name||"Рабочий")}</b><div class="small">${dateRu(x.date)}</div></div><b>${money(x.amount)}</b></div>`).join(""):"<div class='empty'>Выплат пока нет.</div>"}</div>`;
+function renderWorkers(){
+ const total=workers.length;
+ document.getElementById("workersPageTotal").textContent=total;
+ document.getElementById("workerList").innerHTML=workers.length?workers.map((w,i)=>`<div class="card worker-card">
+   <div class="worker-avatar">👷</div><div><div class="worker-name">${w.name}</div><div class="worker-role">${w.role||"Рабочий"} · ${w.object||"Без объекта"}</div></div>
+   <div class="worker-money">${money(w.rate)}<small>за день</small></div>
+ </div><div class="task-tools" style="margin-top:-6px;margin-bottom:10px"><button class="secondary danger-btn" onclick="deleteWorker(${i})">Удалить</button></div>`).join(""):'<div class="empty">Рабочих пока нет. Добавь первого.</div>';
 }
-function morePage(){
- return `${topPills()}<h1>Ещё</h1><div class="grid2" style="margin-top:18px">
- ${moreBtn("🤖","AI-помощник","ai")}${moreBtn("📦","Материалы","materials")}${moreBtn("👷","Рабочие","workers")}${moreBtn("📅","Табель","workers")}${moreBtn("📊","Отчёты","reports")}${moreBtn("👤","Клиенты","clients")}${moreBtn("📋","Сметы","estimates")}${moreBtn("📁","Документы","docs")}${moreBtn("💵","Зарплата","salary")}</div>
- <div class="card" style="margin-top:16px"><h2>⚙️ Данные</h2><button class="secondary full" onclick="exportData()">Экспортировать данные</button><button class="danger full" style="margin-top:10px" onclick="resetData()">Сбросить тестовые данные</button></div>`;
+function addWorker(){
+ const name=document.getElementById("workerName").value.trim();if(!name)return;
+ workers.push({name,role:document.getElementById("workerRole").value.trim(),object:document.getElementById("workerObject").value,rate:Number(document.getElementById("workerRate").value)||0});
+ save();closeModal("workerModal");showView("workers");
 }
-function moreBtn(i,t,v){return `<button class="secondary quick" onclick="go('${v}')"><div style="font-size:30px">${i}</div>${t}</button>`}
-function aiPage(){
- return `${topPills()}<h1>AI-помощник</h1><div class="card" style="margin-top:18px"><h2>Что подсказать?</h2>
- <div class="field"><textarea id="aiQ" placeholder="Например: что просрочено, сколько потратили, что нужно сделать завтра?"></textarea></div>
- <button class="primary full" onclick="askAI()">Спросить</button><div id="aiA" style="margin-top:15px"></div></div>`;
+function deleteWorker(i){if(!confirm("Удалить рабочего?"))return;workers.splice(i,1);save();renderWorkers();renderHome()}
+
+function renderTasks(){
+ let list=tasks.filter(t=>taskFilter==="all"?true:taskFilter==="done"?t.done:!t.done);
+ const open=tasks.filter(t=>!t.done).length, done=tasks.filter(t=>t.done).length;
+ document.getElementById("taskSummary").textContent=`Всего: ${tasks.length} · В работе: ${open} · Выполнено: ${done}`;
+ document.getElementById("taskList").innerHTML=list.length?list.map((t)=>{
+  const i=tasks.indexOf(t),due=t.due?new Date(t.due+"T00:00:00").toLocaleDateString("ru-RU"):"без срока";
+  return `<div class="card task-card ${t.done?'done':''}">
+   <div class="check" onclick="toggleTask(${i})"></div>
+   <div class="task-main" onclick="toggleTask(${i})"><div class="task-title">${t.title}</div><div class="task-meta">🏗️ ${t.object} · 👷 ${t.assignee||"Не назначен"} · 📅 ${due}</div><div class="task-status">${t.done?"✓ Выполнено":"В работе"} · ${priorityLabel(t.priority)} приоритет</div></div>
+   <button class="secondary danger-btn" style="width:auto;padding:9px 12px" onclick="event.stopPropagation();deleteTask(${i})">×</button>
+ </div>`;
+ }).join(""):'<div class="empty">Задач в этом разделе нет.</div>';
+ renderHome();
 }
-function modal(title,body){
- document.getElementById("sheet").innerHTML=`<button class="close-x" onclick="closeModal()">×</button><h2>${title}</h2>${body}`;
- document.getElementById("modal").classList.add("show");
-}
-function closeModal(){document.getElementById("modal").classList.remove("show")}
-function openTask(objectId=selectedObjectId){
- modal("Новая задача",`<div class="field"><label>Задача</label><input id="fTitle" placeholder="Например: проверить электрику"></div>
- <div class="field"><label>Объект</label><select id="fObj">${state.objects.map(o=>`<option value="${o.id}" ${o.id===objectId?"selected":""}>${esc(o.name)}</option>`).join("")}</select></div>
- <div class="field"><label>Ответственный</label><input id="fAssignee" placeholder="Например: Сергей"></div>
- <div class="field"><label>Срок</label><input id="fDue" type="date"></div>
- <div class="field"><label>Приоритет</label><select id="fPriority"><option value="medium">🟠 Средний</option><option value="high">🔴 Высокий</option><option value="low">🟢 Низкий</option></select></div>
- <div class="actions"><button class="secondary" onclick="closeModal()">Отмена</button><button class="primary" onclick="addTask()">Сохранить</button></div>`);
+function toggleTask(i){tasks[i].done=!tasks[i].done;save();renderTasks()}
+function deleteTask(i){if(!confirm("Удалить задачу?"))return;tasks.splice(i,1);save();renderTasks()}
+function openTaskModal(objectName){
+ objectOptions("taskObject");if(objectName)document.getElementById("taskObject").value=objectName;
+ document.getElementById("taskTitle").value="";document.getElementById("taskAssignee").value="";document.getElementById("taskDue").value="";document.getElementById("taskPriority").value="medium";
+ document.getElementById("taskModal").classList.add("show");setTimeout(()=>document.getElementById("taskTitle").focus(),50);
 }
 function addTask(){
- const title=document.getElementById("fTitle").value.trim();if(!title)return;
- state.tasks.unshift({id:crypto.randomUUID(),title,objectId:document.getElementById("fObj").value,assignee:document.getElementById("fAssignee").value.trim(),due:document.getElementById("fDue").value,priority:document.getElementById("fPriority").value,done:false});
- save();closeModal();render();
-}
-function editTask(id){
- const t=state.tasks.find(x=>x.id===id);if(!t)return;
- modal("Редактировать задачу",`<div class="field"><label>Задача</label><input id="fTitle" value="${esc(t.title)}"></div>
- <div class="field"><label>Объект</label><select id="fObj">${state.objects.map(o=>`<option value="${o.id}" ${o.id===t.objectId?"selected":""}>${esc(o.name)}</option>`).join("")}</select></div>
- <div class="field"><label>Ответственный</label><input id="fAssignee" value="${esc(t.assignee||"")}"></div>
- <div class="field"><label>Срок</label><input id="fDue" type="date" value="${t.due||""}"></div>
- <div class="field"><label>Приоритет</label><select id="fPriority"><option value="medium">🟠 Средний</option><option value="high">🔴 Высокий</option><option value="low">🟢 Низкий</option></select></div>
- <div class="actions"><button class="danger" onclick="deleteTask('${id}')">Удалить</button><button class="primary" onclick="updateTask('${id}')">Сохранить</button></div>`);
- document.getElementById("fPriority").value=t.priority||"medium";
-}
-function updateTask(id){const t=state.tasks.find(x=>x.id===id);t.title=document.getElementById("fTitle").value.trim();t.objectId=document.getElementById("fObj").value;t.assignee=document.getElementById("fAssignee").value.trim();t.due=document.getElementById("fDue").value;t.priority=document.getElementById("fPriority").value;save();closeModal();render()}
-function deleteTask(id){state.tasks=state.tasks.filter(t=>t.id!==id);save();closeModal();render()}
-function toggleTask(id){const t=state.tasks.find(x=>x.id===id);t.done=!t.done;save();render()}
-function openExpense(objectId=selectedObjectId){
- modal("Новый расход",`<div class="field"><label>Объект</label><select id="eObj">${state.objects.map(o=>`<option value="${o.id}" ${o.id===objectId?"selected":""}>${esc(o.name)}</option>`).join("")}</select></div>
- <div class="field"><label>Статья</label><input id="eCat" placeholder="Материалы, рабочие, доставка..."></div>
- <div class="field"><label>Сумма</label><input id="eAmount" type="number" inputmode="decimal" placeholder="50000"></div>
- <div class="field"><label>Дата</label><input id="eDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
- <div class="field"><label>Комментарий</label><input id="eComment" placeholder="Что купили?"></div>
- <div class="actions"><button class="secondary" onclick="closeModal()">Отмена</button><button class="primary" onclick="addExpense()">Добавить</button></div>`);
-}
-function addExpense(){const amount=Number(document.getElementById("eAmount").value);if(!amount)return;state.expenses.push({id:crypto.randomUUID(),objectId:document.getElementById("eObj").value,category:document.getElementById("eCat").value||"Без категории",amount,date:document.getElementById("eDate").value,comment:document.getElementById("eComment").value});save();closeModal();render()}
-
-function workerDetailPage(){
- const w=state.workers.find(x=>x.id===selectedWorkerId); if(!w)return workersPage();
- const s=workerStats(w);
- const rows=state.timesheets.filter(x=>x.workerId===w.id).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
- return `${topPills()}<div class="section-head"><h1>Рабочий</h1><button class="secondary" onclick="go('workers')">← Команда</button></div>
- <div class="card"><div style="display:flex;justify-content:space-between;gap:12px"><div><h2>${esc(w.name)}</h2><div class="muted">${esc(w.role||"Рабочий")} · ${esc(obj(w.objectId)?.name||"Без объекта")}</div></div><button class="secondary" onclick="editWorker('${w.id}')">Изменить</button></div>
- <div class="grid2" style="margin-top:18px">${stat("📅",s.days,"отработано дней")}${stat("💰",money(s.earned),"начислено")}${stat("💸",money(s.advances),"выплачено")}${stat("🧾",money(s.balance),"к выплате")}</div></div>
- <div class="card"><div class="section-head"><h2>📅 Табель</h2><button class="primary" onclick="openTimesheet('${w.id}')">＋ День</button></div>
- ${rows.length?rows.map(x=>`<div class="row"><div><b>${dateRu(x.date)}</b><div class="small">${x.status==="worked"?"Работал":"Не работал"}${x.comment?" · "+esc(x.comment):""}</div></div><b>${x.status==="worked"?money(w.rate||0):"0 ₽"}</b></div>`).join(""):"<div class='empty'>Табель пока пуст.</div>"}</div>
- <div class="card"><h2>💵 Выплаты</h2>${state.salaries.filter(x=>x.workerId===w.id).length?state.salaries.filter(x=>x.workerId===w.id).slice().reverse().map(x=>`<div class="row"><span>${dateRu(x.date)}</span><b>${money(x.amount)}</b></div>`).join(""):"<div class='empty'>Выплат пока нет.</div>"}</div>`;
-}
-function workerDetail(id){selectedWorkerId=id;go("worker")}
-function openTimesheet(workerId){
- const w=state.workers.find(x=>x.id===workerId);
- modal("Отметить день",`<div class="field"><label>Рабочий</label><input value="${esc(w?.name||"")}" disabled></div>
- <div class="field"><label>Дата</label><input id="tsDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
- <div class="field"><label>Статус</label><select id="tsStatus"><option value="worked">Работал</option><option value="off">Не работал</option></select></div>
- <div class="field"><label>Комментарий</label><input id="tsComment" placeholder="Например: полный день"></div>
- <div class="actions"><button class="secondary" onclick="closeModal()">Отмена</button><button class="primary" onclick="addTimesheet('${workerId}')">Сохранить</button></div>`);
-}
-function addTimesheet(workerId){
- const date=document.getElementById("tsDate").value;if(!date)return;
- state.timesheets=state.timesheets.filter(x=>!(x.workerId===workerId&&x.date===date));
- state.timesheets.push({id:crypto.randomUUID(),workerId,date,status:document.getElementById("tsStatus").value,comment:document.getElementById("tsComment").value});
- save();closeModal();selectedWorkerId=workerId;render();
-}
-function estimatesPage(){
- const total=state.estimates.reduce((s,x)=>s+Number(x.amount||0),0);
- return `${topPills()}<div class="section-head"><h1>Сметы</h1><button class="primary" onclick="openEstimate()">＋ Смета</button></div>
- <div class="card"><h2>📋 Общая сумма</h2><div class="money">${money(total)}</div></div>
- ${state.estimates.length?state.estimates.map(e=>`<button class="list-card" onclick="estimateDetail('${e.id}')"><div style="display:flex;justify-content:space-between;gap:10px"><div><b style="font-size:19px">${esc(e.name)}</b><div class="muted">${esc(obj(e.objectId)?.name||"Без объекта")}</div></div><b>${money(e.amount)}</b></div><div class="small" style="margin-top:10px">${(e.items||[]).length} позиций</div></button>`).join(""):"<div class='card empty'>Смет пока нет. Создай первую.</div>"}`;
-}
-let selectedEstimateId=null;
-function estimateDetail(id){
- selectedEstimateId=id;
- const e=state.estimates.find(x=>x.id===id);if(!e)return;
- modal("Смета: "+esc(e.name),`<div class="notice">Объект: <b>${esc(obj(e.objectId)?.name||"—")}</b><br>Итого: <b>${money(e.amount)}</b></div>
- ${(e.items||[]).length?`<div class="table"><table><thead><tr><th>Позиция</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr></thead><tbody>${e.items.map(i=>`<tr><td>${esc(i.name)}</td><td>${i.qty} ${esc(i.unit)}</td><td>${money(i.price)}</td><td>${money(i.qty*i.price)}</td></tr>`).join("")}</tbody></table></div>`:"<div class='empty'>Позиций пока нет.</div>"}
- <div class="actions"><button class="secondary" onclick="closeModal()">Закрыть</button><button class="primary" onclick="openEstimateItem('${id}')">＋ Позиция</button></div>`);
-}
-function openEstimate(){
- modal("Новая смета",`<div class="field"><label>Название</label><input id="estName" placeholder="Смета на ремонт"></div><div class="field"><label>Объект</label><select id="estObj">${state.objects.map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join("")}</select></div><div class="actions"><button class="secondary" onclick="closeModal()">Отмена</button><button class="primary" onclick="addEstimate()">Создать</button></div>`);
-}
-function addEstimate(){const name=document.getElementById("estName").value.trim();if(!name)return;state.estimates.push({id:crypto.randomUUID(),name,objectId:document.getElementById("estObj").value,amount:0,items:[]});save();closeModal();render()}
-function openEstimateItem(id){
- modal("Позиция сметы",`<div class="field"><label>Наименование</label><input id="eiName" placeholder="Штукатурка"></div><div class="grid2"><div class="field"><label>Количество</label><input id="eiQty" type="number" value="1"></div><div class="field"><label>Единица</label><input id="eiUnit" value="шт"></div></div><div class="field"><label>Цена</label><input id="eiPrice" type="number" placeholder="1000"></div><div class="actions"><button class="secondary" onclick="closeModal()">Отмена</button><button class="primary" onclick="addEstimateItem('${id}')">Добавить</button></div>`);
-}
-function addEstimateItem(id){
- const e=state.estimates.find(x=>x.id===id);const name=document.getElementById("eiName").value.trim();if(!name)return;
- const qty=Number(document.getElementById("eiQty").value)||0,price=Number(document.getElementById("eiPrice").value)||0;
- e.items=e.items||[];e.items.push({id:crypto.randomUUID(),name,qty,unit:document.getElementById("eiUnit").value,price});e.amount=e.items.reduce((s,i)=>s+i.qty*i.price,0);
- save();closeModal();estimateDetail(id);
+ const title=document.getElementById("taskTitle").value.trim();if(!title)return;
+ tasks.unshift({title,object:document.getElementById("taskObject").value,assignee:document.getElementById("taskAssignee").value.trim(),due:document.getElementById("taskDue").value,priority:document.getElementById("taskPriority").value,done:false});
+ save();closeModal("taskModal");showView("tasks");
 }
 
-function openWorker(){
- modal("Новый рабочий",`<div class="field"><label>ФИО</label><input id="wName" placeholder="Например: Сергей Иванов"></div><div class="field"><label>Специальность</label><input id="wRole" placeholder="Плиточник"></div><div class="field"><label>Ставка</label><input id="wRate" type="number" placeholder="5000"></div><div class="field"><label>Объект</label><select id="wObj">${state.objects.map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join("")}</select></div><div class="actions"><button class="secondary" onclick="closeModal()">Отмена</button><button class="primary" onclick="addWorker()">Добавить</button></div>`);
+function totalIncome(){return incomes.reduce((s,e)=>s+Number(e.amount||0),0)}
+function totalExpenses(){return expenses.reduce((s,e)=>s+Number(e.amount||0),0)}
+function renderFinance(){
+  const income=totalIncome(), spent=totalExpenses(), profit=income-spent;
+  document.getElementById("financeIncome").textContent=money(income);
+  document.getElementById("financeExpenses").textContent=money(spent);
+  const p=document.getElementById("financeProfit");p.textContent=money(profit);p.style.color=profit<0?"#fca5a5":"#fff";
+  document.getElementById("financeObjects").textContent=objects.length;
+  document.getElementById("financeMargin").textContent=income?Math.round(profit/income*100)+"%":"0%";
+
+  document.getElementById("financeObjectList").innerHTML=objects.map(o=>{
+    const inc=incomes.filter(e=>e.object===o.name).reduce((s,e)=>s+Number(e.amount||0),0);
+    const exp=expenses.filter(e=>e.object===o.name).reduce((s,e)=>s+Number(e.amount||0),0);
+    const pr=inc-exp;
+    return `<div class="row"><span><b>${o.name}</b><br><span class="small">Доход ${money(inc)} · Расход ${money(exp)}</span></span><b style="color:${pr<0?'var(--red)':'var(--green)'}">${money(pr)}</b></div>`;
+  }).join("")||'<div class="empty">Объектов пока нет.</div>';
+
+  document.getElementById("incomeList").innerHTML=incomes.length?incomes.slice().reverse().map((e,ri)=>{const i=incomes.length-1-ri;return `<div class="income-item"><div><div class="income-name">${e.category||"Доход"}</div><div class="income-meta">${e.object}${e.comment?" · "+e.comment:""} · ${e.date}</div></div><div style="text-align:right"><div class="income-amount">${money(e.amount)}</div><button class="secondary danger-btn" style="margin-top:6px;padding:5px 9px" onclick="deleteIncome(${i})">Удалить</button></div></div>`}).join(""):'<div class="empty">Доходов пока нет.</div>';
+
+  document.getElementById("financeExpenseList").innerHTML=expenses.length?expenses.slice().reverse().map((e,ri)=>{const i=expenses.length-1-ri;return `<div class="card"><div class="row"><span>${e.category||"Расход"}</span><b>${money(e.amount)}</b></div><div class="small">${e.object}${e.comment?" · "+e.comment:""} · ${e.date}</div><button class="secondary danger-btn" style="margin-top:8px;padding:6px 10px" onclick="deleteExpense(${i})">Удалить</button></div>`}).join(""):'<div class="empty">Расходов пока нет.</div>';
 }
-function addWorker(){const name=document.getElementById("wName").value.trim();if(!name)return;state.workers.push({id:crypto.randomUUID(),name,role:document.getElementById("wRole").value,rate:Number(document.getElementById("wRate").value)||0,objectId:document.getElementById("wObj").value});save();closeModal();render()}
-function editWorker(id){
- const w=state.workers.find(x=>x.id===id);if(!w)return;
- modal("Рабочий",`<div class="field"><label>ФИО</label><input id="wName" value="${esc(w.name)}"></div><div class="field"><label>Специальность</label><input id="wRole" value="${esc(w.role||"")}"></div><div class="field"><label>Ставка</label><input id="wRate" type="number" value="${w.rate||0}"></div><div class="actions"><button class="danger" onclick="state.workers=state.workers.filter(x=>x.id!=='${id}');save();closeModal();render()">Удалить</button><button class="primary" onclick="w.name=document.getElementById('wName').value;w.role=document.getElementById('wRole').value;w.rate=Number(document.getElementById('wRate').value)||0;save();closeModal();render()">Сохранить</button></div>`);
+function openIncomeModal(objectName){
+  objectOptions("incomeObject");
+  if(objectName)document.getElementById("incomeObject").value=objectName;
+  document.getElementById("incomeCategory").value="";
+  document.getElementById("incomeAmount").value="";
+  document.getElementById("incomeDate").value=new Date().toISOString().slice(0,10);
+  document.getElementById("incomeComment").value="";
+  document.getElementById("incomeModal").classList.add("show");
 }
-function openMaterial(){
- modal("Новый материал",`<div class="field"><label>Материал</label><input id="mName" placeholder="Плитка, цемент, краска..."></div><div class="field"><label>Объект</label><select id="mObj">${state.objects.map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join("")}</select></div><div class="field"><label>Количество</label><input id="mQty" type="number" placeholder="10"></div><div class="field"><label>Единица</label><input id="mUnit" value="шт"></div><div class="field"><label>Сумма</label><input id="mAmount" type="number" placeholder="50000"></div><div class="field"><label>Поставщик</label><input id="mSup" placeholder="Компания"></div><div class="field"><label>Дата</label><input id="mDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="actions"><button class="secondary" onclick="closeModal()">Отмена</button><button class="primary" onclick="addMaterial()">Добавить</button></div>`);
+function addIncome(){
+  const amount=Number(document.getElementById("incomeAmount").value);if(!amount)return;
+  const rawDate=document.getElementById("incomeDate").value;
+  const date=rawDate?new Date(rawDate+"T00:00:00").toLocaleDateString("ru-RU"):new Date().toLocaleDateString("ru-RU");
+  incomes.push({object:document.getElementById("incomeObject").value,category:document.getElementById("incomeCategory").value.trim()||"Доход",amount,comment:document.getElementById("incomeComment").value.trim(),date});
+  save();closeModal("incomeModal");showView("finance");
 }
-function addMaterial(){const name=document.getElementById("mName").value.trim();if(!name)return;state.materials.push({id:crypto.randomUUID(),name,objectId:document.getElementById("mObj").value,qty:Number(document.getElementById("mQty").value)||0,unit:document.getElementById("mUnit").value,amount:Number(document.getElementById("mAmount").value)||0,supplier:document.getElementById("mSup").value,date:document.getElementById("mDate").value});save();closeModal();render()}
-function openEvent(){
- modal("Новое событие",`<div class="field"><label>Название</label><input id="vTitle" placeholder="Поставка материалов"></div><div class="field"><label>Дата</label><input id="vDate" type="date"></div><div class="field"><label>Комментарий</label><textarea id="vComment"></textarea></div><div class="actions"><button class="secondary" onclick="closeModal()">Отмена</button><button class="primary" onclick="addEvent()">Добавить</button></div>`);
+
+
+function deleteIncome(i){if(!confirm("Удалить доход?"))return;incomes.splice(i,1);save();renderFinance();renderHome()}
+function deleteExpense(i){if(!confirm("Удалить расход?"))return;expenses.splice(i,1);save();renderExpenses();renderFinance();renderHome()}
+
+function renderExpenses(){
+ const total=expenses.reduce((s,e)=>s+Number(e.amount||0),0);
+ document.getElementById("expensePageTotal").textContent=money(total);
+ document.getElementById("expenseList").innerHTML=expenses.length?expenses.slice().reverse().map(e=>`<div class="card"><div class="row"><span>${e.category||"Расход"}</span><b>${money(e.amount)}</b></div><div class="small">${e.object}${e.comment?" · "+e.comment:""} · ${e.date}</div></div>`).join(""):'<div class="empty">Расходов пока нет.</div>';
 }
-function addEvent(){const title=document.getElementById("vTitle").value.trim();if(!title)return;state.events.push({id:crypto.randomUUID(),title,date:document.getElementById("vDate").value,comment:document.getElementById("vComment").value});save();closeModal();render()}
-function openObject(){
- modal("Новый объект",`<div class="field"><label>Название</label><input id="oName" placeholder="Например: ЖК Хорошевский"></div><div class="field"><label>Город</label><input id="oCity" value="Москва"></div><div class="field"><label>Площадь, м²</label><input id="oArea" type="number"></div><div class="field"><label>Бюджет</label><input id="oBudget" type="number"></div><div class="field"><label>Клиент</label><input id="oClient"></div><div class="field"><label>Этап</label><input id="oStage" placeholder="Черновые работы"></div><div class="field"><label>Начало</label><input id="oStart" type="date"></div><div class="field"><label>Сдача</label><input id="oFinish" type="date"></div><div class="actions"><button class="secondary" onclick="closeModal()">Отмена</button><button class="primary" onclick="addObject()">Добавить</button></div>`);
+function openExpenseModal(objectName){objectOptions("expenseObject");if(objectName)document.getElementById("expenseObject").value=objectName;document.getElementById("expenseCategory").value="";document.getElementById("expenseAmount").value="";document.getElementById("expenseDate").value=new Date().toISOString().slice(0,10);document.getElementById("expenseComment").value="";document.getElementById("expenseModal").classList.add("show")}
+function addExpense(){
+ const amount=Number(document.getElementById("expenseAmount").value);if(!amount)return;
+ const rawDate=document.getElementById("expenseDate").value;
+ const date=rawDate?new Date(rawDate+"T00:00:00").toLocaleDateString("ru-RU"):new Date().toLocaleDateString("ru-RU");
+ expenses.push({object:document.getElementById("expenseObject").value,category:document.getElementById("expenseCategory").value.trim()||"Расход",amount,comment:document.getElementById("expenseComment").value.trim(),date});
+ save();closeModal("expenseModal");showView("expenses");
 }
-function addObject(){const name=document.getElementById("oName").value.trim();if(!name)return;const o={id:crypto.randomUUID(),name,city:document.getElementById("oCity").value,area:Number(document.getElementById("oArea").value)||0,budget:Number(document.getElementById("oBudget").value)||0,client:document.getElementById("oClient").value,stage:document.getElementById("oStage").value,start:document.getElementById("oStart").value,finish:document.getElementById("oFinish").value,progress:0,issues:0,workersCount:0};state.objects.push(o);selectedObjectId=o.id;save();closeModal();render()}
-function openSalary(){
- modal("Новая выплата",`<div class="field"><label>Рабочий</label><select id="sWorker">${state.workers.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join("")}</select></div><div class="field"><label>Сумма</label><input id="sAmount" type="number" placeholder="30000"></div><div class="field"><label>Дата</label><input id="sDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="actions"><button class="secondary" onclick="closeModal()">Отмена</button><button class="primary" onclick="addSalary()">Добавить</button></div>`);
-}
-function addSalary(){if(!state.workers.length){alert("Сначала добавь рабочего.");return}const amount=Number(document.getElementById("sAmount").value);if(!amount)return;state.salaries.push({id:crypto.randomUUID(),workerId:document.getElementById("sWorker").value,amount,date:document.getElementById("sDate").value});save();closeModal();render()}
-function openSimple(type){
- const map={client:["Новый клиент","Имя","Телефон"],estimate:["Новая смета","Название","Сумма"],doc:["Новый документ","Название","Тип"]};const x=map[type];
- modal(x[0],`<div class="field"><label>${x[1]}</label><input id="q1"></div><div class="field"><label>${x[2]}</label><input id="q2"></div><div class="field"><label>Объект</label><select id="q3"><option value="">Без объекта</option>${state.objects.map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join("")}</select></div><div class="actions"><button class="secondary" onclick="closeModal()">Отмена</button><button class="primary" onclick="addSimple('${type}')">Добавить</button></div>`);
-}
-function addSimple(type){
- const x={id:crypto.randomUUID(),name:document.getElementById("q1").value,objectId:document.getElementById("q3").value};
- if(type==="client"){x.phone=document.getElementById("q2").value;state.clients.push(x)}
- if(type==="estimate"){x.amount=Number(document.getElementById("q2").value)||0;state.estimates.push(x)}
- if(type==="doc"){x.type=document.getElementById("q2").value;state.docs.push(x)}
- save();closeModal();render();
-}
+function closeModal(id){document.getElementById(id).classList.remove("show")}
 function askAI(){
- const q=(document.getElementById("aiQ").value||"").toLowerCase(), a=document.getElementById("aiA");
- const overdue=state.tasks.filter(t=>!t.done&&t.due&&t.due<new Date().toISOString().slice(0,10));
- if(q.includes("просроч")||q.includes("долг")) a.innerHTML=`<div class="notice"><b>Просроченные задачи: ${overdue.length}</b><br>${overdue.map(t=>esc(t.title)).join("<br>")||"Нет просроченных задач."}</div>`;
- else if(q.includes("завтра")) a.innerHTML=`<div class="notice"><b>Задачи со сроком:</b><br>${state.tasks.filter(t=>t.due).map(t=>`${dateRu(t.due)} — ${esc(t.title)}`).join("<br>")||"Нет задач со сроками."}</div>`;
- else a.innerHTML=`<div class="notice">Сейчас в системе ${state.objects.length} объект(а), ${state.tasks.filter(t=>!t.done).length} задач в работе и расходов на ${money(state.expenses.reduce((s,x)=>s+Number(x.amount||0),0))}.</div>`;
+ const q=document.getElementById("aiInput").value.toLowerCase().trim(),a=document.getElementById("aiAnswer");
+ if(q.includes("просроч")){const n=tasks.filter(t=>!t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date()).length;a.innerHTML=`Просроченных задач: <b>${n}</b>.`;return}
+ if(q.includes("расход")){a.innerHTML=`Всего расходов: <b>${money(expenses.reduce((s,e)=>s+Number(e.amount||0),0))}</b>.`;return}
+ if(q.includes("завтра")){a.innerHTML=`На данный момент в задачах нет отдельного планировщика уведомлений. Задачи со сроками сохраняются в приложении.`;return}
+ a.innerHTML=`Сейчас я могу помочь с быстрым анализом: <b>просроченных задач</b>, <b>расходов</b> и текущего списка задач.`;
 }
-function exportData(){
- const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="buildos-backup.json";a.click();URL.revokeObjectURL(url);
+
+
+function currentMonthKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`}
+function entryMonthKey(e){
+ if(!e.date)return "";
+ const parts=e.date.split(".");
+ if(parts.length===3)return `${parts[2]}-${parts[1].padStart(2,"0")}`;
+ const iso=e.date.slice(0,7);return iso;
 }
-function resetData(){if(confirm("Сбросить данные к тестовым?")){localStorage.removeItem(KEY);state=structuredClone(defaultState);selectedObjectId=state.objects[0]?.id;render()}}
-function go(v){view=v;render();window.scrollTo(0,0)}
-render();
+function renderReports(){
+ const key=currentMonthKey();
+ const inc=incomes.filter(e=>entryMonthKey(e)===key).reduce((s,e)=>s+Number(e.amount||0),0);
+ const exp=expenses.filter(e=>entryMonthKey(e)===key).reduce((s,e)=>s+Number(e.amount||0),0);
+ const profit=inc-exp;
+ document.getElementById("reportIncome").textContent=money(inc);
+ document.getElementById("reportExpenses").textContent=money(exp);
+ document.getElementById("reportProfit").textContent=money(profit);
+ document.getElementById("reportMargin").textContent=inc?Math.round(profit/inc*100)+"%":"0%";
+
+ document.getElementById("reportObjects").innerHTML=objects.map(o=>{
+   const oi=incomes.filter(e=>e.object===o.name).reduce((s,e)=>s+Number(e.amount||0),0);
+   const oe=expenses.filter(e=>e.object===o.name).reduce((s,e)=>s+Number(e.amount||0),0);
+   const op=oi-oe;
+   return `<div class="report-row"><div class="row"><span><b>${o.name}</b><br><span class="small">${money(oi)} доход · ${money(oe)} расход</span></span><b class="${op<0?'danger-text':''}">${money(op)}</b></div><div class="report-bar" style="margin-top:8px"><i style="width:${Math.min(100,o.progress||0)}%"></i></div><div class="small" style="margin-top:4px">Готовность ${o.progress||0}%</div></div>`;
+ }).join("")||'<div class="empty">Объектов пока нет.</div>';
+
+ const open=tasks.filter(t=>!t.done).length,done=tasks.filter(t=>t.done).length;
+ const overdue=tasks.filter(t=>!t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date()).length;
+ document.getElementById("reportTasks").innerHTML=`<div class="kpi-grid"><div class="kpi"><span class="small">Всего</span><b>${tasks.length}</b></div><div class="kpi"><span class="small">В работе</span><b>${open}</b></div><div class="kpi"><span class="small">Выполнено</span><b>${done}</b></div><div class="kpi"><span class="small">Просрочено</span><b class="${overdue?'danger-text':''}">${overdue}</b></div></div>`;
+}
+
+
+function exportBackup(){
+ const data={version:4,createdAt:new Date().toISOString(),objects,tasks,expenses,incomes,workers};
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="BUILDOS_backup_"+new Date().toISOString().slice(0,10)+".json";a.click();
+ setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function importBackup(event){
+ const file=event.target.files[0];if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{try{
+   const d=JSON.parse(reader.result);
+   if(!Array.isArray(d.objects)||!Array.isArray(d.tasks))throw new Error("Неверный файл");
+   objects=d.objects;tasks=d.tasks;expenses=Array.isArray(d.expenses)?d.expenses:[];incomes=Array.isArray(d.incomes)?d.incomes:[];workers=Array.isArray(d.workers)?d.workers:[];
+   save();alert("Данные восстановлены");renderHome();renderObjects();renderTasks();renderExpenses();renderFinance();renderWorkers();
+ }catch(e){alert("Не удалось восстановить файл")}};
+ reader.readAsText(file);
+ event.target.value="";
+}
+function resetBuildos(){
+ if(!confirm("Точно удалить сохранённые данные?"))return;
+ ["buildos_tasks","buildos_expenses","buildos_incomes","buildos_workers","buildos_objects"].forEach(k=>localStorage.removeItem(k));
+ location.reload();
+}
+
+function openMoreMenu(){document.getElementById("moreModal").classList.add("show")}
+function closeMoreMenu(){document.getElementById("moreModal").classList.remove("show")}
+
+function init(){objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");objectOptions("workerObject");renderHome();renderObjects();renderTasks();renderExpenses();renderFinance();renderWorkers();renderReports()}
+init();
 </script>
 </body>
 </html>
