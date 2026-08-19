@@ -5,46 +5,32 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>BUILDOS</title>
 <style>
-:root{--bg:#f5f7fa;--card:#fff;--text:#111827;--muted:#6b7280;--blue:#2475f5;--green:#16a34a;--red:#ef4444;--line:#e5e7eb}
+:root{--bg:#f5f7fa;--card:#fff;--text:#111827;--muted:#6b7280;--blue:#2475f5;--green:#16a34a;--red:#ef4444;--orange:#f59e0b;--line:#e5e7eb}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--text)}
-.app{max-width:430px;margin:auto;min-height:100vh;padding-bottom:82px}
+.app{max-width:430px;margin:auto;min-height:100vh;padding-bottom:84px}
 header{background:#fff;padding:24px 18px 18px;border-bottom:1px solid var(--line)}
-.brand{font-size:25px;font-weight:850;letter-spacing:-1px}.brand span{color:#f59e0b}
-.greeting{margin-top:20px;font-size:25px;font-weight:800}.subtitle{margin-top:7px;font-size:17px;color:var(--muted)}
+.brand{font-size:25px;font-weight:850;letter-spacing:-1px}.brand span{color:#f59e0b}.greeting{margin-top:20px;font-size:25px;font-weight:800}.subtitle{margin-top:7px;font-size:17px;color:var(--muted)}
 .content{padding:18px 16px}.section-head{display:flex;justify-content:space-between;align-items:center;margin:5px 0 14px}.section-head h2{font-size:22px;margin:0}.link{color:var(--blue);font-weight:700}
-.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:14px;box-shadow:0 3px 12px #1111}
-.object{display:flex;gap:14px;align-items:center}.icon{width:72px;height:72px;border-radius:20px;background:#dce5f1;display:grid;place-items:center;font-size:35px}.name{font-size:18px;font-weight:800}.meta{color:var(--muted);margin-top:5px;font-size:15px}
+.card,.detail-card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:14px;box-shadow:0 3px 12px #1111}
+.object{display:flex;gap:14px;align-items:center}.icon{width:72px;height:72px;border-radius:20px;background:#dce5f1;display:grid;place-items:center;font-size:35px}.name{font-size:18px;font-weight:800}.meta,.small{color:var(--muted);margin-top:5px;font-size:14px}
 .progress{height:9px;background:#e9edf3;border-radius:99px;overflow:hidden;margin:16px 0 10px}.progress i{display:block;height:100%;background:var(--blue);border-radius:99px}
 .status{font-size:14px;font-weight:700}.status.ok{color:var(--green)}.status.warn{color:var(--red)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.stat{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;min-height:125px}.stat .emoji{font-size:25px}.stat b{display:block;font-size:31px;margin-top:5px}.stat span{color:var(--muted)}
-button{font:inherit;cursor:pointer}.primary{width:100%;border:0;border-radius:14px;background:var(--blue);color:white;padding:13px;font-weight:750;font-size:16px}.secondary{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 13px;font-weight:700}
-.task{display:flex;gap:12px;align-items:flex-start}.check{width:23px;height:23px;border:2px solid #b8c0cc;border-radius:7px;flex:none}.task.done .check{background:var(--green);border-color:var(--green);position:relative}.task.done .check:after{content:"✓";color:#fff;position:absolute;left:3px;top:-2px;font-weight:800}.task.done .task-title{text-decoration:line-through;color:var(--muted)}.task-title{font-weight:700}.task-meta{font-size:13px;color:var(--muted);margin-top:4px}
-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:10}
-nav button{border:0;background:none;color:var(--muted);font-size:12px;padding:5px}nav button.active{color:var(--blue);font-weight:800}.navicon{display:block;font-size:23px;margin-bottom:2px}
+button{font:inherit;cursor:pointer}.primary{width:100%;border:0;border-radius:14px;background:var(--blue);color:white;padding:13px;font-weight:750;font-size:16px}.secondary{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 13px;font-weight:700;color:var(--text)}
+.danger{border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:12px;padding:10px 13px;font-weight:700}.mini{padding:8px 10px;font-size:13px}
+.task-card{display:flex;gap:12px;align-items:flex-start;cursor:pointer}.check{width:23px;height:23px;border:2px solid #b8c0cc;border-radius:7px;flex:none}.task-card.done .check{background:var(--green);border-color:var(--green);position:relative}.task-card.done .check:after{content:"✓";color:#fff;position:absolute;left:3px;top:-2px;font-weight:800}.task-card.done .task-title{text-decoration:line-through;color:var(--muted)}.task-title{font-weight:750;font-size:16px}.task-meta{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.45}.task-main{flex:1;min-width:0}.priority{display:inline-block;margin-top:8px;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800}.priority.high{background:#fee2e2;color:#b91c1c}.priority.medium{background:#fff7ed;color:#c2410c}.priority.low{background:#ecfdf5;color:#15803d}.task-status{font-size:12px;font-weight:800;margin-top:6px;color:var(--blue)}.task-card.overdue{border-color:#fecaca}.overdue-label{color:var(--red);font-size:12px;font-weight:800;margin-top:5px}
+.task-tools{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.task-filter{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;font-weight:700;color:#4b5563}.task-filter.active{background:#eef4ff;color:var(--blue);border-color:#9ec5ff}
+.row{display:flex;justify-content:space-between;gap:15px;padding:12px 0;border-bottom:1px solid var(--line);font-size:15px}.row:last-child{border-bottom:0}.row b{white-space:nowrap}
+.detail-title{font-size:25px;font-weight:850}.pill{display:inline-block;padding:7px 10px;border-radius:999px;background:#eef4ff;color:var(--blue);font-weight:750;font-size:12px}
 .view{display:none}.view.active{display:block}
-.back{border:0;background:none;color:var(--blue);font-weight:750;padding:0;margin-bottom:14px;font-size:16px}.detail-title{font-size:26px;font-weight:850;margin:5px 0}.detail-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:14px}.row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.pill{padding:6px 10px;border-radius:99px;background:#eef4ff;color:var(--blue);font-size:12px;font-weight:750}
-.modal{position:fixed;inset:0;background:#0006;display:none;align-items:flex-end;z-index:20}.modal.show{display:flex}
-.sheet{background:#fff;width:min(430px,100%);margin:auto 0 0;border-radius:24px 24px 0 0;padding:22px 18px 28px;box-shadow:0 -8px 30px #0002}
-.sheet h3{margin:0 0 18px;font-size:24px}.field-label{display:block;font-size:13px;font-weight:800;color:var(--muted);margin:7px 2px 5px}
-.input{width:100%;padding:14px 13px;border:1px solid #d8dde5;border-radius:12px;margin:0 0 10px;font:inherit;background:#fff;color:var(--text);box-sizing:border-box}
-.input:focus{outline:2px solid #b9d7ff;border-color:#5b9cff}.sheet-actions{display:flex;gap:10px;margin-top:6px}.sheet-actions>*{flex:1}
-.small{font-size:13px;color:var(--muted)}
-.detail-card h3{margin-bottom:8px}.detail-card .row b{font-weight:800}
-.object-card{cursor:default}.object-card .primary{display:block;cursor:pointer;position:relative;z-index:2}
-.grid .secondary{width:100%;min-height:48px}
-.task-tools{display:flex;gap:8px;margin-bottom:14px;overflow:auto}
-.task-filter{border:1px solid var(--line);background:#fff;border-radius:99px;padding:8px 12px;font-weight:700;white-space:nowrap;color:var(--muted)}
-.task-filter.active{background:#eef4ff;color:var(--blue);border-color:#cfe0ff}
-.task-card{display:flex;gap:12px;align-items:flex-start}
-.task-main{flex:1;min-width:0}
-.task-title{font-weight:750;font-size:16px}
-.task-meta{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.35}
-.priority{display:inline-block;font-size:11px;font-weight:800;border-radius:99px;padding:4px 7px;margin-top:7px}
-.priority.high{background:#fee2e2;color:#b91c1c}
-.priority.medium{background:#fff7ed;color:#c2410c}
-.priority.low{background:#ecfdf5;color:#15803d}
-.task-status{font-size:12px;font-weight:800;color:var(--blue);margin-top:6px}
-
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:10}
+nav button{border:0;background:none;color:var(--muted);font-size:12px;font-weight:600;padding:4px 0}.navicon{display:block;font-size:24px;margin-bottom:3px}nav button.active{color:var(--blue)}
+.modal{position:fixed;inset:0;background:#0006;display:none;align-items:flex-end;z-index:20}.modal.show{display:flex}.sheet{background:#fff;width:min(430px,100%);max-height:90vh;overflow:auto;margin:auto 0 0;border-radius:24px 24px 0 0;padding:22px 18px 28px;box-shadow:0 -8px 30px #0002}.sheet h3{margin:0 0 18px;font-size:24px}.field-label{display:block;font-size:13px;font-weight:800;color:var(--muted);margin:7px 2px 5px}.input{width:100%;padding:14px 13px;border:1px solid #d8dde5;border-radius:12px;margin:0 0 10px;font:inherit;background:#fff;color:var(--text)}.input:focus{outline:2px solid #b9d7ff;border-color:#5b9cff}.sheet-actions{display:flex;gap:10px;margin-top:6px}.sheet-actions>*{flex:1}
+.photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.photo{border-radius:14px;overflow:hidden;background:#eef2f7;min-height:130px}.photo img{width:100%;height:130px;object-fit:cover}.photo .caption{padding:8px;font-size:12px}.file-input{width:100%;padding:12px;border:1px dashed #b8c0cc;border-radius:12px;background:#fafafa}
+.badge{display:inline-block;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:800}.badge.red{background:#fee2e2;color:#b91c1c}.badge.green{background:#dcfce7;color:#166534}.badge.orange{background:#ffedd5;color:#9a3412}
+.money{font-size:26px;font-weight:850}.money.red{color:var(--red)}.money.green{color:var(--green)}.progress.green i{background:var(--green)}.progress.red i{background:var(--red)}
+.timeline{border-left:3px solid #dbe5f5;margin:8px 0 0 7px;padding-left:18px}.timeline-item{position:relative;margin:0 0 18px}.timeline-item:before{content:"";position:absolute;left:-26px;top:3px;width:11px;height:11px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 0 0 1px #cbd5e1}.timeline-item.done:before{background:var(--green)}
+.ai-box{background:#111827;color:#fff;border-radius:20px;padding:18px}.ai-box .input{color:#111827}.ai-answer{margin-top:12px;background:#fff;color:#111827;border-radius:14px;padding:14px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -55,65 +41,129 @@ nav button{border:0;background:none;color:var(--muted);font-size:12px;padding:5p
   <div class="subtitle">Вот что происходит на объектах</div>
 </header>
 
-<main class="content">
+
+<main class="app">
+<header>
+  <div class="brand">BUILD<span>OS</span></div>
+  <div class="greeting">Добрый день, Дмитрий 👋</div>
+  <div class="subtitle">Контроль объектов, задач и бюджета</div>
+</header>
+
 <section id="home" class="view active">
-  <div class="section-head"><h2>Мои объекты</h2><button class="link" style="border:0;background:none" onclick="showView('objects')">Все объекты →</button></div>
-
-  <div class="card">
-    <div class="object"><div class="icon">🏗️</div><div><div class="name">ЖК Хорошевский</div><div class="meta">142 м² · срок 74 дня</div></div></div>
-    <div class="progress"><i style="width:64%"></i></div><div class="status warn">⚠️ 2 проблемы · выполнено 64%</div>
-    <button class="primary" style="margin-top:14px" onclick="openObject(0)">Открыть объект →</button>
-  </div>
-
-  <div class="card">
-    <div class="object"><div class="icon">🏠</div><div><div class="name">Квартира №27</div><div class="meta">87 м² · срок 61 день</div></div></div>
-    <div class="progress"><i style="width:41%"></i></div><div class="status ok">🟢 Всё по плану · выполнено 41%</div>
-    <button class="primary" style="margin-top:14px" onclick="openObject(1)">Открыть объект →</button>
-  </div>
-
-  <h2 style="margin:30px 0 14px">Сегодня</h2>
-  <div class="grid">
-    <div class="stat"><div class="emoji">🔴</div><b id="overdue">3</b><span>просрочено</span></div>
-    <div class="stat"><div class="emoji">📋</div><b id="todayCount">5</b><span>задач на сегодня</span></div>
-    <div class="stat"><div class="emoji">⚠️</div><b>4</b><span>проблемы</span></div>
-    <div class="stat"><div class="emoji">📅</div><b>2</b><span>ближайшие сроки</span></div>
+  <div class="content">
+    <div class="section-head"><h2>Мои объекты</h2><button class="link" onclick="showView('objects')">Все объекты →</button></div>
+    <div id="homeObjects"></div>
+    <h2>Сегодня</h2>
+    <div class="grid">
+      <div class="stat"><div class="emoji">🔴</div><b id="overdue">0</b><span>просрочено</span></div>
+      <div class="stat"><div class="emoji">📋</div><b id="todayCount">0</b><span>в работе</span></div>
+      <div class="stat"><div class="emoji">💰</div><b id="homeBudget">0 ₽</b><span>расходы</span></div>
+      <div class="stat"><div class="emoji">👷</div><b id="homeWorkers">0</b><span>рабочих</span></div>
+    </div>
+    <div class="detail-card">
+      <h3 style="margin-top:0">⚡ Быстрые действия</h3>
+      <div class="grid">
+        <button class="secondary" onclick="openTaskModal()">➕ Задача</button>
+        <button class="secondary" onclick="showView('objects')">🏗️ Объекты</button>
+        <button class="secondary" onclick="openBudgetModal()">💰 Расход</button>
+        <button class="secondary" onclick="showView('ai')">🤖 Спросить AI</button>
+      </div>
+    </div>
   </div>
 </section>
 
 <section id="objects" class="view">
-  <button class="back" onclick="showView('home')">← Главная</button>
-  <h2>Все объекты</h2>
-  <div id="objectList"></div>
+  <div class="content">
+    <div class="section-head"><h2>Мои объекты</h2><button class="link" onclick="openObjectModal()">+ Добавить</button></div>
+    <div id="objectList"></div>
+  </div>
 </section>
 
 <section id="objectDetail" class="view">
-  <button class="back" onclick="showView('objects')">← Все объекты</button>
-  <div id="detail"></div>
+  <div class="content">
+    <button class="secondary mini" onclick="showView('objects')">← Все объекты</button>
+    <div id="detail" style="margin-top:12px"></div>
+  </div>
 </section>
 
 <section id="tasks" class="view">
-  <div class="section-head"><h2>Задачи</h2><button class="primary" style="width:auto;padding:9px 13px" onclick="openTaskModal()">+ Добавить</button></div>
-  <div class="task-tools">
-    <button class="task-filter active" id="filterAll" onclick="setTaskFilter('all',this)">Все</button>
-    <button class="task-filter" onclick="setTaskFilter('open',this)">В работе</button>
-    <button class="task-filter" onclick="setTaskFilter('done',this)">Выполнены</button>
+  <div class="content">
+    <div class="section-head"><h2>Задачи</h2><button class="primary" style="width:auto;padding:11px 18px" onclick="openTaskModal()">+ Добавить</button></div>
+    <div class="task-tools">
+      <button id="filterAll" class="task-filter active" onclick="setTaskFilter('all',this)">Все</button>
+      <button class="task-filter" onclick="setTaskFilter('open',this)">В работе</button>
+      <button class="task-filter" onclick="setTaskFilter('done',this)">Выполнены</button>
+      <button class="task-filter" onclick="setTaskFilter('overdue',this)">Просрочены</button>
+    </div>
+    <div id="taskSummary" class="meta" style="margin:14px 0"></div>
+    <div id="taskList"></div>
   </div>
-  <div id="taskSummary" class="small" style="margin-bottom:12px"></div>
-  <div id="taskList"></div>
 </section>
 
 <section id="ai" class="view">
-  <h2>AI-помощник</h2>
-  <div class="card">
-    <div style="font-size:30px">🤖</div>
-    <h3>Спросите BUILDOS</h3>
-    <p class="small">Попробуйте: «Что просрочено?», «Что сделать завтра?» или «Сделай отчёт по ЖК Хорошевский».</p>
-    <input class="input" id="aiInput" placeholder="Например: что просрочено?">
-    <button class="primary" onclick="askAI()">Спросить</button>
-    <div id="aiAnswer" style="margin-top:14px"></div>
+  <div class="content">
+    <div class="section-head"><h2>AI-помощник</h2></div>
+    <div class="ai-box">
+      <div style="font-size:22px;font-weight:850">🤖 BUILDOS AI</div>
+      <div style="opacity:.75;margin:7px 0 14px">Поможет быстро найти проблемы по твоим данным.</div>
+      <input id="aiInput" class="input" placeholder="Например: что просрочено?">
+      <button class="primary" onclick="askAI()">Спросить</button>
+      <div id="aiAnswer" class="ai-answer">Задай вопрос: «что просрочено», «сколько потрачено», «что делать завтра» или «какие задачи в работе».</div>
+    </div>
   </div>
 </section>
+
+<nav>
+  <button class="active" onclick="showView('home',this)"><span class="navicon">🏠</span>Главная</button>
+  <button onclick="showView('objects',this)"><span class="navicon">🏗️</span>Объекты</button>
+  <button onclick="showView('tasks',this)"><span class="navicon">✅</span>Задачи</button>
+  <button onclick="showView('ai',this)"><span class="navicon">🤖</span>AI</button>
+</nav>
+
+<div class="modal" id="taskModal">
+ <div class="sheet">
+  <h3 id="taskModalTitle">Новая задача</h3>
+  <label class="field-label">Задача</label><input class="input" id="taskTitle" placeholder="Например: проверить электрику">
+  <label class="field-label">Объект</label><select class="input" id="taskObject"></select>
+  <label class="field-label">Ответственный</label><input class="input" id="taskAssignee" placeholder="Например: Сергей">
+  <label class="field-label">Срок</label><input class="input" id="taskDue" type="date">
+  <label class="field-label">Приоритет</label><select class="input" id="taskPriority"><option value="high">🔴 Высокий</option><option value="medium" selected>🟠 Средний</option><option value="low">🟢 Низкий</option></select>
+  <div class="sheet-actions"><button class="secondary" onclick="closeTaskModal()">Отмена</button><button class="primary" onclick="saveTask()">Сохранить</button></div>
+ </div>
+</div>
+
+<div class="modal" id="objectModal">
+ <div class="sheet">
+  <h3>Новый объект</h3>
+  <label class="field-label">Название</label><input class="input" id="objName" placeholder="Например: ЖК Северный">
+  <label class="field-label">Площадь</label><input class="input" id="objArea" placeholder="120 м²">
+  <label class="field-label">Клиент</label><input class="input" id="objClient" placeholder="Имя клиента">
+  <label class="field-label">Бюджет</label><input class="input" id="objBudget" placeholder="3 500 000">
+  <div class="sheet-actions"><button class="secondary" onclick="closeObjectModal()">Отмена</button><button class="primary" onclick="addObject()">Добавить</button></div>
+ </div>
+</div>
+
+<div class="modal" id="budgetModal">
+ <div class="sheet">
+  <h3>Новый расход</h3>
+  <label class="field-label">Объект</label><select class="input" id="expenseObject"></select>
+  <label class="field-label">Статья</label><input class="input" id="expenseTitle" placeholder="Материалы, рабочие, доставка...">
+  <label class="field-label">Сумма</label><input class="input" id="expenseAmount" type="number" placeholder="50000">
+  <label class="field-label">Комментарий</label><input class="input" id="expenseNote" placeholder="Что купили?">
+  <div class="sheet-actions"><button class="secondary" onclick="closeBudgetModal()">Отмена</button><button class="primary" onclick="addExpense()">Добавить</button></div>
+ </div>
+</div>
+
+<div class="modal" id="photoModal">
+ <div class="sheet">
+  <h3>Фотоотчёт</h3>
+  <label class="field-label">Комментарий</label><input class="input" id="photoCaption" placeholder="Например: электрика в спальне">
+  <label class="field-label">Фото</label><input class="file-input" id="photoFile" type="file" accept="image/*">
+  <div class="sheet-actions"><button class="secondary" onclick="closePhotoModal()">Отмена</button><button class="primary" onclick="addPhoto()">Добавить</button></div>
+ </div>
+</div>
 </main>
+
 
 <nav>
   <button class="active" onclick="showView('home',this)"><span class="navicon">🏠</span>Главная</button>
@@ -156,11 +206,13 @@ nav button{border:0;background:none;color:var(--muted);font-size:12px;padding:5p
  </div>
 </div>
 
+
 <script>
-const objects=[
- {name:"ЖК Хорошевский",area:"142 м²",days:"74 дня",progress:64,issues:2,icon:"🏗️",client:"Иван",budget:"3 200 000 ₽",address:"Москва",stage:"Черновые работы",workers:"6 человек",start:"12 августа",finish:"25 октября",tasks:["Проверить электрику","Согласовать плитку","Установить двери"]},
- {name:"Квартира №27",area:"87 м²",days:"61 день",progress:41,issues:0,icon:"🏠",client:"Анна",budget:"1 850 000 ₽",address:"Москва",stage:"Подготовка стен",workers:"4 человека",start:"5 августа",finish:"5 октября",tasks:["Подготовить стены","Заказать сантехнику","Проверить смету"]}
+const defaultObjects=[
+ {name:"ЖК Хорошевский",area:"142 м²",days:"74 дня",progress:64,issues:2,icon:"🏗️",client:"Иван",budget:"3200000",address:"Москва",stage:"Черновые работы",workers:"6 человек",start:"12 августа",finish:"25 октября"},
+ {name:"Квартира №27",area:"87 м²",days:"61 день",progress:41,issues:0,icon:"🏠",client:"Анна",budget:"1850000",address:"Москва",stage:"Подготовка стен",workers:"4 человека",start:"5 августа",finish:"5 октября"}
 ];
+let objects=JSON.parse(localStorage.getItem("buildos_objects")||"null")||defaultObjects;
 let tasks=JSON.parse(localStorage.getItem("buildos_tasks")||"null")||[
  {title:"Проверить электрику",object:"ЖК Хорошевский",assignee:"Сергей",due:"",priority:"high",done:false},
  {title:"Согласовать плитку",object:"ЖК Хорошевский",assignee:"Дмитрий",due:"",priority:"medium",done:false},
@@ -168,127 +220,192 @@ let tasks=JSON.parse(localStorage.getItem("buildos_tasks")||"null")||[
  {title:"Подготовить стены",object:"Квартира №27",assignee:"Сергей",due:"",priority:"high",done:false},
  {title:"Фотоотчёт заказчику",object:"ЖК Хорошевский",assignee:"Дмитрий",due:"",priority:"low",done:false}
 ];
-let taskFilter="all";
+let expenses=JSON.parse(localStorage.getItem("buildos_expenses")||"null")||[
+ {object:"ЖК Хорошевский",title:"Материалы",amount:420000,note:"Черновые материалы",date:"2026-08-17"},
+ {object:"Квартира №27",title:"Сантехника",amount:185000,note:"Комплект",date:"2026-08-16"}
+];
+let employees=JSON.parse(localStorage.getItem("buildos_employees")||"null")||[
+ {name:"Дмитрий",role:"Прораб"},
+ {name:"Сергей",role:"Электрик"},
+ {name:"Анна",role:"Снабжение"},
+ {name:"Иван",role:"Мастер"}
+];
+let photos=JSON.parse(localStorage.getItem("buildos_photos")||"null")||[];
+let schedules=JSON.parse(localStorage.getItem("buildos_schedules")||"null")||[
+ {object:"ЖК Хорошевский",title:"Черновые работы",date:"25 августа",done:true},
+ {object:"ЖК Хорошевский",title:"Электрика",date:"5 сентября",done:false},
+ {object:"ЖК Хорошевский",title:"Чистовая отделка",date:"1 октября",done:false},
+ {object:"Квартира №27",title:"Подготовка стен",date:"28 августа",done:true},
+ {object:"Квартира №27",title:"Сантехника",date:"10 сентября",done:false}
+];
 
-function save(){localStorage.setItem("buildos_tasks",JSON.stringify(tasks))}
+let taskFilter="all",editingTask=-1,currentObject=0;
+
+function saveAll(){
+ localStorage.setItem("buildos_objects",JSON.stringify(objects));
+ localStorage.setItem("buildos_tasks",JSON.stringify(tasks));
+ localStorage.setItem("buildos_expenses",JSON.stringify(expenses));
+ localStorage.setItem("buildos_employees",JSON.stringify(employees));
+ localStorage.setItem("buildos_photos",JSON.stringify(photos));
+ localStorage.setItem("buildos_schedules",JSON.stringify(schedules));
+}
+function money(n){return new Intl.NumberFormat("ru-RU").format(Number(n)||0)+" ₽"}
+function isOverdue(t){return !t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date()}
+function dueLabel(d){
+ if(!d)return "без срока";
+ const x=new Date(d+"T00:00:00"), now=new Date(); now.setHours(0,0,0,0);
+ const diff=Math.round((x-now)/86400000);
+ if(diff===0)return "Сегодня"; if(diff===1)return "Завтра"; if(diff===-1)return "Вчера";
+ return x.toLocaleDateString("ru-RU");
+}
 function showView(id,btn){
  document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
  document.getElementById(id).classList.add("active");
- if(btn){document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));btn.classList.add("active")}
- if(id==="objects")renderObjects(); if(id==="tasks")renderTasks();
- window.scrollTo(0,0)
+ document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));
+ if(btn)btn.classList.add("active");
+ if(id==="home")renderHome();
+ if(id==="objects")renderObjects();
+ if(id==="tasks")renderTasks();
+ window.scrollTo(0,0);
+}
+function objectOptions(selected=""){
+ return objects.map(o=>`<option ${o.name===selected?"selected":""}>${o.name}</option>`).join("");
+}
+function renderHome(){
+ document.getElementById("homeObjects").innerHTML=objects.map((o,i)=>`
+ <div class="card" onclick="openObject(${i})"><div class="object"><div class="icon">${o.icon}</div><div><div class="name">${o.name}</div><div class="meta">${o.area} · ${o.days}</div></div></div>
+ <div class="progress"><i style="width:${o.progress}%"></i></div>
+ <div class="status ${o.issues?'warn':'ok'}">${o.issues?'⚠️ '+o.issues+' проблемы':'🟢 Всё по плану'} · выполнено ${o.progress}%</div></div>`).join("");
+ const open=tasks.filter(t=>!t.done).length;
+ const overdue=tasks.filter(isOverdue).length;
+ const spent=expenses.reduce((s,e)=>s+Number(e.amount||0),0);
+ document.getElementById("todayCount").textContent=open;
+ document.getElementById("overdue").textContent=overdue;
+ document.getElementById("homeBudget").textContent=money(spent).replace(" ₽","");
+ document.getElementById("homeWorkers").textContent=employees.length;
 }
 function renderObjects(){
  document.getElementById("objectList").innerHTML=objects.map((o,i)=>`
- <div class="card" onclick="openObject(${i})"><div class="object"><div class="icon">${o.icon}</div><div><div class="name">${o.name}</div><div class="meta">${o.area} · срок ${o.days}</div></div></div>
- <div class="progress"><i style="width:${o.progress}%"></i></div><div class="status ${o.issues?'warn':'ok'}">${o.issues?'⚠️ '+o.issues+' проблемы':'🟢 Всё по плану'} · выполнено ${o.progress}%</div></div>`).join("")
+ <div class="card">
+  <div class="object" onclick="openObject(${i})"><div class="icon">${o.icon}</div><div><div class="name">${o.name}</div><div class="meta">${o.address} · ${o.area} · клиент: ${o.client}</div></div></div>
+  <div class="progress"><i style="width:${o.progress}%"></i></div>
+  <div class="status ${o.issues?'warn':'ok'}">${o.issues?'⚠️ '+o.issues+' проблемы':'🟢 Всё по плану'} · выполнено ${o.progress}%</div>
+  <button class="primary" style="margin-top:12px" onclick="openObject(${i})">Открыть объект →</button>
+ </div>`).join("");
 }
 function openObject(i){
-  const o=objects[i];
-  document.getElementById("detail").innerHTML=`
-  <div class="detail-card">
-    <div style="display:flex;align-items:center;gap:14px">
-      <div style="font-size:48px">${o.icon}</div>
-      <div><div class="detail-title">${o.name}</div><div class="meta">${o.address} · ${o.area}</div></div>
-    </div>
-    <div class="progress"><i style="width:${o.progress}%"></i></div>
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <b>Готовность ${o.progress}%</b>
-      <span class="pill">${o.issues?'⚠️ Есть проблемы':'🟢 По плану'}</span>
-    </div>
-  </div>
-
-  <div class="detail-card">
-    <h3 style="margin-top:0">📋 Основная информация</h3>
-    <div class="row"><span>Клиент</span><b>${o.client}</b></div>
-    <div class="row"><span>Бюджет</span><b>${o.budget}</b></div>
-    <div class="row"><span>Этап</span><span>${o.stage}</span></div>
-    <div class="row"><span>Рабочие</span><span>${o.workers}</span></div>
-    <div class="row"><span>Начало</span><span>${o.start}</span></div>
-    <div class="row"><span>Сдача</span><span>${o.finish}</span></div>
-  </div>
-
-  <div class="detail-card">
-    <h3 style="margin-top:0">⚠️ Контроль</h3>
-    <div class="row"><span>Проблемы</span><b style="color:${o.issues?'var(--red)':'var(--green)'}">${o.issues}</b></div>
-    <div class="row"><span>Задач объекта</span><b>${o.tasks.length}</b></div>
-    <div class="row"><span>Срок</span><b>${o.days}</b></div>
-  </div>
-
-  <div class="detail-card">
-    <h3 style="margin-top:0">📋 Задачи объекта</h3>
-    ${o.tasks.map(t=>`<div class="row"><span>${t}</span><span class="pill">В работе</span></div>`).join("")}
-  </div>
-
-  <div class="grid" style="margin-bottom:14px">
-    <button class="secondary" onclick="alert('Раздел фото будет подключён следующим этапом')">📸 Фото</button>
-    <button class="secondary" onclick="alert('Раздел бюджет будет подключён следующим этапом')">💰 Бюджет</button>
-    <button class="secondary" onclick="alert('Раздел график будет подключён следующим этапом')">📅 График</button>
-    <button class="secondary" onclick="alert('Раздел рабочие будет подключён следующим этапом')">👷 Рабочие</button>
-  </div>
-
-  <button class="primary" onclick="showView('tasks')">Открыть все задачи →</button>`;
-  showView("objectDetail");window.scrollTo(0,0)
+ currentObject=i; const o=objects[i];
+ const objTasks=tasks.filter(t=>t.object===o.name);
+ const spent=expenses.filter(e=>e.object===o.name).reduce((s,e)=>s+Number(e.amount||0),0);
+ const budget=Number(String(o.budget).replace(/\D/g,""))||0;
+ const percent=budget?Math.min(100,Math.round(spent/budget*100)):0;
+ const objPhotos=photos.filter(p=>p.object===o.name);
+ const objSchedule=schedules.filter(s=>s.object===o.name);
+ document.getElementById("detail").innerHTML=`
+ <div class="detail-card">
+  <div style="display:flex;align-items:center;gap:14px"><div style="font-size:48px">${o.icon}</div><div><div class="detail-title">${o.name}</div><div class="meta">${o.address} · ${o.area}</div></div></div>
+  <div class="progress"><i style="width:${o.progress}%"></i></div>
+  <div style="display:flex;justify-content:space-between"><b>Готовность ${o.progress}%</b><span class="pill">${o.issues?'⚠️ Есть проблемы':'🟢 По плану'}</span></div>
+ </div>
+ <div class="detail-card"><h3 style="margin-top:0">📋 Основная информация</h3>
+  <div class="row"><span>Клиент</span><b>${o.client}</b></div><div class="row"><span>Бюджет</span><b>${money(budget)}</b></div>
+  <div class="row"><span>Этап</span><span>${o.stage}</span></div><div class="row"><span>Рабочие</span><span>${o.workers}</span></div>
+  <div class="row"><span>Начало</span><span>${o.start}</span></div><div class="row"><span>Сдача</span><span>${o.finish}</span></div>
+ </div>
+ <div class="detail-card"><h3 style="margin-top:0">💰 Контроль бюджета</h3>
+  <div class="row"><span>Бюджет</span><b>${money(budget)}</b></div><div class="row"><span>Потрачено</span><b class="${percent>90?'money red':'money'}">${money(spent)}</b></div>
+  <div class="progress ${percent>90?'red':'green'}"><i style="width:${percent}%"></i></div>
+  <div class="row"><span>Использовано</span><b>${percent}%</b></div>
+  <button class="secondary" style="width:100%;margin-top:8px" onclick="openBudgetModal('${o.name}')">+ Добавить расход</button>
+  ${expenses.filter(e=>e.object===o.name).slice(-5).reverse().map(e=>`<div class="row"><span>${e.title}<br><span class="small">${e.note||""}</span></span><b>${money(e.amount)}</b></div>`).join("")}
+ </div>
+ <div class="detail-card"><h3 style="margin-top:0">✅ Задачи объекта</h3>
+  ${objTasks.length?objTasks.map(t=>`<div class="row"><span>${t.done?'✓':'○'} ${t.title}<br><span class="small">${t.assignee||"не назначен"} · ${dueLabel(t.due)}</span></span><span class="badge ${t.done?'green':isOverdue(t)?'red':'orange'}">${t.done?'Готово':isOverdue(t)?'Просрочено':'В работе'}</span></div>`).join(""):'<div class="small">Задач пока нет.</div>'}
+  <button class="secondary" style="width:100%;margin-top:8px" onclick="openTaskModal('${o.name}')">+ Добавить задачу</button>
+ </div>
+ <div class="detail-card"><h3 style="margin-top:0">📅 График</h3>
+  <div class="timeline">${objSchedule.map(s=>`<div class="timeline-item ${s.done?'done':''}"><b>${s.title}</b><div class="small">${s.date}</div></div>`).join("")}</div>
+ </div>
+ <div class="detail-card"><h3 style="margin-top:0">👷 Рабочие</h3>
+  ${employees.map(e=>`<div class="row"><span>${e.name}</span><span>${e.role}</span></div>`).join("")}
+  <button class="secondary" style="width:100%;margin-top:8px" onclick="alert('Следующий шаг — назначение конкретных сотрудников на объект и учёт смен.')">Управление рабочими</button>
+ </div>
+ <div class="detail-card"><h3 style="margin-top:0">📸 Фотоотчёт <span class="pill">${objPhotos.length}</span></h3>
+  ${objPhotos.length?`<div class="photo-grid">${objPhotos.slice(-6).reverse().map(p=>`<div class="photo"><img src="${p.data}" alt=""><div class="caption">${p.caption||"Без комментария"}<br><span class="small">${p.date}</span></div></div>`).join("")}</div>`:'<div class="small">Фото пока нет.</div>'}
+  <button class="secondary" style="width:100%;margin-top:10px" onclick="openPhotoModal('${o.name}')">+ Добавить фото</button>
+ </div>
+ <div class="grid"><button class="secondary" onclick="showView('tasks')">Все задачи →</button><button class="secondary" onclick="openBudgetModal('${o.name}')">💰 Бюджет</button></div>`;
+ showView("objectDetail");
 }
-function setTaskFilter(filter,btn){
-  taskFilter=filter;
-  document.querySelectorAll(".task-filter").forEach(x=>x.classList.remove("active"));
-  btn.classList.add("active");
-  renderTasks();
-}
+function setTaskFilter(filter,btn){taskFilter=filter;document.querySelectorAll(".task-filter").forEach(x=>x.classList.remove("active"));btn.classList.add("active");renderTasks()}
 function priorityLabel(p){return p==="high"?"Высокий":p==="low"?"Низкий":"Средний"}
 function renderTasks(){
-  const list=taskFilter==="all"?tasks:taskFilter==="done"?tasks.filter(t=>t.done):tasks.filter(t=>!t.done);
-  const open=tasks.filter(t=>!t.done).length, done=tasks.filter(t=>t.done).length;
-  document.getElementById("taskSummary").textContent=`Всего: ${tasks.length} · В работе: ${open} · Выполнено: ${done}`;
-  document.getElementById("taskList").innerHTML=list.length?list.map(t=>{
-    const i=tasks.indexOf(t);
-    const due=t.due?new Date(t.due+"T00:00:00").toLocaleDateString("ru-RU"):"без срока";
-    return `<div class="card task-card ${t.done?'done':''}" onclick="toggleTask(${i})">
-      <div class="check"></div>
-      <div class="task-main">
-        <div class="task-title">${t.title}</div>
-        <div class="task-meta">🏗️ ${t.object} · 👷 ${t.assignee||"не назначен"} · 📅 ${due}</div>
-        <span class="priority ${t.priority||'medium'}">${priorityLabel(t.priority||"medium")} приоритет</span>
-        <div class="task-status">${t.done?"✓ Выполнено":"В работе"}</div>
-      </div>
-    </div>`;
-  }).join(""):'<div class="card"><div class="small">Задач в этом разделе пока нет.</div></div>';
-  document.getElementById("todayCount").textContent=open;
-  document.getElementById("overdue").textContent=tasks.filter(t=>!t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date()).length;
+ let list=taskFilter==="all"?tasks:taskFilter==="done"?tasks.filter(t=>t.done):taskFilter==="overdue"?tasks.filter(isOverdue):tasks.filter(t=>!t.done);
+ const open=tasks.filter(t=>!t.done).length,done=tasks.filter(t=>t.done).length,overdue=tasks.filter(isOverdue).length;
+ document.getElementById("taskSummary").textContent=`Всего: ${tasks.length} · В работе: ${open} · Выполнено: ${done} · Просрочено: ${overdue}`;
+ document.getElementById("taskList").innerHTML=list.length?list.map(t=>{
+  const i=tasks.indexOf(t), od=isOverdue(t);
+  return `<div class="card task-card ${t.done?'done':''} ${od?'overdue':''}" onclick="toggleTask(${i})">
+   <div class="check"></div><div class="task-main"><div class="task-title">${t.title}</div>
+   <div class="task-meta">🏗️ ${t.object} · 👷 ${t.assignee||"не назначен"} · 📅 ${dueLabel(t.due)}</div>
+   ${od?'<div class="overdue-label">🔴 Срок прошёл</div>':''}
+   <span class="priority ${t.priority||'medium'}">${priorityLabel(t.priority||"medium")} приоритет</span>
+   <div class="task-status">${t.done?"✓ Выполнено":"В работе"}</div>
+   <div class="task-tools" onclick="event.stopPropagation()"><button class="secondary mini" onclick="editTask(${i})">✏️ Изменить</button><button class="danger mini" onclick="deleteTask(${i})">Удалить</button></div>
+   </div></div>`;
+ }).join(""):'<div class="card"><div class="small">Задач в этом разделе пока нет.</div></div>';
+ document.getElementById("todayCount").textContent=open;document.getElementById("overdue").textContent=overdue;
 }
-function toggleTask(i){tasks[i].done=!tasks[i].done;save();renderTasks()}
-function openTaskModal(){
-  document.getElementById("taskModal").classList.add("show");
-  setTimeout(()=>document.getElementById("taskTitle").focus(),100);
+function toggleTask(i){tasks[i].done=!tasks[i].done;saveAll();renderTasks();renderHome()}
+function openTaskModal(objectName="",index=-1){
+ editingTask=index;
+ document.getElementById("taskModalTitle").textContent=index>=0?"Изменить задачу":"Новая задача";
+ document.getElementById("taskObject").innerHTML=objectOptions(objectName||"");
+ if(index>=0){const t=tasks[index];document.getElementById("taskTitle").value=t.title;document.getElementById("taskObject").value=t.object;document.getElementById("taskAssignee").value=t.assignee||"";document.getElementById("taskDue").value=t.due||"";document.getElementById("taskPriority").value=t.priority||"medium"}
+ else {document.getElementById("taskTitle").value="";document.getElementById("taskAssignee").value="";document.getElementById("taskDue").value="";document.getElementById("taskPriority").value="medium"}
+ document.getElementById("taskModal").classList.add("show");setTimeout(()=>document.getElementById("taskTitle").focus(),100)
 }
 function closeTaskModal(){document.getElementById("taskModal").classList.remove("show")}
-function addTask(){
-  const title=document.getElementById("taskTitle").value.trim();
-  const object=document.getElementById("taskObject").value;
-  const assignee=document.getElementById("taskAssignee").value.trim();
-  const due=document.getElementById("taskDue").value;
-  const priority=document.getElementById("taskPriority").value;
-  if(!title)return;
-  tasks.unshift({title,object,assignee,due,priority,done:false});
-  save();
-  document.getElementById("taskTitle").value="";
-  document.getElementById("taskAssignee").value="";
-  document.getElementById("taskDue").value="";
-  document.getElementById("taskPriority").value="medium";
-  closeTaskModal();
-  showView("tasks");
+function saveTask(){
+ const title=document.getElementById("taskTitle").value.trim();if(!title)return;
+ const data={title,object:document.getElementById("taskObject").value,assignee:document.getElementById("taskAssignee").value.trim(),due:document.getElementById("taskDue").value,priority:document.getElementById("taskPriority").value};
+ if(editingTask>=0)tasks[editingTask]={...tasks[editingTask],...data};else tasks.unshift({...data,done:false});
+ saveAll();closeTaskModal();showView("tasks");editingTask=-1
+}
+function editTask(i){openTaskModal(tasks[i].object,i)}
+function deleteTask(i){if(confirm("Удалить эту задачу?")){tasks.splice(i,1);saveAll();renderTasks();renderHome()}}
+function openObjectModal(){document.getElementById("objectModal").classList.add("show");setTimeout(()=>document.getElementById("objName").focus(),100)}
+function closeObjectModal(){document.getElementById("objectModal").classList.remove("show")}
+function addObject(){
+ const name=document.getElementById("objName").value.trim();if(!name)return;
+ objects.push({name,area:document.getElementById("objArea").value.trim()||"—",days:"—",progress:0,issues:0,icon:"🏗️",client:document.getElementById("objClient").value.trim()||"—",budget:document.getElementById("objBudget").value.trim()||"0",address:"Москва",stage:"Подготовка",workers:"0 человек",start:"—",finish:"—"});
+ saveAll();["objName","objArea","objClient","objBudget"].forEach(id=>document.getElementById(id).value="");closeObjectModal();renderObjects();renderHome()
+}
+function openBudgetModal(objectName=""){document.getElementById("expenseObject").innerHTML=objectOptions(objectName);document.getElementById("expenseTitle").value="";document.getElementById("expenseAmount").value="";document.getElementById("expenseNote").value="";document.getElementById("budgetModal").classList.add("show")}
+function closeBudgetModal(){document.getElementById("budgetModal").classList.remove("show")}
+function addExpense(){
+ const amount=Number(document.getElementById("expenseAmount").value);if(!amount)return;
+ expenses.push({object:document.getElementById("expenseObject").value,title:document.getElementById("expenseTitle").value.trim()||"Расход",amount,note:document.getElementById("expenseNote").value.trim(),date:new Date().toISOString().slice(0,10)});
+ saveAll();closeBudgetModal();renderHome();if(document.getElementById("objectDetail").classList.contains("active"))openObject(currentObject)
+}
+function openPhotoModal(objectName){document.getElementById("photoModal").dataset.object=objectName;document.getElementById("photoCaption").value="";document.getElementById("photoFile").value="";document.getElementById("photoModal").classList.add("show")}
+function closePhotoModal(){document.getElementById("photoModal").classList.remove("show")}
+function addPhoto(){
+ const f=document.getElementById("photoFile").files[0];if(!f)return;
+ const reader=new FileReader();reader.onload=()=>{photos.push({object:document.getElementById("photoModal").dataset.object,caption:document.getElementById("photoCaption").value.trim(),data:reader.result,date:new Date().toLocaleDateString("ru-RU")});saveAll();closePhotoModal();openObject(currentObject)};reader.readAsDataURL(f)
 }
 function askAI(){
- const q=document.getElementById("aiInput").value.toLowerCase(), a=document.getElementById("aiAnswer");
- if(q.includes("просроч")) {
-  const overdue=tasks.filter(t=>!t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date());
-  a.innerHTML='<div class="detail-card"><b>Просроченных задач: '+overdue.length+'</b><br><br>'+(overdue.length?overdue.map(t=>"• "+t.title+" — "+t.object).join("<br>"):"Просроченных задач нет.")+'</div>';
+ const q=document.getElementById("aiInput").value.toLowerCase(),a=document.getElementById("aiAnswer");
+ const overdue=tasks.filter(isOverdue),open=tasks.filter(t=>!t.done),spent=expenses.reduce((s,e)=>s+Number(e.amount||0),0);
+ if(q.includes("просроч"))a.innerHTML=`<b>🔴 Просроченные задачи: ${overdue.length}</b><br><br>${overdue.length?overdue.map(t=>`• ${t.title} — ${t.object}`).join("<br>"):"Нет просроченных задач."}`;
+ else if(q.includes("потрач")||q.includes("расход"))a.innerHTML=`<b>💰 Всего расходов: ${money(spent)}</b><br><br>${expenses.slice(-8).reverse().map(e=>`• ${e.object}: ${e.title} — ${money(e.amount)}`).join("<br>")}`;
+ else if(q.includes("завтра"))a.innerHTML=`<b>📅 Что делать завтра</b><br><br>${open.slice(0,5).map((t,i)=>`${i+1}. ${t.title} — ${t.object}`).join("<br>")||"Свободных задач нет."}`;
+ else if(q.includes("задач")||q.includes("работ"))a.innerHTML=`<b>📋 Сейчас в работе: ${open.length}</b><br><br>${open.slice(0,10).map(t=>`• ${t.title} — ${t.assignee||"не назначен"}`).join("<br>")}`;
+ else a.innerHTML="Я уже вижу задачи и расходы внутри BUILDOS. Попробуй спросить: «что просрочено?», «сколько потрачено?», «что делать завтра?» или «какие задачи в работе?»";
 }
- else if(q.includes("завтра")) a.innerHTML='<div class="detail-card"><b>План на завтра:</b><br><br>1. Проверить электрику<br>2. Согласовать плитку<br>3. Фотоотчёт заказчику</div>';
- else a.innerHTML='<div class="detail-card">Пока я работаю как демонстрационный AI. Следующий этап — подключить настоящую AI-модель и данные объектов.</div>';
-}
-renderTasks();
+function init(){renderHome();renderObjects();renderTasks()}
+init();
 </script>
+
 </body>
 </html>
