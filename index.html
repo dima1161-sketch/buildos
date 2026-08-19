@@ -1087,5 +1087,185 @@ init();
 })();
 </script>
 
+
+<script>
+/* BUILDOS MEGA UPDATE — v7
+   Object command center: plan/fact budget, stages, payments,
+   materials, photo notes, object journal, profitability and progress.
+*/
+(function(){
+  const KEY="buildos_mega_v7";
+  const base={stages:{},payments:{},materials:{},journal:{},photos:{},plans:{},issues:{}};
+  let D=(()=>{try{return Object.assign({},base,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){return {...base}}})();
+  const save=()=>{localStorage.setItem(KEY,JSON.stringify(D));};
+  const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+  const money=n=>new Intl.NumberFormat("ru-RU").format(Number(n)||0)+" ₽";
+  const dateNow=()=>new Date().toISOString().slice(0,10);
+  const objs=()=>Array.isArray(window.objects)?window.objects:[];
+  const tasks=()=>Array.isArray(window.tasks)?window.tasks:[];
+  const workers=()=>Array.isArray(window.BUILDOS_V5?.data()?.workers)?window.BUILDOS_V5.data().workers:[];
+  const key=i=>String(i);
+  const arr=(bucket,i)=>D[bucket][key(i)]||(D[bucket][key(i)]=[]);
+  const obj=i=>objs()[i];
+  function v7Modal(title,body,actions){
+    let m=document.getElementById("v7Modal");
+    if(!m){m=document.createElement("div");m.id="v7Modal";m.className="modal";document.body.appendChild(m)}
+    m.innerHTML=`<div class="v7-sheet"><div class="v7-head"><h2>${title}</h2><button onclick="v7Close()">✕</button></div><div class="v7-body">${body}</div><div class="v7-actions">${actions||'<button class="secondary" onclick="v7Close()">Закрыть</button>'}</div></div>`;
+    m.classList.add("show");
+  }
+  window.v7Close=()=>document.getElementById("v7Modal")?.classList.remove("show");
+
+  function objectPicker(id,i){
+    return `<select id="${id}">${objs().map((o,n)=>`<option value="${n}" ${n===i?"selected":""}>${esc(o.name)}</option>`).join("")||'<option>Нет объектов</option>'}</select>`;
+  }
+  function stats(i){
+    const o=obj(i)||{};
+    const ps=arr("payments",i), ms=arr("materials",i), ss=arr("stages",i), js=arr("journal",i);
+    const income=ps.filter(x=>x.type==="income").reduce((a,x)=>a+(+x.amount||0),0);
+    const expenses=ps.filter(x=>x.type==="expense").reduce((a,x)=>a+(+x.amount||0),0);
+    const planned=Number(o.budget)||Number(D.plans[key(i)]?.budget)||0;
+    const spent=expenses+ms.reduce((a,x)=>a+(+x.amount||0),0);
+    const done=ss.length?Math.round(ss.filter(x=>x.done).length/ss.length*100):Number(o.progress)||0;
+    return {income,expenses,planned,spent,profit:income-spent,done,stages:ss.length,materials:ms.length,journal:js.length};
+  }
+
+  /* OBJECT COMMAND CENTER */
+  window.v7Object= i => {
+    const o=obj(i), s=stats(i);
+    if(!o)return;
+    const open=tasks().filter(t=>!t.done && (t.object===o.name || t.objectName===o.name));
+    const overdue=open.filter(t=>t.due&&new Date(t.due+"T23:59:59")<new Date()).length;
+    const margin=s.income?Math.round(s.profit/s.income*100):0;
+    v7Modal(`🏗️ ${esc(o.name)}`,`
+      <div class="v7-hero"><div><b>${esc(o.name)}</b><small>${esc(o.client||"Клиент не указан")} · ${esc(o.address||"Адрес не указан")}</small></div><div class="v7-progress"><i style="width:${Math.min(100,s.done)}%"></i></div><strong>${s.done}% готовности</strong></div>
+      <div class="v7-stats">
+        <div><b>${money(s.planned)}</b><small>Бюджет план</small></div><div><b>${money(s.spent)}</b><small>Расход факт</small></div>
+        <div><b>${money(s.profit)}</b><small>Прибыль</small></div><div><b>${margin}%</b><small>Маржа</small></div>
+        <div><b>${open.length}</b><small>Задач</small></div><div><b>${overdue}</b><small>Просрочено</small></div>
+      </div>
+      <div class="v7-menu">
+        <button onclick="v7Budget(${i})">💰 Бюджет план/факт</button>
+        <button onclick="v7Stages(${i})">🧱 Этапы и прогресс</button>
+        <button onclick="v7Payments(${i})">💳 Платежи клиента</button>
+        <button onclick="v7Materials(${i})">📦 Материалы</button>
+        <button onclick="v7Journal(${i})">📓 Журнал объекта</button>
+        <button onclick="v7Issues(${i})">⚠️ Проблемы и риски</button>
+        <button onclick="v7Plan(${i})">🗓️ План объекта</button>
+        <button onclick="v7Report(${i})">📊 Отчёт по объекту</button>
+      </div>
+      <h3>Ближайшие задачи</h3>
+      ${open.slice(0,5).map(t=>`<div class="v7-task">${t.done?"✅":"⬜"} <b>${esc(t.title)}</b><small>${esc(t.due||"Без срока")}</small></div>`).join("")||'<div class="v7-empty">Задач нет</div>'}
+    `);
+  };
+
+  /* BUDGET PLAN/FACT */
+  window.v7Budget=i=>{
+    const s=stats(i), p=D.plans[key(i)]||{};
+    v7Modal("💰 Бюджет — "+esc(obj(i)?.name||""),`
+      <div class="v7-stats"><div><b>${money(s.planned)}</b><small>План</small></div><div><b>${money(s.spent)}</b><small>Факт</small></div><div><b>${money(s.planned-s.spent)}</b><small>Остаток</small></div><div><b>${s.planned?Math.round(s.spent/s.planned*100):0}%</b><small>Использовано</small></div></div>
+      <label>Плановый бюджет<input id="v7BudgetVal" type="number" value="${p.budget||obj(i)?.budget||0}"></label>
+      <h3>Расходы по категориям</h3>
+      <div class="v7-list">${arr("payments",i).filter(x=>x.type==="expense").map(x=>`<div class="v7-row"><span>${esc(x.category||"Расход")}</span><b>${money(x.amount)}</b></div>`).join("")||'<div class="v7-empty">Расходов пока нет</div>'}</div>
+      <button class="secondary" onclick="v7AddExpense(${i})">＋ Добавить расход</button>
+    `,`<button class="secondary" onclick="v7Object(${i})">Назад</button><button class="primary" onclick="v7SaveBudget(${i})">Сохранить</button>`);
+  };
+  window.v7SaveBudget=i=>{D.plans[key(i)]={...(D.plans[key(i)]||{}),budget:+document.getElementById("v7BudgetVal").value||0};save();v7Budget(i)};
+  window.v7AddExpense=i=>{
+    v7Modal("Новый расход",`<label>Категория<input id="v7ec" placeholder="Материалы, доставка, рабочие..."></label><label>Сумма<input id="v7ea" type="number"></label><label>Дата<input id="v7ed" type="date" value="${dateNow()}"></label><label>Комментарий<input id="v7en"></label>`,
+      `<button class="secondary" onclick="v7Budget(${i})">Отмена</button><button class="primary" onclick="v7SaveExpense(${i})">Добавить</button>`);
+  };
+  window.v7SaveExpense=i=>{arr("payments",i).unshift({type:"expense",category:document.getElementById("v7ec").value,amount:+document.getElementById("v7ea").value||0,date:document.getElementById("v7ed").value,note:document.getElementById("v7en").value});save();v7Budget(i)};
+
+  /* STAGES */
+  const defaultStages=["Дизайн / подготовка","Демонтаж","Черновые работы","Электрика","Сантехника","Стены / потолки","Плитка","Полы","Двери","Мебель / кухня","Финишные работы","Уборка / сдача"];
+  window.v7Stages=i=>{
+    let ss=arr("stages",i);
+    if(!ss.length){defaultStages.forEach((n,nr)=>ss.push({name:n,done:false,percent:0,nr})) ;save();}
+    v7Modal("🧱 Этапы — "+esc(obj(i)?.name||""),`<div class="v7-list">${ss.map((x,n)=>`<div class="v7-stage"><button class="v7-check ${x.done?"done":""}" onclick="v7ToggleStage(${i},${n})">${x.done?"✓":"○"}</button><div><b>${esc(x.name)}</b><small>${x.percent||0}%</small><div class="v7-bar"><i style="width:${x.percent||0}%"></i></div></div><button class="v7-mini" onclick="v7EditStage(${i},${n})">✎</button></div>`).join("")}</div><button class="secondary" onclick="v7AddStage(${i})">＋ Добавить этап</button>`);
+  };
+  window.v7ToggleStage=(i,n)=>{const x=arr("stages",i)[n];x.done=!x.done;x.percent=x.done?100:0;save();v7Stages(i)};
+  window.v7AddStage=i=>v7Modal("Новый этап",`<label>Название<input id="v7sn" placeholder="Например, установка кухни"></label><label>Готовность %<input id="v7sp" type="number" min="0" max="100" value="0"></label>`,`<button class="secondary" onclick="v7Stages(${i})">Отмена</button><button class="primary" onclick="v7SaveStage(${i})">Добавить</button>`);
+  window.v7SaveStage=i=>{arr("stages",i).push({name:document.getElementById("v7sn").value,percent:Math.min(100,+document.getElementById("v7sp").value||0),done:false});save();v7Stages(i)};
+  window.v7EditStage=(i,n)=>{const x=arr("stages",i)[n];v7Modal("Редактировать этап",`<label>Название<input id="v7sn" value="${esc(x.name)}"></label><label>Готовность %<input id="v7sp" type="number" value="${x.percent||0}"></label>`,`<button class="secondary" onclick="v7Stages(${i})">Отмена</button><button class="primary" onclick="v7SaveEditStage(${i},${n})">Сохранить</button>`)};
+  window.v7SaveEditStage=(i,n)=>{const x=arr("stages",i)[n];x.name=document.getElementById("v7sn").value;x.percent=Math.min(100,Math.max(0,+document.getElementById("v7sp").value||0));x.done=x.percent===100;save();v7Stages(i)};
+
+  /* PAYMENTS */
+  window.v7Payments=i=>{
+    const p=arr("payments",i), income=p.filter(x=>x.type==="income").reduce((a,x)=>a+(+x.amount||0),0), exp=p.filter(x=>x.type==="expense").reduce((a,x)=>a+(+x.amount||0),0);
+    v7Modal("💳 Деньги — "+esc(obj(i)?.name||""),`<div class="v7-stats"><div><b>${money(income)}</b><small>Получено</small></div><div><b>${money(exp)}</b><small>Расходы</small></div><div><b>${money(income-exp)}</b><small>Баланс</small></div><div><b>${p.length}</b><small>Операций</small></div></div><button class="primary" onclick="v7AddPayment(${i})">＋ Добавить операцию</button><div class="v7-list">${p.map(x=>`<div class="v7-row"><div><b>${x.type==="income"?"🟢":"🔴"} ${esc(x.category||x.note||"Операция")}</b><small>${esc(x.date||"")} · ${esc(x.note||"")}</small></div><b>${x.type==="income"?"+":"−"}${money(x.amount)}</b></div>`).join("")||'<div class="v7-empty">Операций пока нет</div>'}</div>`);
+  };
+  window.v7AddPayment=i=>v7Modal("Новая операция",`<label>Тип<select id="v7pt"><option value="income">Приход</option><option value="expense">Расход</option></select></label><label>Категория<input id="v7pc" placeholder="Аванс / материалы / рабочие..."></label><label>Сумма<input id="v7pa" type="number"></label><label>Дата<input id="v7pd" type="date" value="${dateNow()}"></label><label>Комментарий<input id="v7pn"></label>`,`<button class="secondary" onclick="v7Payments(${i})">Отмена</button><button class="primary" onclick="v7SavePayment(${i})">Добавить</button>`);
+  window.v7SavePayment=i=>{arr("payments",i).unshift({type:document.getElementById("v7pt").value,category:document.getElementById("v7pc").value,amount:+document.getElementById("v7pa").value||0,date:document.getElementById("v7pd").value,note:document.getElementById("v7pn").value});save();v7Payments(i)};
+
+  /* MATERIALS */
+  window.v7Materials=i=>{
+    const m=arr("materials",i), total=m.reduce((a,x)=>a+(+x.amount||0),0);
+    v7Modal("📦 Материалы — "+esc(obj(i)?.name||""),`<div class="v7-card"><b>Всего по материалам</b><strong>${money(total)}</strong></div><button class="primary" onclick="v7AddMaterial(${i})">＋ Добавить материал</button><div class="v7-list">${m.map((x,n)=>`<div class="v7-row"><div><b>${esc(x.name)}</b><small>${esc(x.supplier||"")} · ${x.qty||0} ${esc(x.unit||"шт.")}</small></div><b>${money(x.amount)}</b></div>`).join("")||'<div class="v7-empty">Материалов пока нет</div>'}</div>`);
+  };
+  window.v7AddMaterial=i=>v7Modal("Новый материал",`<label>Материал<input id="v7mn" placeholder="Плитка 60×60"></label><label>Количество<input id="v7mq" type="number" value="1"></label><label>Ед. изм.<input id="v7mu" value="шт."></label><label>Сумма<input id="v7ma" type="number"></label><label>Поставщик<input id="v7ms"></label>`,`<button class="secondary" onclick="v7Materials(${i})">Отмена</button><button class="primary" onclick="v7SaveMaterial(${i})">Добавить</button>`);
+  window.v7SaveMaterial=i=>{arr("materials",i).unshift({name:document.getElementById("v7mn").value,qty:+document.getElementById("v7mq").value||1,unit:document.getElementById("v7mu").value,amount:+document.getElementById("v7ma").value||0,supplier:document.getElementById("v7ms").value,date:dateNow()});save();v7Materials(i)};
+
+  /* JOURNAL */
+  window.v7Journal=i=>{
+    const j=arr("journal",i);
+    v7Modal("📓 Журнал объекта",`<button class="primary" onclick="v7AddJournal(${i})">＋ Запись</button><div class="v7-list">${j.map(x=>`<div class="v7-journal"><b>${esc(x.date)} · ${esc(x.author||"Дмитрий")}</b><p>${esc(x.text)}</p>${x.tag?`<span>${esc(x.tag)}</span>`:""}</div>`).join("")||'<div class="v7-empty">Журнал пуст</div>'}</div>`);
+  };
+  window.v7AddJournal=i=>v7Modal("Новая запись",`<label>Тип<select id="v7jt"><option>Отчёт</option><option>Проблема</option><option>Решение</option><option>Встреча</option><option>Звонок</option></select></label><label>Текст<textarea id="v7jx" rows="6" placeholder="Что произошло на объекте?"></textarea></label>`,`<button class="secondary" onclick="v7Journal(${i})">Отмена</button><button class="primary" onclick="v7SaveJournal(${i})">Добавить</button>`);
+  window.v7SaveJournal=i=>{arr("journal",i).unshift({date:dateNow(),author:"Дмитрий",tag:document.getElementById("v7jt").value,text:document.getElementById("v7jx").value});save();v7Journal(i)};
+
+  /* ISSUES / RISKS */
+  window.v7Issues=i=>{
+    const a=arr("issues",i);
+    v7Modal("⚠️ Проблемы и риски",`<button class="primary" onclick="v7AddIssue(${i})">＋ Добавить проблему</button><div class="v7-list">${a.map((x,n)=>`<div class="v7-issue ${x.done?"closed":""}"><div><b>${x.level==="high"?"🔴":x.level==="medium"?"🟠":"🟢"} ${esc(x.title)}</b><small>${esc(x.note||"")}</small></div><button class="v7-mini" onclick="v7ToggleIssue(${i},${n})">${x.done?"Открыть":"Закрыть"}</button></div>`).join("")||'<div class="v7-empty">Проблем нет</div>'}</div>`);
+  };
+  window.v7AddIssue=i=>v7Modal("Новая проблема",`<label>Проблема<input id="v7in" placeholder="Задержка поставки"></label><label>Приоритет<select id="v7il"><option value="high">Высокий</option><option value="medium">Средний</option><option value="low">Низкий</option></select></label><label>Комментарий<textarea id="v7ix" rows="4"></textarea></label>`,`<button class="secondary" onclick="v7Issues(${i})">Отмена</button><button class="primary" onclick="v7SaveIssue(${i})">Добавить</button>`);
+  window.v7SaveIssue=i=>{arr("issues",i).unshift({title:document.getElementById("v7in").value,level:document.getElementById("v7il").value,note:document.getElementById("v7ix").value,done:false,date:dateNow()});save();v7Issues(i)};
+  window.v7ToggleIssue=(i,n)=>{arr("issues",i)[n].done=!arr("issues",i)[n].done;save();v7Issues(i)};
+
+  /* PLAN */
+  window.v7Plan=i=>{
+    const p=D.plans[key(i)]||{};
+    v7Modal("🗓️ План объекта",`<label>Дата сдачи<input id="v7finish" type="date" value="${p.finish||obj(i)?.finish||""}"></label><label>Цель на неделю<textarea id="v7goal" rows="4">${esc(p.goal||"")}</textarea></label><h3>Контроль</h3><div class="v7-card">Этапы: <b>${stats(i).done}%</b><br>Открытые задачи: <b>${tasks().filter(t=>!t.done&&(t.object===obj(i)?.name||t.objectName===obj(i)?.name)).length}</b></div>`,
+      `<button class="secondary" onclick="v7Object(${i})">Назад</button><button class="primary" onclick="v7SavePlan(${i})">Сохранить</button>`);
+  };
+  window.v7SavePlan=i=>{D.plans[key(i)]={...(D.plans[key(i)]||{}),finish:document.getElementById("v7finish").value,goal:document.getElementById("v7goal").value};save();v7Plan(i)};
+
+  /* REPORT */
+  window.v7Report=i=>{
+    const s=stats(i),o=obj(i), issues=arr("issues",i).filter(x=>!x.done).length;
+    const report=`BUILDOS — ОТЧЁТ ПО ОБЪЕКТУ\nОбъект: ${o?.name||""}\nДата: ${dateNow()}\nГотовность: ${s.done}%\nБюджет план: ${s.planned}\nРасход факт: ${s.spent}\nОстаток: ${s.planned-s.spent}\nПрибыль: ${s.profit}\nОткрытых проблем: ${issues}\nЭтапов: ${s.stages}\nМатериалов: ${s.materials}\nЗаписей журнала: ${s.journal}`;
+    v7Modal("📊 Отчёт по объекту",`<pre class="v7-report">${esc(report)}</pre><button class="secondary" onclick="navigator.clipboard?.writeText(${JSON.stringify(report)});alert('Отчёт скопирован')">📋 Скопировать</button>`);
+  };
+
+  /* Hook "Открыть объект" buttons/cards */
+  function hookObjects(){
+    document.querySelectorAll("button,.object-card,.card").forEach(el=>{
+      const txt=(el.innerText||"").trim();
+      if(txt==="Открыть объект →" && !el.dataset.v7){
+        el.dataset.v7="1";
+        el.onclick=()=>v7Object(0);
+      }
+    });
+    if(!document.getElementById("v7Style")){
+      const s=document.createElement("style");s.id="v7Style";s.textContent=`
+        #v7Modal.show{display:flex!important}.v7-sheet{background:#fff;position:absolute;inset:auto 0 0;border-radius:28px 28px 0 0;max-height:94vh;overflow:auto;padding:18px 18px calc(20px + env(safe-area-inset-bottom))}.v7-head{display:flex;justify-content:space-between;align-items:center}.v7-head h2{font-size:25px;margin:0}.v7-head button{border:0;background:#eef1f5;border-radius:50%;width:40px;height:40px;font-size:19px}.v7-body{padding:14px 0}.v7-body label{display:block;color:#697386;font-weight:750;margin:12px 0}.v7-body input,.v7-body select,.v7-body textarea{width:100%;box-sizing:border-box;border:1px solid #d8dde5;border-radius:14px;padding:14px;margin-top:6px;font:inherit;background:#fff}.v7-actions{display:flex;gap:10px}.v7-actions button{flex:1}.v7-hero{background:#f5f7fa;border-radius:19px;padding:16px}.v7-hero b{font-size:21px}.v7-hero small{display:block;color:#70798a;margin-top:5px}.v7-progress,.v7-bar{height:8px;background:#e2e7ef;border-radius:99px;margin:13px 0 8px;overflow:hidden}.v7-progress i,.v7-bar i{display:block;height:100%;background:#2875ed;border-radius:99px}.v7-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.v7-stats>div{background:#f5f7fa;border-radius:16px;padding:13px}.v7-stats b{display:block;font-size:20px}.v7-stats small{color:#727b8c}.v7-menu{display:grid;grid-template-columns:1fr 1fr;gap:9px}.v7-menu button{border:1px solid #e0e4eb;background:#fff;border-radius:15px;padding:14px;font:inherit;font-weight:700;text-align:left}.v7-list{display:grid;gap:8px}.v7-row{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid #e0e4eb;border-radius:14px;padding:12px}.v7-row>div{flex:1}.v7-row small,.v7-task small,.v7-issue small{display:block;color:#788193;margin-top:3px}.v7-card{background:#f5f7fa;border-radius:16px;padding:14px;margin:9px 0}.v7-card strong{font-size:21px}.v7-stage{display:flex;align-items:center;gap:9px;border:1px solid #e0e4eb;border-radius:15px;padding:10px}.v7-stage>div{flex:1}.v7-stage b{display:block}.v7-stage small{color:#788193}.v7-check{width:40px;height:40px;border:0;border-radius:50%;background:#edf1f5;font-size:20px}.v7-check.done{background:#16a34a;color:#fff}.v7-mini{border:0;background:#eef1f5;border-radius:10px;padding:9px;font:inherit}.v7-task{padding:11px;border-radius:13px;background:#f5f7fa;margin:6px 0}.v7-journal{border-left:3px solid #2875ed;background:#f5f7fa;border-radius:0 14px 14px 0;padding:12px}.v7-journal p{margin:8px 0}.v7-journal span{font-size:12px;background:#e9eef7;border-radius:9px;padding:4px 7px}.v7-issue{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:12px;border-radius:14px;background:#fff5f5;border:1px solid #f0d7d7}.v7-issue.closed{background:#f2fbf4;opacity:.75}.v7-issue>div{flex:1}.v7-empty{text-align:center;background:#f5f7fa;color:#788193;padding:20px;border-radius:14px}.v7-report{white-space:pre-wrap;background:#111827;color:#fff;border-radius:15px;padding:15px;line-height:1.5;font-size:13px}
+      `;document.head.appendChild(s);
+    }
+  }
+  function init(){
+    window.BUILDOS_V7={data:()=>D,save};
+    hookObjects();
+    setInterval(hookObjects,1500);
+    /* Make object cards open the new command center. */
+    setTimeout(()=>{
+      document.querySelectorAll(".object-card").forEach((el,i)=>{
+        if(!el.dataset.v7obj){el.dataset.v7obj="1";el.onclick=()=>v7Object(i)}
+      });
+    },500);
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
+</script>
+
 </body>
 </html>
