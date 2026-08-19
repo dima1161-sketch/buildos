@@ -474,13 +474,33 @@ function openObject(i){
    ${objExpenses.length?objExpenses.slice().reverse().map(e=>`<div class="expense-item"><div><div class="expense-name">${e.category||"Расход"}</div><div class="expense-meta">${e.comment||"Без комментария"} · ${e.date}</div></div><div class="expense-amount">${money(e.amount)}</div></div>`).join(""):'<div class="empty">Расходов по объекту пока нет.</div>'}
  </div>
 
- <div class="detail-card"><h3>🧾 Импортированная смета</h3>
- ${o.estimateItems&&o.estimateItems.length?
-   `<div class="row"><span>Позиций</span><b>${o.estimateItems.length}</b></div>
-    <div class="row"><span>Сумма сметы</span><b>${money(o.estimateTotal||0)}</b></div>
-    ${o.estimateItems.slice(0,12).map(x=>`<div class="row"><span>${x.name}<small style="display:block;color:var(--muted)">${x.qty||0} ${x.unit||"шт"} × ${money(x.price||0)}</small></span><b>${money((+x.qty||0)*(+x.price||0))}</b></div>`).join("")}
-    ${o.estimateItems.length>12?`<div class="empty">Показаны первые 12 позиций из ${o.estimateItems.length}.</div>`:""}`
-   :'<div class="empty">Смета по объекту пока не загружена.</div>'}
+ <div class="detail-card">
+   <div class="beq">
+     <div class="beq-scroll">
+       <button class="active" onclick="beOpenEstimate(${i})">📋 Смета</button>
+       <button onclick="bePurchaseList(${i})">🛒 Закупки</button>
+       <button onclick="beEstimateCheck(${i})">🤖 Проверка</button>
+     </div>
+   </div>
+   ${o.estimateItems&&o.estimateItems.length?
+     (()=>{const total=o.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const purchased=o.estimateItems.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);const work=o.estimateItems.filter(x=>x.status==="work").length;const done=o.estimateItems.filter(x=>x.status==="done").length;const buy=o.estimateItems.filter(x=>beType(x.name)==="Материалы"&&(+x.purchasedQty||0)<(+x.qty||0)).length;return `
+       <h3>📋 Смета объекта</h3>
+       <div class="be-summary">
+         <div class="be-stat"><span>Сумма сметы</span><b>${beMoney(total)}</b></div>
+         <div class="be-stat"><span>Потрачено по смете</span><b>${beMoney(purchased)}</b></div>
+         <div class="be-stat"><span>В работе</span><b>${work}</b></div>
+         <div class="be-stat"><span>Выполнено</span><b>${done}</b></div>
+       </div>
+       <div class="be-progress"><i style="width:${total?Math.min(100,Math.round(purchased/total*100)):0}%"></i></div>
+       <div class="be-muted" style="margin-top:6px">${o.estimateItems.length} позиций · ${buy} материалов требуют закупки</div>
+       <div class="be-actions">
+         <button class="primary" onclick="beOpenEstimate(${i})">Открыть смету →</button>
+         <button onclick="bePurchaseList(${i})">🛒 Что купить</button>
+       </div>
+     `})()
+     :'<h3>📋 Смета объекта</h3><div class="empty">Смета по объекту пока не загружена.</div><button class="primary" style="width:100%;margin-top:10px" onclick="bfOpenImport(\'estimate\')">📥 Загрузить смету</button>'}
+ </div>
+
  </div>
 
  <div class="detail-card"><h3>📅 График работ</h3>
@@ -1091,6 +1111,29 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
             }));
           }
           localStorage.setItem("buildos_objects",JSON.stringify(mainObjects));
+
+          // IMPORTANT: the main app keeps `objects` in memory.
+          // Updating only localStorage does not refresh the currently opened
+          // object, so the screen can still say "Смета не загружена".
+          try{
+            if(typeof objects!=="undefined" && Array.isArray(objects) && mainObj){
+              const liveObj=objects.find(o=>
+                (project&&project.name&&o.name===project.name) ||
+                String(o.id||"")===String(mainObj.id||"")
+              );
+              if(liveObj){
+                if(mode==="estimate"){
+                  liveObj.estimateItems=JSON.parse(JSON.stringify(mainObj.estimateItems||[]));
+                  liveObj.estimateTotal=+mainObj.estimateTotal||0;
+                }else{
+                  liveObj.schedule=JSON.parse(JSON.stringify(mainObj.schedule||[]));
+                }
+                if(typeof save==="function") save();
+              }
+            }
+          }catch(liveErr){
+            console.warn("BUILDOS live object refresh failed",liveErr);
+          }
         }
 
         // Also mirror schedule tasks into the main Tasks screen.
@@ -1112,6 +1155,17 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       const topAction=document.getElementById("bfImportTopAction");
       if(topAction) topAction.style.display="block";
       if(b){b.textContent="✅ Добавлено";b.disabled=true;b.style.opacity=".6";}
+
+      // Refresh the object detail immediately after import.
+      try{
+        if(typeof objects!=="undefined" && Array.isArray(objects)){
+          const chosenName=(s.projects.find(p=>String(p.id)===String(pid))||{}).name||"";
+          const liveIndex=objects.findIndex(o=>o.name===chosenName);
+          if(liveIndex>=0 && typeof openObject==="function"){
+            openObject(liveIndex);
+          }
+        }
+      }catch(refreshErr){console.warn("Object detail refresh failed",refreshErr);}
     }catch(err){bfImportStatus('<div class="bf-warn">Ошибка сохранения: '+esc(err.message||err)+'</div>')}
     if(commitBtn){commitBtn.disabled=true;commitBtn.textContent="✅ Добавлено в объект";commitBtn.style.opacity=".65";}
 
@@ -1198,6 +1252,160 @@ window.bfAddOpen=function(pid){
  document.getElementById("bfAddSheet").classList.add("show");
 };
 window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.remove("show")};
+</script>
+
+<style id="buildosEstimateMobileCSS">
+.beq{position:sticky;top:0;z-index:3500;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);padding:8px 0 10px;margin-bottom:10px}
+.beq-scroll{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px}
+.beq-scroll button{white-space:nowrap;border:1px solid #dbe1e9;background:#fff;border-radius:13px;padding:10px 12px;font-weight:800;font-size:13px}
+.beq-scroll .active{background:#2878ed;color:#fff;border-color:#2878ed}
+.be-summary{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.be-stat{background:#f6f8fb;border:1px solid #e3e8ef;border-radius:17px;padding:13px}
+.be-stat span{display:block;color:#6f7888;font-size:12px}.be-stat b{display:block;font-size:20px;margin-top:4px}
+.be-good{color:#168a4b}.be-bad{color:#c62828}.be-warn{color:#b06b00}
+.be-progress{height:9px;background:#e8edf3;border-radius:99px;overflow:hidden;margin-top:10px}.be-progress i{height:100%;display:block;background:#2878ed;border-radius:99px}
+.be-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
+.be-actions button{border:1px solid #dbe1e9;background:#fff;border-radius:15px;padding:13px 10px;font-weight:800}
+.be-actions .primary{background:#2878ed;color:#fff;border-color:#2878ed}
+.be-filter{display:flex;gap:7px;overflow:auto;margin:11px 0}.be-filter button{white-space:nowrap;border:1px solid #dbe1e9;background:#fff;border-radius:12px;padding:9px 11px;font-weight:800;font-size:12px}.be-filter .active{background:#eef4ff;color:#2878ed;border-color:#9fc0ff}
+.be-search{width:100%;box-sizing:border-box;border:1px solid #d8dee7;border-radius:14px;padding:12px;font:inherit;margin-top:8px}
+.be-item{background:#fff;border:1px solid #e2e6ec;border-radius:18px;padding:13px;margin:8px 0}
+.be-item-top{display:flex;justify-content:space-between;gap:10px}.be-name{font-weight:800;font-size:16px;line-height:1.25}.be-muted{color:#717a8a;font-size:12px;margin-top:3px}.be-amount{font-weight:850;font-size:16px;white-space:nowrap}.be-status{display:inline-flex;align-items:center;gap:5px;border-radius:9px;padding:5px 8px;font-size:11px;font-weight:800;margin-top:8px}.be-status.todo{background:#fff3df;color:#ad6900}.be-status.work{background:#eef4ff;color:#2863b8}.be-status.done{background:#eaf8ef;color:#19834a}.be-purchase{background:#fff8e8;border:1px solid #f0d28d;border-radius:16px;padding:13px;margin-top:10px}.be-purchase b{font-size:16px}
+.be-modal{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:10010;display:none;align-items:flex-end}.be-modal.show{display:flex}
+.be-sheet{width:100%;max-width:760px;max-height:92vh;overflow:auto;background:#fff;border-radius:28px 28px 0 0;padding:18px 16px calc(22px + env(safe-area-inset-bottom));font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+.be-sheet h2{margin:0 0 6px;font-size:25px}.be-sheet .close{float:right;border:1px solid #dbe1e9;background:#fff;border-radius:50%;width:38px;height:38px;font-size:20px}
+.be-field input,.be-field select{width:100%;box-sizing:border-box;border:1px solid #d8dee7;border-radius:13px;padding:12px;font:inherit}
+.be-field{margin:11px 0}.be-field label{display:block;font-weight:700;color:#6f7888;margin-bottom:6px}
+.be-line{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #e7eaf0}.be-line:last-child{border-bottom:0}
+.be-cat{font-size:12px;font-weight:800;color:#2863b8}.be-big{font-size:26px;font-weight:900}
+</style>
+<div id="beEstimateModal" class="be-modal" onclick="if(event.target===this)beCloseEstimate()"><div class="be-sheet" id="beEstimateSheet"></div></div>
+
+<script>
+(function(){
+  window.beCloseEstimate=function(){document.getElementById("beEstimateModal").classList.remove("show");};
+  function beMoney(x){return new Intl.NumberFormat("ru-RU").format(Number(x)||0)+" ₽";}
+  function beEsc(x){return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+  function beType(name){
+    const n=String(name||"").toLowerCase();
+    if(/плит|клей|грунт|краск|штукатур|шпаклев|гипс|профил|кабел|провод|розет|выключ|смес|труб|ламин|паркет|цемент|саморез|дюбел|гермет|утепл|минват|фанер|мдф|дсп|керам|обои|светиль|силикон/.test(n))return "Материалы";
+    return "Работы";
+  }
+  function beStatus(x){
+    const st=x.status||"todo";
+    if(st==="done")return ["done","✅ Выполнено"];
+    if(st==="work")return ["work","🟡 В работе"];
+    return ["todo","⚪ Не начато"];
+  }
+  function beGetObj(i){
+    try{return objects[i]}catch(e){return null}
+  }
+  function beRefresh(i){
+    if(typeof openObject==="function")openObject(i);
+  }
+  window.beOpenEstimate=function(i){
+    const o=beGetObj(i); if(!o)return;
+    o.estimateItems=o.estimateItems||[];
+    const items=o.estimateItems;
+    const q=(o.beEstimateFilter||"all"), search=o.beEstimateSearch||"";
+    const filtered=items.filter(x=>(q==="all"||beType(x.name)===q||x.status===q)&&String(x.name||"").toLowerCase().includes(search.toLowerCase()));
+    const total=items.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
+    const purchased=items.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);
+    const left=Math.max(0,total-purchased);
+    const done=items.filter(x=>x.status==="done").length;
+    const work=items.filter(x=>x.status==="work").length;
+    const buy=items.filter(x=>(+x.purchasedQty||0)<(+x.qty||0));
+    document.getElementById("beEstimateSheet").innerHTML=`
+      <button class="close" onclick="beCloseEstimate()">×</button>
+      <h2>📋 Смета</h2>
+      <div style="color:#717a8a;font-size:13px">${beEsc(o.name)} · ${items.length} позиций</div>
+      <div class="be-summary" style="margin-top:14px">
+        <div class="be-stat"><span>По смете</span><b>${beMoney(total)}</b></div>
+        <div class="be-stat"><span>Куплено</span><b>${beMoney(purchased)}</b></div>
+        <div class="be-stat"><span>Осталось</span><b class="${left<0?'be-bad':'be-good'}">${beMoney(left)}</b></div>
+        <div class="be-stat"><span>Статус</span><b>${done}/${items.length}</b><span>${work} в работе</span></div>
+      </div>
+      <div class="be-progress"><i style="width:${total?Math.min(100,Math.round(purchased/total*100)):0}%"></i></div>
+      <input class="be-search" placeholder="🔎 Поиск по смете" value="${beEsc(search)}" oninput="objects[${i}].beEstimateSearch=this.value;beOpenEstimate(${i})">
+      <div class="be-filter">
+        ${[["all","Все"],["Материалы","Материалы"],["Работы","Работы"],["work","В работе"],["done","Выполнено"]].map(f=>`<button class="${q===f[0]?'active':''}" onclick="objects[${i}].beEstimateFilter='${f[0]}';beOpenEstimate(${i})">${f[1]}</button>`).join("")}
+      </div>
+      <div class="be-actions">
+        <button class="primary" onclick="bePurchaseList(${i})">🛒 Что купить</button>
+        <button onclick="beEstimateCheck(${i})">🤖 Проверить</button>
+      </div>
+      <div style="margin-top:12px">
+        ${filtered.map((x,j)=>{const realIndex=items.indexOf(x), st=beStatus(x), sum=(+x.qty||0)*(+x.price||0), rem=Math.max(0,(+x.qty||0)-(+x.purchasedQty||0));return `
+          <div class="be-item" onclick="beItem(${i},${realIndex})">
+            <div class="be-item-top"><div><div class="be-name">${beEsc(x.name)}</div><div class="be-muted">${beType(x.name)} · ${x.qty||0} ${beEsc(x.unit||"шт")} · ${beMoney(x.price||0)}/${beEsc(x.unit||"шт")}</div></div><div class="be-amount">${beMoney(sum)}</div></div>
+            <span class="be-status ${st[0]}">${st[1]}</span>
+            ${beType(x.name)==="Материалы"&&rem>0?`<div class="be-muted" style="margin-top:7px">🛒 Купить ещё: <b>${rem} ${beEsc(x.unit||"шт")}</b></div>`:""}
+          </div>`}).join("")||'<div class="be-muted" style="padding:20px 0">Ничего не найдено.</div>'}
+      </div>`;
+    document.getElementById("beEstimateModal").classList.add("show");
+  };
+  window.beItem=function(oi,ii){
+    const o=beGetObj(oi),x=o.estimateItems[ii]; if(!x)return;
+    const sum=(+x.qty||0)*(+x.price||0),st=beStatus(x);
+    document.getElementById("beEstimateSheet").innerHTML=`
+      <button class="close" onclick="beOpenEstimate(${oi})">×</button>
+      <h2>${beEsc(x.name)}</h2>
+      <div class="be-cat">${beType(x.name)}</div>
+      <div class="be-summary" style="margin-top:14px">
+        <div class="be-stat"><span>Количество</span><b>${x.qty||0} ${beEsc(x.unit||"шт")}</b></div>
+        <div class="be-stat"><span>Цена</span><b>${beMoney(x.price||0)}</b></div>
+        <div class="be-stat"><span>Сумма</span><b>${beMoney(sum)}</b></div>
+        <div class="be-stat"><span>Куплено</span><b>${x.purchasedQty||0} ${beEsc(x.unit||"шт")}</b></div>
+      </div>
+      <div class="be-field"><label>Статус</label><select id="beItemStatus"><option value="todo">Не начато</option><option value="work">В работе</option><option value="done">Выполнено</option></select></div>
+      <div class="be-field"><label>Куплено</label><input id="beItemPurchased" type="number" min="0" value="${x.purchasedQty||0}"></div>
+      <div class="be-field"><label>Комментарий</label><input id="beItemNote" value="${beEsc(x.note||"")}" placeholder="Например: заказали у Петровича"></div>
+      <div class="be-actions">
+        <button onclick="beSaveItem(${oi},${ii})" class="primary">Сохранить</button>
+        <button onclick="beOpenEstimate(${oi})">← К смете</button>
+      </div>`;
+    document.getElementById("beItemStatus").value=x.status||"todo";
+    document.getElementById("beEstimateModal").classList.add("show");
+  };
+  window.beSaveItem=function(oi,ii){
+    const o=beGetObj(oi),x=o.estimateItems[ii];if(!x)return;
+    x.status=document.getElementById("beItemStatus").value;
+    x.purchasedQty=Math.max(0,Number(document.getElementById("beItemPurchased").value)||0);
+    x.note=document.getElementById("beItemNote").value||"";
+    save();
+    beOpenEstimate(oi);
+    try{if(typeof renderObjects==="function")renderObjects();if(typeof renderHome==="function")renderHome()}catch(e){}
+  };
+  window.bePurchaseList=function(i){
+    const o=beGetObj(i),items=o.estimateItems||[];
+    const buy=items.filter(x=>beType(x.name)==="Материалы"&&(+x.purchasedQty||0)<(+x.qty||0));
+    const total=buy.reduce((a,x)=>a+(Math.max(0,(+x.qty||0)-(+x.purchasedQty||0))*(+x.price||0)),0);
+    document.getElementById("beEstimateSheet").innerHTML=`
+      <button class="close" onclick="beOpenEstimate(${i})">×</button>
+      <h2>🛒 Что нужно купить</h2>
+      <div class="be-stat"><span>Ориентировочно на закупку</span><div class="be-big">${beMoney(total)}</div></div>
+      ${buy.map((x,idx)=>{const rem=Math.max(0,(+x.qty||0)-(+x.purchasedQty||0));return `<div class="be-line"><div><b>${beEsc(x.name)}</b><div class="be-muted">${rem} ${beEsc(x.unit||"шт")} × ${beMoney(x.price||0)}</div></div><b>${beMoney(rem*(+x.price||0))}</b></div>`}).join("")||'<div class="be-muted" style="padding:20px 0">Все материалы закуплены.</div>'}
+      <div class="be-actions"><button class="primary" onclick="beMarkAllPurchased(${i})">Отметить всё купленным</button><button onclick="beOpenEstimate(${i})">← К смете</button></div>`;
+  };
+  window.beMarkAllPurchased=function(i){
+    const o=beGetObj(i);(o.estimateItems||[]).forEach(x=>{if(beType(x.name)==="Материалы"){x.purchasedQty=+x.qty||0;x.status="done"}});save();bePurchaseList(i);
+  };
+  window.beEstimateCheck=function(i){
+    const o=beGetObj(i),items=o.estimateItems||[], issues=[];
+    items.forEach(x=>{
+      const q=+x.qty||0,p=+x.price||0;
+      if(q<=0)issues.push(`⚠️ ${x.name}: нулевой объём`);
+      if(p<=0)issues.push(`⚠️ ${x.name}: цена не распознана`);
+    });
+    const byName={};items.forEach(x=>{const k=String(x.name||"").toLowerCase();byName[k]=(byName[k]||0)+1});
+    Object.keys(byName).forEach(k=>{if(byName[k]>1)issues.push(`🔁 Дубликат позиции: ${k}`)});
+    document.getElementById("beEstimateSheet").innerHTML=`
+      <button class="close" onclick="beOpenEstimate(${i})">×</button>
+      <h2>🤖 Проверка сметы</h2>
+      ${issues.length?issues.map(x=>`<div class="be-purchase" style="margin:8px 0">${beEsc(x)}</div>`):'<div class="be-stat"><span>Проверка</span><b class="be-good">✅ Явных проблем не найдено</b><div class="be-muted">Проверь объёмы и цены, которые могли быть распознаны из исходного файла.</div></div>'}
+      <div class="be-actions"><button class="primary" onclick="beOpenEstimate(${i})">← К смете</button></div>`;
+  };
+})();
 </script>
 </body>
 </html>
