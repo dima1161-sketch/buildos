@@ -263,7 +263,29 @@ window.addEventListener('unhandledrejection',function(e){
     </div>
   </section>
 
-  <section id="ai" class="view">
+  
+<section id="materials" class="view">
+  <div class="section-head"><h2>🧱 Материалы</h2><button class="primary" onclick="openMaterialModal()">＋ Добавить</button></div>
+  <div class="grid2">
+    <div class="stat"><div class="icon">🧱</div><div class="value" id="materialsCount">0</div><div class="label">позиций</div></div>
+    <div class="stat"><div class="icon">💰</div><div class="value" id="materialsTotal">0 ₽</div><div class="label">стоимость</div></div>
+  </div>
+  <div id="materialsList" style="margin-top:16px"></div>
+</section>
+
+<section id="clients" class="view">
+  <div class="section-head"><h2>👤 Клиенты</h2><button class="primary" onclick="openClientModal()">＋ Добавить</button></div>
+  <div class="card"><div class="small">Клиенты и привязанные к ним объекты</div><div class="money" id="clientsCount">0</div></div>
+  <div id="clientsList" style="margin-top:16px"></div>
+</section>
+
+<section id="calendar" class="view">
+  <div class="section-head"><h2>📅 Календарь</h2></div>
+  <div class="card"><div class="small">Задачи по срокам</div><div class="money" id="calendarCount">0</div></div>
+  <div id="calendarList" style="margin-top:16px"></div>
+</section>
+
+<section id="ai" class="view">
     <div class="section-head"><h2>AI-помощник</h2></div>
     <div class="ai-box">
       <div style="font-size:20px;font-weight:800">🤖 Чем помочь?</div>
@@ -298,6 +320,15 @@ window.addEventListener('unhandledrejection',function(e){
       <button class="more-item" onclick="closeMoreMenu();showView('workers')">
         <span class="more-icon">👷</span><b>Рабочие</b>
       </button>
+      <button class="more-item" onclick="closeMoreMenu();showView('materials')">
+        <span class="more-icon">🧱</span><b>Материалы</b>
+      </button>
+      <button class="more-item" onclick="closeMoreMenu();showView('clients')">
+        <span class="more-icon">👤</span><b>Клиенты</b>
+      </button>
+      <button class="more-item" onclick="closeMoreMenu();showView('calendar')">
+        <span class="more-icon">📅</span><b>Календарь</b>
+      </button>
       <button class="more-item" onclick="closeMoreMenu();showView('reports')">
         <span class="more-icon">📊</span><b>Отчёты</b>
       </button>
@@ -309,6 +340,36 @@ window.addEventListener('unhandledrejection',function(e){
   </div>
 </div>
 
+
+
+<div id="materialModal" class="modal" onclick="if(event.target===this)closeModal('materialModal')">
+  <div class="sheet">
+    <h2>Новый материал</h2>
+    <div class="field"><label>Наименование</label><input id="materialName" placeholder="Например: керамогранит"></div>
+    <div class="field"><label>Объект</label><select id="materialObject"></select></div>
+    <div class="grid2">
+      <div class="field"><label>Количество</label><input id="materialQty" type="number" inputmode="decimal" value="1"></div>
+      <div class="field"><label>Единица</label><input id="materialUnit" value="шт"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Цена за единицу</label><input id="materialPrice" type="number" inputmode="decimal" placeholder="2500"></div>
+      <div class="field"><label>Поставщик</label><input id="materialSupplier" placeholder="Леруа / поставщик"></div>
+    </div>
+    <div class="field"><label>Статус</label><select id="materialStatus"><option>Нужно купить</option><option>Заказано</option><option>Доставлено</option><option>На объекте</option></select></div>
+    <div class="actions"><button class="secondary" onclick="closeModal('materialModal')">Отмена</button><button class="primary" onclick="addMaterial()">Добавить</button></div>
+  </div>
+</div>
+
+<div id="clientModal" class="modal" onclick="if(event.target===this)closeModal('clientModal')">
+  <div class="sheet">
+    <h2>Новый клиент</h2>
+    <div class="field"><label>Имя</label><input id="clientName" placeholder="Иван Петров"></div>
+    <div class="field"><label>Телефон</label><input id="clientPhone" type="tel" inputmode="tel" placeholder="+7 999 123-45-67"></div>
+    <div class="field"><label>Объект</label><select id="clientObject"></select></div>
+    <div class="field"><label>Комментарий</label><input id="clientNote" placeholder="Пожелания, договорённости..."></div>
+    <div class="actions"><button class="secondary" onclick="closeModal('clientModal')">Отмена</button><button class="primary" onclick="addClient()">Добавить</button></div>
+  </div>
+</div>
 
 <div id="workerModal" class="modal" onclick="if(event.target===this)closeModal('workerModal')">
   <div class="sheet">
@@ -389,15 +450,17 @@ let tasks=JSON.parse(localStorage.getItem("buildos_tasks")||"null")||[
 let expenses=JSON.parse(localStorage.getItem("buildos_expenses")||"[]");
 let incomes=JSON.parse(localStorage.getItem("buildos_incomes")||"[]");
 let workers=JSON.parse(localStorage.getItem("buildos_workers")||"[]");
+let materials=JSON.parse(localStorage.getItem("buildos_materials")||"[]");
+let clients=JSON.parse(localStorage.getItem("buildos_clients")||"[]");
 let taskFilter="all";
 
-function save(){localStorage.setItem("buildos_tasks",JSON.stringify(tasks));localStorage.setItem("buildos_expenses",JSON.stringify(expenses));localStorage.setItem("buildos_incomes",JSON.stringify(incomes));localStorage.setItem("buildos_workers",JSON.stringify(workers));localStorage.setItem("buildos_objects",JSON.stringify(objects))}
+function save(){localStorage.setItem("buildos_tasks",JSON.stringify(tasks));localStorage.setItem("buildos_expenses",JSON.stringify(expenses));localStorage.setItem("buildos_incomes",JSON.stringify(incomes));localStorage.setItem("buildos_workers",JSON.stringify(workers));localStorage.setItem("buildos_materials",JSON.stringify(materials));localStorage.setItem("buildos_clients",JSON.stringify(clients));localStorage.setItem("buildos_objects",JSON.stringify(objects))}
 function showView(id,btn){
  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
  const v=document.getElementById(id); if(v)v.classList.add("active");
  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("nav-active"));
  const nav=document.getElementById("nav-"+id); if(nav)nav.classList.add("nav-active");
- if(id==="home")renderHome(); if(id==="objects")renderObjects(); if(id==="tasks")renderTasks(); if(id==="expenses")renderExpenses(); if(id==="finance")renderFinance(); if(id==="workers")renderWorkers(); if(id==="reports")renderReports();
+ if(id==="home")renderHome(); if(id==="objects")renderObjects(); if(id==="tasks")renderTasks(); if(id==="expenses")renderExpenses(); if(id==="finance")renderFinance(); if(id==="workers")renderWorkers(); if(id==="materials")renderMaterials(); if(id==="clients")renderClients(); if(id==="calendar")renderCalendar(); if(id==="reports")renderReports();
  window.scrollTo(0,0);
 }
 function money(n){return Number(n||0).toLocaleString("ru-RU")+" ₽"}
@@ -442,7 +505,7 @@ function addObject(){
    days:Number(document.getElementById("objectDays").value)||0,progress:0,stage:document.getElementById("objectStage").value.trim()||"Подготовка",
    workers:0,start:new Date().toLocaleDateString("ru-RU"),finish:"",issues:0,icon:"🏠",tasks:[]
  });
- save();closeModal("objectModal");renderObjects();renderHome();objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");objectOptions("workerObject");
+ save();closeModal("objectModal");renderObjects();renderHome();objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");objectOptions("workerObject");objectOptions("materialObject");objectOptions("clientObject");
 }
 
 function renderObjects(){document.getElementById("objectList").innerHTML=objects.map((o,i)=>objectCard(o,i)).join("")||'<div class="empty">Объектов пока нет</div>'}
@@ -479,11 +542,114 @@ function openObject(i){
 
  <div class="detail-card"><h3>📋 Задачи объекта</h3>
  ${objTasks.length?objTasks.map(t=>`<div class="row"><span>${t.done?'✅':'⬜'} ${t.title}<br><span class="small">${t.assignee||"Не назначен"} · ${t.due||"Без срока"}</span></span></div>`).join(""):'<div class="empty">Задач пока нет.</div>'}
- <button class="secondary" style="width:100%;margin-top:10px" onclick="openTaskModal('${o.name}')">+ Добавить задачу</button></div>`;
+ <button class="secondary" style="width:100%;margin-top:10px" onclick="openTaskModal('${o.name}')">+ Добавить задачу</button></div>
+
+ <div class="detail-card"><h3>🧱 Материалы объекта</h3>
+ ${materials.filter(m=>m.object===o.name).length?materials.filter(m=>m.object===o.name).map(m=>`<div class="row"><span>${m.name}<br><span class="small">${m.qty} ${m.unit} · ${m.status}</span></span><b>${money(materialTotal(m))}</b></div>`).join(""):'<div class="empty">Материалов по объекту пока нет.</div>'}
+ <button class="secondary" style="width:100%;margin-top:10px" onclick="showView('materials')">Открыть материалы →</button></div>
+
+ <div class="detail-card"><h3>👷 Рабочие объекта</h3>
+ ${workers.filter(w=>w.object===o.name).length?workers.filter(w=>w.object===o.name).map(w=>`<div class="row"><span>${w.name}<br><span class="small">${w.role||"Рабочий"}</span></span><b>${money(w.rate)} / день</b></div>`).join(""):'<div class="empty">Рабочие пока не назначены.</div>'}</div>`;
  showView("objectDetail");
 }
 function setTaskFilter(f,btn){taskFilter=f;document.querySelectorAll(".task-filter").forEach(b=>b.classList.remove("active"));btn.classList.add("active");renderTasks()}
 function priorityLabel(p){return p==="high"?"Высокий":p==="low"?"Низкий":"Средний"}
+
+
+function materialTotal(m){return Number(m.qty||0)*Number(m.price||0)}
+function openMaterialModal(){
+  objectOptions("materialObject");
+  document.getElementById("materialName").value="";
+  document.getElementById("materialQty").value="1";
+  document.getElementById("materialUnit").value="шт";
+  document.getElementById("materialPrice").value="";
+  document.getElementById("materialSupplier").value="";
+  document.getElementById("materialStatus").value="Нужно купить";
+  document.getElementById("materialModal").classList.add("show");
+  setTimeout(()=>document.getElementById("materialName").focus(),50);
+}
+function addMaterial(){
+  const name=document.getElementById("materialName").value.trim(); if(!name)return;
+  materials.push({
+    id:Date.now()+"_"+Math.random().toString(36).slice(2),
+    name,
+    object:document.getElementById("materialObject").value,
+    qty:Number(document.getElementById("materialQty").value)||0,
+    unit:document.getElementById("materialUnit").value.trim()||"шт",
+    price:Number(document.getElementById("materialPrice").value)||0,
+    supplier:document.getElementById("materialSupplier").value.trim(),
+    status:document.getElementById("materialStatus").value
+  });
+  save();closeModal("materialModal");renderMaterials();
+}
+function renderMaterials(){
+  const total=materials.reduce((sum,m)=>sum+materialTotal(m),0);
+  document.getElementById("materialsCount").textContent=materials.length;
+  document.getElementById("materialsTotal").textContent=money(total);
+  document.getElementById("materialsList").innerHTML=materials.length?materials.slice().reverse().map((m,ri)=>{
+    const i=materials.length-1-ri, total=materialTotal(m);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;gap:12px">
+        <div><div class="task-title">${m.name}</div><div class="muted">🏗️ ${m.object} · ${m.qty} ${m.unit}</div></div>
+        <div style="text-align:right"><b>${money(total)}</b><div class="small">${money(m.price)} / ${m.unit}</div></div>
+      </div>
+      <div class="task-meta" style="margin-top:10px">📦 ${m.status}${m.supplier?" · "+m.supplier:""}</div>
+      <button class="secondary danger-btn" style="margin-top:10px" onclick="deleteMaterial(${i})">Удалить</button>
+    </div>`;
+  }).join(""):'<div class="empty">Материалов пока нет.</div>';
+}
+function deleteMaterial(i){if(!confirm("Удалить позицию?"))return;materials.splice(i,1);save();renderMaterials()}
+
+function openClientModal(){
+  objectOptions("clientObject");
+  document.getElementById("clientName").value="";
+  document.getElementById("clientPhone").value="";
+  document.getElementById("clientNote").value="";
+  document.getElementById("clientModal").classList.add("show");
+  setTimeout(()=>document.getElementById("clientName").focus(),50);
+}
+function addClient(){
+  const name=document.getElementById("clientName").value.trim();if(!name)return;
+  clients.push({
+    id:Date.now()+"_"+Math.random().toString(36).slice(2),
+    name,
+    phone:document.getElementById("clientPhone").value.trim(),
+    object:document.getElementById("clientObject").value,
+    note:document.getElementById("clientNote").value.trim()
+  });
+  save();closeModal("clientModal");renderClients();
+}
+function renderClients(){
+  document.getElementById("clientsCount").textContent=clients.length;
+  document.getElementById("clientsList").innerHTML=clients.length?clients.slice().reverse().map((c,ri)=>{
+    const i=clients.length-1-ri;
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;gap:12px">
+        <div><div class="task-title">👤 ${c.name}</div><div class="muted">🏗️ ${c.object||"Без объекта"}</div></div>
+        <a class="secondary" style="display:inline-flex;align-items:center;text-decoration:none" href="tel:${c.phone||""}">Позвонить</a>
+      </div>
+      <div class="task-meta" style="margin-top:10px">${c.phone||"Телефон не указан"}${c.note?" · "+c.note:""}</div>
+      <button class="secondary danger-btn" style="margin-top:10px" onclick="deleteClient(${i})">Удалить</button>
+    </div>`;
+  }).join(""):'<div class="empty">Клиентов пока нет.</div>';
+}
+function deleteClient(i){if(!confirm("Удалить клиента?"))return;clients.splice(i,1);save();renderClients()}
+
+function renderCalendar(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const list=tasks.filter(t=>t.due).slice().sort((a,b)=>a.due.localeCompare(b.due));
+  document.getElementById("calendarCount").textContent=list.length;
+  document.getElementById("calendarList").innerHTML=list.length?list.map(t=>{
+    const d=new Date(t.due+"T00:00:00"), diff=Math.ceil((d-today)/86400000);
+    const status=t.done?"done":diff<0?"overdue":diff===0?"today":"upcoming";
+    const label=t.done?"Выполнено":diff<0?"Просрочено":diff===0?"Сегодня":("через "+diff+" дн.");
+    return `<div class="card task-card ${t.done?'done':''}">
+      <div class="task-main"><div class="task-title">${t.done?"✅":"📅"} ${t.title}</div>
+      <div class="task-meta">🏗️ ${t.object} · 👷 ${t.assignee||"Не назначен"} · ${new Date(t.due+"T00:00:00").toLocaleDateString("ru-RU")}</div>
+      <div class="task-status">${label} · ${priorityLabel(t.priority)}</div></div>
+    </div>`;
+  }).join(""):'<div class="empty">Задач со сроками пока нет. Добавь срок в задаче.</div>';
+}
 
 function openWorkerModal(){
  document.getElementById("workerName").value="";document.getElementById("workerRole").value="";document.getElementById("workerRate").value="";
@@ -654,7 +820,7 @@ function resetBuildos(){
 function openMoreMenu(){document.getElementById("moreModal").classList.add("show")}
 function closeMoreMenu(){document.getElementById("moreModal").classList.remove("show")}
 
-function init(){objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");objectOptions("workerObject");renderHome();renderObjects();renderTasks();renderExpenses();renderFinance();renderWorkers();renderReports()}
+function init(){objectOptions("taskObject");objectOptions("expenseObject");objectOptions("incomeObject");objectOptions("workerObject");objectOptions("materialObject");objectOptions("clientObject");renderHome();renderObjects();renderTasks();renderExpenses();renderFinance();renderWorkers();renderReports()}
 init();
 </script>
 </body>
