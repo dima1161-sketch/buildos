@@ -25,6 +25,8 @@ nav button{border:0;background:none;color:var(--muted);font-size:12px;padding:5p
 .back{border:0;background:none;color:var(--blue);font-weight:750;padding:0;margin-bottom:14px;font-size:16px}.detail-title{font-size:26px;font-weight:850;margin:5px 0}.detail-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:14px}.row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.pill{padding:6px 10px;border-radius:99px;background:#eef4ff;color:var(--blue);font-size:12px;font-weight:750}
 .modal{position:fixed;inset:0;background:#0006;display:none;align-items:flex-end;z-index:20}.modal.show{display:flex}.sheet{background:#fff;width:min(430px,100%);margin:auto 0 0;border-radius:24px 24px 0 0;padding:20px 18px 28px}.sheet h3{margin:0 0 15px;font-size:22px}.input{width:100%;padding:13px;border:1px solid #d8dde5;border-radius:12px;margin:7px 0 12px;font:inherit}.sheet-actions{display:flex;gap:10px}.sheet-actions>*{flex:1}
 .small{font-size:13px;color:var(--muted)}
+.detail-card h3{margin-bottom:8px}.detail-card .row b{font-weight:800}
+.grid .secondary{width:100%;min-height:48px}
 </style>
 </head>
 <body>
@@ -106,8 +108,8 @@ nav button{border:0;background:none;color:var(--muted);font-size:12px;padding:5p
 
 <script>
 const objects=[
- {name:"ЖК Хорошевский",area:"142 м²",days:"74 дня",progress:64,issues:2,icon:"🏗️",tasks:["Проверить электрику","Согласовать плитку","Установить двери"]},
- {name:"Квартира №27",area:"87 м²",days:"61 день",progress:41,issues:0,icon:"🏠",tasks:["Подготовить стены","Заказать сантехнику","Проверить смету"]}
+ {name:"ЖК Хорошевский",area:"142 м²",days:"74 дня",progress:64,issues:2,icon:"🏗️",client:"Иван",budget:"3 200 000 ₽",address:"Москва",stage:"Черновые работы",workers:"6 человек",start:"12 августа",finish:"25 октября",tasks:["Проверить электрику","Согласовать плитку","Установить двери"]},
+ {name:"Квартира №27",area:"87 м²",days:"61 день",progress:41,issues:0,icon:"🏠",client:"Анна",budget:"1 850 000 ₽",address:"Москва",stage:"Подготовка стен",workers:"4 человека",start:"5 августа",finish:"5 октября",tasks:["Подготовить стены","Заказать сантехнику","Проверить смету"]}
 ];
 let tasks=JSON.parse(localStorage.getItem("buildos_tasks")||"null")||[
  {title:"Проверить электрику",object:"ЖК Хорошевский",done:false},
@@ -131,17 +133,51 @@ function renderObjects(){
  <div class="progress"><i style="width:${o.progress}%"></i></div><div class="status ${o.issues?'warn':'ok'}">${o.issues?'⚠️ '+o.issues+' проблемы':'🟢 Всё по плану'} · выполнено ${o.progress}%</div></div>`).join("")
 }
 function openObject(i){
- const o=objects[i];
- document.getElementById("detail").innerHTML=`
- <div class="detail-card"><div style="font-size:48px">${o.icon}</div><div class="detail-title">${o.name}</div><div class="meta">${o.area} · срок ${o.days}</div>
- <div class="progress"><i style="width:${o.progress}%"></i></div><b>Готовность ${o.progress}%</b></div>
- <div class="detail-card"><h3>Информация</h3>
- <div class="row"><span>Статус</span><span class="pill">${o.issues?'Есть проблемы':'По плану'}</span></div>
- <div class="row"><span>Проблем</span><b>${o.issues}</b></div>
- <div class="row"><span>Задач</span><b>${o.tasks.length}</b></div></div>
- <div class="detail-card"><h3>Задачи объекта</h3>${o.tasks.map(t=>`<div class="row"><span>${t}</span><span>→</span></div>`).join("")}</div>
- <button class="primary" onclick="showView('tasks')">Открыть все задачи</button>`;
- showView("objectDetail");window.scrollTo(0,0)
+  const o=objects[i];
+  document.getElementById("detail").innerHTML=`
+  <div class="detail-card">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="font-size:48px">${o.icon}</div>
+      <div><div class="detail-title">${o.name}</div><div class="meta">${o.address} · ${o.area}</div></div>
+    </div>
+    <div class="progress"><i style="width:${o.progress}%"></i></div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <b>Готовность ${o.progress}%</b>
+      <span class="pill">${o.issues?'⚠️ Есть проблемы':'🟢 По плану'}</span>
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <h3 style="margin-top:0">📋 Основная информация</h3>
+    <div class="row"><span>Клиент</span><b>${o.client}</b></div>
+    <div class="row"><span>Бюджет</span><b>${o.budget}</b></div>
+    <div class="row"><span>Этап</span><span>${o.stage}</span></div>
+    <div class="row"><span>Рабочие</span><span>${o.workers}</span></div>
+    <div class="row"><span>Начало</span><span>${o.start}</span></div>
+    <div class="row"><span>Сдача</span><span>${o.finish}</span></div>
+  </div>
+
+  <div class="detail-card">
+    <h3 style="margin-top:0">⚠️ Контроль</h3>
+    <div class="row"><span>Проблемы</span><b style="color:${o.issues?'var(--red)':'var(--green)'}">${o.issues}</b></div>
+    <div class="row"><span>Задач объекта</span><b>${o.tasks.length}</b></div>
+    <div class="row"><span>Срок</span><b>${o.days}</b></div>
+  </div>
+
+  <div class="detail-card">
+    <h3 style="margin-top:0">📋 Задачи объекта</h3>
+    ${o.tasks.map(t=>`<div class="row"><span>${t}</span><span class="pill">В работе</span></div>`).join("")}
+  </div>
+
+  <div class="grid" style="margin-bottom:14px">
+    <button class="secondary" onclick="alert('Раздел фото будет подключён следующим этапом')">📸 Фото</button>
+    <button class="secondary" onclick="alert('Раздел бюджет будет подключён следующим этапом')">💰 Бюджет</button>
+    <button class="secondary" onclick="alert('Раздел график будет подключён следующим этапом')">📅 График</button>
+    <button class="secondary" onclick="alert('Раздел рабочие будет подключён следующим этапом')">👷 Рабочие</button>
+  </div>
+
+  <button class="primary" onclick="showView('tasks')">Открыть все задачи →</button>`;
+  showView("objectDetail");window.scrollTo(0,0)
 }
 function renderTasks(){
  document.getElementById("taskList").innerHTML=tasks.map((t,i)=>`
