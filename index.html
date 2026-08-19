@@ -484,16 +484,18 @@ function openObject(i){
      </div>
    </div>
    ${o.estimateItems&&o.estimateItems.length?
-     (()=>{const total=o.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const purchased=o.estimateItems.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);const work=o.estimateItems.filter(x=>x.status==="work").length;const done=o.estimateItems.filter(x=>x.status==="done").length;const buy=o.estimateItems.filter(x=>window.beType(x.name)==="Материалы"&&(+x.purchasedQty||0)<(+x.qty||0)).length;return `
+     (()=>{const total=Number(o.estimateTotal)||o.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const workTotal=Number(o.estimateWorkTotal)||o.estimateItems.filter(x=>x.kind!=="material").reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const materialTotal=Number(o.estimateMaterialTotal)||o.estimateItems.filter(x=>x.kind==="material").reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const purchased=o.estimateItems.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);const work=o.estimateItems.filter(x=>x.status==="work").length;const done=o.estimateItems.filter(x=>x.status==="done").length;const buy=o.estimateItems.filter(x=>x.kind==="material"&&(+x.purchasedQty||0)<(+x.qty||0)).length;const check=o.estimateItems.filter(x=>x.needsMaterialCheck||x.materialMode==="clarify").length;return `
        <h3>📋 Смета объекта</h3>
        <div class="be-summary">
-         <div class="be-stat"><span>Сумма сметы</span><b>${window.beMoney(total)}</b></div>
+         <div class="be-stat"><span>Всего по смете</span><b>${window.beMoney(total)}</b></div>
+         <div class="be-stat"><span>Работы / СМР</span><b>${window.beMoney(workTotal)}</b></div>
+         <div class="be-stat"><span>Материалы</span><b>${window.beMoney(materialTotal)}</b></div>
          <div class="be-stat"><span>Потрачено по смете</span><b>${window.beMoney(purchased)}</b></div>
          <div class="be-stat"><span>В работе</span><b>${work}</b></div>
          <div class="be-stat"><span>Выполнено</span><b>${done}</b></div>
        </div>
        <div class="be-progress"><i style="width:${total?Math.min(100,Math.round(purchased/total*100)):0}%"></i></div>
-       <div class="be-muted" style="margin-top:6px">${o.estimateItems.length} позиций · ${buy} материалов требуют закупки</div>
+       <div class="be-muted" style="margin-top:6px">${o.estimateItems.length} позиций · 🛒 ${buy} материалов к закупке · ⚠️ ${check} позиций требуют проверки материалов</div>
        <div class="be-actions">
          <button class="primary" onclick="beOpenEstimate(${i})">Открыть смету →</button>
          <button onclick="bePurchaseList(${i})">🛒 Что купить</button>
@@ -953,6 +955,7 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
     const wb=XLSX.read(data,{type:"array"});
     const ws=wb.Sheets[wb.SheetNames[0]];
     const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+    window.bfXlsxRows=rows;
     document.getElementById("bfImportText").value=rows.map(r=>r.join("\t")).join("\n");
     bfImportStatus(`<div class="bf-ok">Excel прочитан: лист <b>${esc(wb.SheetNames[0])}</b>. Найдено строк: <b>${rows.length}</b>.</div>`);
   }
@@ -982,6 +985,55 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
     return m?Number(m[1]):0;
   }
   function parseEstimate(text){
+    // Prefer the real Excel column structure when available. The uploaded
+    // construction estimates use: A number, B work name, C unit, D qty,
+    // E work price, F work total, G material name, H unit, I qty, J price, K total.
+    if(Array.isArray(window.bfXlsxRows) && window.bfXlsxRows.length){
+      const rows=window.bfXlsxRows;
+      const headerIndex=rows.findIndex(r=>String(r[1]||'').toLowerCase().includes('наименование работ') && String(r[6]||'').toLowerCase().includes('материал'));
+      if(headerIndex>=0){
+        const items=[], materials=[];
+        let explicitTotal=0;
+        for(let i=headerIndex+1;i<rows.length;i++){
+          const r=rows[i]||[];
+          const a=r[0], b=String(r[1]||'').trim(), c=String(r[2]||'').trim();
+          const d=Number(r[3])||0, e=Number(r[4])||0, f=Number(r[5])||0;
+          const g=String(r[6]||'').trim(), h=String(r[7]||'').trim();
+          const iq=Number(r[8])||0, jp=Number(r[9])||0, kt=Number(r[10])||0;
+          const low=norm(b);
+          if(/итого\s*смр|итого$|всего\s*смр/.test(low)){ if(f>0) explicitTotal=f; continue; }
+          if(!b && !g) continue;
+          // Section headers: text only, no measurable values.
+          if(b && !d && !e && !f && !g && !iq && !jp && !kt){ continue; }
+          // Work item. Keep zero-price/zero-qty rows as clarification items.
+          if(b && (d||e||f||/требует уточнения/i.test(g))){
+            const clarification=/требует уточнения/i.test(g) || d<=0 || e<=0 || f<=0;
+            const work={id:id(),name:b,qty:d,unit:c||'шт',price:e,total:f||d*e,kind:'work',materialMode:clarification?'clarify':'included_or_unknown',needsMaterialCheck:false,materialName:g&& !/требует уточнения/i.test(g)?g:'',materialQty:iq,materialUnit:h,materialPrice:jp,materialTotal:kt};
+            // Conservative signal: the app may suggest checking consumables,
+            // but never silently invent a material quantity or cost.
+            work.needsMaterialCheck=/(монтаж|устройство|укладк|штукатур|грунт|шпатл|окраск|поклей|стяжк|изоляц|гидроиз|каркас|зашивк|прокладк|установк|подключ|сборк)/i.test(low);
+            if(g && !/требует уточнения/i.test(g)){
+              work.materialMode='separate';
+              if(iq>0||jp>0||kt>0) materials.push({id:id(),name:g,qty:iq,unit:h||'шт',price:jp,total:kt||iq*jp,kind:'material',sourceWork:b,status:'need_buy',purchasedQty:0});
+            }
+            items.push(work);
+            continue;
+          }
+          // Material-only row (some estimates place materials without a work row).
+          if(g && (iq||jp||kt)){
+            materials.push({id:id(),name:g,qty:iq,unit:h||'шт',price:jp,total:kt||iq*jp,kind:'material',sourceWork:b,status:'need_buy',purchasedQty:0});
+          }
+        }
+        // Some work names are split across rows: if a row has a continuation
+        // with measurable values and no section number, keep it as a work item.
+        const all=[...items,...materials];
+        const workTotal=explicitTotal||items.reduce((a,x)=>a+(+x.total||0),0);
+        const materialTotal=materials.reduce((a,x)=>a+(+x.total||0),0);
+        return {items:all,workTotal,materialTotal,grandTotal:workTotal+materialTotal,explicitTotal,structured:true};
+      }
+    }
+
+    // Text fallback for pasted CSV/TXT/PDF content.
     const lines=parseLines(text), items=[], categories=[];
     for(const line of lines){
       if(/^(итого|всего|сумма|раздел|материалы|работы)\b/i.test(line))continue;
@@ -989,22 +1041,17 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       if(!nums.length)continue;
       const lower=norm(line);
       const units=["м2","м²","м","м.п","шт","меш","мешок","л","кг","компл","рул","лист","уп","пог.м","день"];
-      const unit=(line.match(new RegExp("\\b("+units.map(x=>x.replace(".","\\.")).join("|")+")\\b","i"))||[])[1]||"шт";
+      const unit=(line.match(new RegExp("\\b("+units.map(x=>x.replace(".","\\.")).join("|")+ ")\\b","i"))||[])[1]||"шт";
       let qty=nums[0], price=nums.length>1?nums[1]:0;
       let name=line.replace(/\d+(?:[.,]\d+)?/g," ").replace(new RegExp("\\b"+unit+"\\b","ig")," ").replace(/\s{2,}/g," ").trim();
       if(!name||name.length<2)name=line;
       const total=nums.length>=3?nums[nums.length-1]:qty*price;
-      const likelyMaterial=/(плит|клей|грунт|штукатур|гипс|профил|кабел|провод|розет|выключ|смес|труба|ламин|паркет|краск|цемент|шпаклев|гермет|двер|плинтус|сух|утепл|минват|фанер|мдф|дсп|керам|обои|светиль|силикон|саморез|дюбел|арматур|песок)/i.test(lower);
-      if(likelyMaterial || mode==="estimate")items.push({id:id(),name,qty,unit,price,total:nums.length>=3?total:qty*price,category:likelyMaterial?"Материалы":"Проверить"});
+      items.push({id:id(),name,qty,unit,price,total,kind:'work',materialMode:'unknown',needsMaterialCheck:/(монтаж|устройство|укладк|штукатур|грунт|шпатл|окраск|поклей|стяжк|изоляц|гидроиз|каркас|зашивк|прокладк|установк|подключ|сборк)/i.test(lower)});
     }
-    // Merge duplicates by normalized name + unit.
     const map=new Map();
-    for(const x of items){
-      const key=norm(x.name)+"|"+norm(x.unit);
-      if(map.has(key)){const a=map.get(key);a.qty+=x.qty;a.total+=x.total;if(!a.price&&x.price)a.price=x.price}
-      else map.set(key,{...x});
-    }
-    return [...map.values()];
+    for(const x of items){const key=norm(x.name)+"|"+norm(x.unit);if(map.has(key)){const a=map.get(key);a.qty+=x.qty;a.total+=x.total;if(!a.price&&x.price)a.price=x.price}else map.set(key,{...x})}
+    const arr=[...map.values()], total=arr.reduce((a,x)=>a+(+x.total||0),0);
+    return {items:arr,workTotal:total,materialTotal:0,grandTotal:total,explicitTotal:0,structured:false};
   }
   function dateFromText(x){
     const m=String(x).match(/(\d{1,2})[.\-/](\d{1,2})(?:[.\-/](\d{2,4}))?/);
@@ -1049,9 +1096,9 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       return;
     }
     parsed=mode==="estimate"?parseEstimate(text):parseSchedule(text);
-    if(mode==="estimate") renderEstimatePreview(parsed);
+    if(mode==="estimate") renderEstimatePreview(parsed.items||parsed);
     else renderSchedulePreview(parsed);
-    if(top && parsed && parsed.length){
+    if(top && parsed && (mode!=="estimate" ? parsed.length : (parsed.items||[]).length)){
       top.style.display="block";
       top.style.position="sticky";
       top.style.top="0";
@@ -1062,9 +1109,13 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
     }
   };
   function renderEstimatePreview(items){
-    const total=items.reduce((a,x)=>a+x.total,0);
-    bfImportStatus(`<div class="bf-ok">Найдено <b>${items.length}</b> сводных позиций. Ориентировочная сумма: <b>${money(total)}</b>.</div>`);
-    bfImportPreview(items.length?`<table class="bf-import-table"><thead><tr><th>Материал</th><th>Объём</th><th>Цена</th><th>Сумма</th></tr></thead><tbody>${items.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.qty} ${esc(x.unit)}</td><td>${money(x.price)}</td><td>${money(x.total)}</td></tr>`).join("")}</tbody></table>`:"<div class='bf-import-muted'>Позиции не распознаны. Попробуй вставить текст таблицы.</div>");
+    const list=Array.isArray(items)?items:[];
+    const meta=(parsed&&parsed.items)?parsed:{workTotal:list.reduce((a,x)=>a+(+x.total||0),0),materialTotal:0,grandTotal:list.reduce((a,x)=>a+(+x.total||0),0)};
+    const total=Number(meta.grandTotal)||0;
+    const materialTotal=Number(meta.materialTotal)||0;
+    const clarify=list.filter(x=>x.materialMode==='clarify'||x.needsMaterialCheck).length;
+    bfImportStatus(`<div class="bf-ok">Найдено <b>${list.length}</b> позиций. <b>СМР: ${money(meta.workTotal||0)}</b> · материалы: <b>${money(materialTotal)}</b> · всего: <b>${money(total)}</b>${clarify?` · ⚠️ ${clarify} позиций требуют проверки материалов`:''}</div>`);
+    bfImportPreview(list.length?`<div class="bf-import-summary"><div><b>${money(meta.workTotal||0)}</b><span>Работы / СМР</span></div><div><b>${money(materialTotal)}</b><span>Материалы</span></div><div><b>${money(total)}</b><span>Всего</span></div></div><table class="bf-import-table"><thead><tr><th>Позиция</th><th>Тип</th><th>Объём</th><th>Сумма</th></tr></thead><tbody>${list.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.kind==='material'?'Материал':x.materialMode==='clarify'?'Уточнить':'Работа'}</td><td>${x.qty||0} ${esc(x.unit||'шт')}</td><td>${money(x.total||0)}</td></tr>`).join("")}</tbody></table>`:"<div class='bf-import-muted'>Позиции не распознаны. Попробуй вставить текст таблицы.</div>");
   }
   function renderSchedulePreview(items){
     bfImportStatus(`<div class="bf-ok">Найдено этапов: <b>${items.length}</b>. Они будут добавлены в календарь объекта.</div>`);
@@ -1083,7 +1134,7 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
         bfImportStatus('<div class="bf-warn">Сначала выбери объект в поле «Объект».</div>');
         return;
       }
-      if(!parsed||!parsed.length){
+      if(!parsed || (mode==="estimate" ? !(parsed.items||[]).length : !parsed.length)){
         if(commitBtn){commitBtn.disabled=false;commitBtn.textContent="➕ Добавить в объект";commitBtn.style.opacity="1";}
         bfImportStatus('<div class="bf-warn">Сначала нажми «Анализировать».</div>');
         return;
@@ -1091,7 +1142,8 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       if(commitBtn){commitBtn.disabled=true;commitBtn.textContent="⏳ Добавляем...";}
       s.materials=s.materials||[]; s.estimates=s.estimates||[];
       if(mode==="estimate"){
-        for(const x of parsed){
+        const estimateItems=parsed.items||[];
+        for(const x of estimateItems){
           const ex=s.materials.find(m=>m.projectId===pid&&norm(m.name)===norm(x.name)&&norm(m.unit||"шт")===norm(x.unit));
           if(ex){ex.qty=(+ex.qty||0)+(+x.qty||0);if(!ex.price)ex.price=x.price}
           else s.materials.push({id:x.id||id(),projectId:pid,name:x.name,qty:x.qty,unit:x.unit,price:x.price,supplier:"",status:"Нужно купить"});
@@ -1099,8 +1151,10 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
         let e=s.estimates.find(x=>x.projectId===pid);
         if(!e){e={id:id(),projectId:pid,name:"Импортированная смета",items:[]};s.estimates.push(e)}
         e.items=e.items||[];
-        parsed.forEach(x=>e.items.push({id:id(),name:x.name,qty:x.qty,unit:x.unit,price:x.price}));
-        e.amount=e.items.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
+        estimateItems.forEach(x=>e.items.push({id:id(),name:x.name,qty:+x.qty||0,unit:x.unit||"шт",price:+x.price||0,kind:x.kind||"work",materialMode:x.materialMode||"unknown",needsMaterialCheck:!!x.needsMaterialCheck,materialName:x.materialName||"",materialQty:+x.materialQty||0,materialUnit:x.materialUnit||"",materialPrice:+x.materialPrice||0,materialTotal:+x.materialTotal||0,purchasedQty:0,status:x.kind==="material"?"need_buy":"todo"}));
+        e.workTotal=Number(parsed.workTotal)||0;
+        e.materialTotal=Number(parsed.materialTotal)||0;
+        e.amount=Number(parsed.grandTotal)||e.workTotal+e.materialTotal;
       }else{
         s.events=s.events||[];s.tasks=s.tasks||[];
         parsed.forEach(x=>{
@@ -1142,7 +1196,7 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
             if(mode==="estimate"){
               mainObj.estimateItems=Array.isArray(mainObj.estimateItems)?mainObj.estimateItems:[];
               const byKey=(x)=>norm(x.name)+"|"+norm(x.unit||"шт");
-              parsed.forEach(x=>{
+              estimateItems.forEach(x=>{
                 const key=byKey(x);
                 const ex=mainObj.estimateItems.find(m=>byKey(m)===key);
                 if(ex){
@@ -1150,10 +1204,12 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
                   ex.price=+x.price||ex.price||0;
                   ex.total=(+ex.qty||0)*(+ex.price||0);
                 }else{
-                  mainObj.estimateItems.push({id:x.id||id(),name:x.name,qty:+x.qty||0,unit:x.unit||"шт",price:+x.price||0,total:(+x.qty||0)*(+x.price||0),purchasedQty:0,status:"todo"});
+                  mainObj.estimateItems.push({id:x.id||id(),name:x.name,qty:+x.qty||0,unit:x.unit||"шт",price:+x.price||0,total:(+x.qty||0)*(+x.price||0),purchasedQty:0,status:x.kind==="material"?"need_buy":"todo",kind:x.kind||"work",materialMode:x.materialMode||"unknown",needsMaterialCheck:!!x.needsMaterialCheck,materialName:x.materialName||"",materialQty:+x.materialQty||0,materialUnit:x.materialUnit||"",materialPrice:+x.materialPrice||0,materialTotal:+x.materialTotal||0});
                 }
               });
-              mainObj.estimateTotal=mainObj.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
+              mainObj.estimateWorkTotal=Number(parsed.workTotal)||0;
+              mainObj.estimateMaterialTotal=Number(parsed.materialTotal)||0;
+              mainObj.estimateTotal=Number(parsed.grandTotal)||mainObj.estimateWorkTotal+mainObj.estimateMaterialTotal;
             }else{
               mainObj.schedule=Array.isArray(mainObj.schedule)?mainObj.schedule:[];
               parsed.forEach(x=>mainObj.schedule.push({id:x.id||id(),title:x.name,start:x.start,end:x.end,assignee:x.assignee||"",status:x.status||"Запланировано"}));
@@ -1170,6 +1226,8 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
                 if(mode==="estimate") {
                   liveObj.estimateItems=JSON.parse(JSON.stringify(source.estimateItems||[]));
                   liveObj.estimateTotal=+source.estimateTotal||0;
+                  liveObj.estimateWorkTotal=+source.estimateWorkTotal||0;
+                  liveObj.estimateMaterialTotal=+source.estimateMaterialTotal||0;
                 } else {
                   liveObj.schedule=JSON.parse(JSON.stringify(source.schedule||[]));
                 }
@@ -1320,6 +1378,7 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
 .be-field{margin:11px 0}.be-field label{display:block;font-weight:700;color:#6f7888;margin-bottom:6px}
 .be-line{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #e7eaf0}.be-line:last-child{border-bottom:0}
 .be-cat{font-size:12px;font-weight:800;color:#2863b8}.be-big{font-size:26px;font-weight:900}
+.bf-import-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}.bf-import-summary>div{background:#f6f8fb;border:1px solid #e3e8ef;border-radius:14px;padding:10px}.bf-import-summary b{display:block;font-size:15px}.bf-import-summary span{display:block;color:#717a8a;font-size:11px;margin-top:3px}
 </style>
 <div id="beEstimateModal" class="be-modal" onclick="if(event.target===this)beCloseEstimate()"><div class="be-sheet" id="beEstimateSheet"></div></div>
 
@@ -1351,7 +1410,7 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
     o.estimateItems=o.estimateItems||[];
     const items=o.estimateItems;
     const q=(o.beEstimateFilter||"all"), search=o.beEstimateSearch||"";
-    const filtered=items.filter(x=>(q==="all"||window.beType(x.name)===q||x.status===q)&&String(x.name||"").toLowerCase().includes(search.toLowerCase()));
+    const filtered=items.filter(x=>((q==="all")||(q==="Материалы"&&x.kind==="material")||(q==="Работы"&&x.kind!=="material")||(q==="Купить"&&x.kind==="material"&&(+x.purchasedQty||0)<(+x.qty||0))||(q==="Проверить"&&(x.needsMaterialCheck||x.materialMode==="clarify"))||x.status===q) && String(x.name||"").toLowerCase().includes(search.toLowerCase()));
     const total=items.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
     const purchased=items.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);
     const left=Math.max(0,total-purchased);
@@ -1371,7 +1430,7 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
       <div class="be-progress"><i style="width:${total?Math.min(100,Math.round(purchased/total*100)):0}%"></i></div>
       <input class="be-search" placeholder="🔎 Поиск по смете" value="${beEsc(search)}" oninput="objects[${i}].beEstimateSearch=this.value;beOpenEstimate(${i})">
       <div class="be-filter">
-        ${[["all","Все"],["Материалы","Материалы"],["Работы","Работы"],["work","В работе"],["done","Выполнено"]].map(f=>`<button class="${q===f[0]?'active':''}" onclick="objects[${i}].beEstimateFilter='${f[0]}';beOpenEstimate(${i})">${f[1]}</button>`).join("")}
+        ${[["all","Все"],["Материалы","Материалы"],["Работы","Работы"],["Купить","🛒 Купить"],["Проверить","⚠️ Проверить"],["work","В работе"],["done","Выполнено"]].map(f=>`<button class="${q===f[0]?'active':''}" onclick="objects[${i}].beEstimateFilter='${f[0]}';beOpenEstimate(${i})">${f[1]}</button>`).join("")}
       </div>
       <div class="be-actions">
         <button class="primary" onclick="bePurchaseList(${i})">🛒 Что купить</button>
@@ -1380,9 +1439,10 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
       <div style="margin-top:12px">
         ${filtered.map((x,j)=>{const realIndex=items.indexOf(x), st=beStatus(x), sum=(+x.qty||0)*(+x.price||0), rem=Math.max(0,(+x.qty||0)-(+x.purchasedQty||0));return `
           <div class="be-item" onclick="beItem(${i},${realIndex})">
-            <div class="be-item-top"><div><div class="be-name">${beEsc(x.name)}</div><div class="be-muted">${window.beType(x.name)} · ${x.qty||0} ${beEsc(x.unit||"шт")} · ${beMoney(x.price||0)}/${beEsc(x.unit||"шт")}</div></div><div class="be-amount">${beMoney(sum)}</div></div>
+            <div class="be-item-top"><div><div class="be-name">${beEsc(x.name)}</div><div class="be-muted">${x.kind==="material"?"Материал":"Работа"} · ${x.qty||0} ${beEsc(x.unit||"шт")} · ${beMoney(x.price||0)}/${beEsc(x.unit||"шт")}</div></div><div class="be-amount">${beMoney(sum)}</div></div>
             <span class="be-status ${st[0]}">${st[1]}</span>
-            ${window.beType(x.name)==="Материалы"&&rem>0?`<div class="be-muted" style="margin-top:7px">🛒 Купить ещё: <b>${rem} ${beEsc(x.unit||"шт")}</b></div>`:""}
+            ${x.kind==="material"&&rem>0?`<div class="be-muted" style="margin-top:7px">🛒 Купить ещё: <b>${rem} ${beEsc(x.unit||"шт")}</b></div>`:""}
+            ${x.needsMaterialCheck||x.materialMode==="clarify"?`<div class="be-purchase"><b>⚠️ Нужно проверить материал</b><div class="be-muted">Смета содержит работу, но не даёт однозначного ответа, входит ли материал в цену. BUILDOS не будет придумывать объём — его можно указать вручную.</div></div>`:""}
           </div>`}).join("")||'<div class="be-muted" style="padding:20px 0">Ничего не найдено.</div>'}
       </div>`;
     document.getElementById("beEstimateModal").classList.add("show");
@@ -1400,6 +1460,8 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
         <div class="be-stat"><span>Сумма</span><b>${beMoney(sum)}</b></div>
         <div class="be-stat"><span>Куплено</span><b>${x.purchasedQty||0} ${beEsc(x.unit||"шт")}</b></div>
       </div>
+      <div class="be-field"><label>Тип позиции</label><select id="beItemKind"><option value="work">Работа</option><option value="material">Материал — купить</option></select></div>
+      <div class="be-field"><label>Материал по этой работе</label><select id="beItemMaterialMode"><option value="unknown">Не указано в смете</option><option value="included">Материал включён в цену</option><option value="buy">Материал нужно купить отдельно</option><option value="clarify">Нужно уточнить</option></select></div>
       <div class="be-field"><label>Статус</label><select id="beItemStatus"><option value="todo">Не начато</option><option value="work">В работе</option><option value="done">Выполнено</option></select></div>
       <div class="be-field"><label>Куплено</label><input id="beItemPurchased" type="number" min="0" value="${x.purchasedQty||0}"></div>
       <div class="be-field"><label>Комментарий</label><input id="beItemNote" value="${beEsc(x.note||"")}" placeholder="Например: заказали у Петровича"></div>
@@ -1407,11 +1469,16 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
         <button onclick="beSaveItem(${oi},${ii})" class="primary">Сохранить</button>
         <button onclick="beOpenEstimate(${oi})">← К смете</button>
       </div>`;
+    document.getElementById("beItemKind").value=x.kind||"work";
+    document.getElementById("beItemMaterialMode").value=x.materialMode||"unknown";
     document.getElementById("beItemStatus").value=x.status||"todo";
     document.getElementById("beEstimateModal").classList.add("show");
   };
   window.beSaveItem=function(oi,ii){
     const o=beGetObj(oi),x=o.estimateItems[ii];if(!x)return;
+    x.kind=document.getElementById("beItemKind").value;
+    x.materialMode=document.getElementById("beItemMaterialMode").value;
+    x.needsMaterialCheck=(x.kind!=="material" && (x.materialMode==="buy"||x.materialMode==="clarify"));
     x.status=document.getElementById("beItemStatus").value;
     x.purchasedQty=Math.max(0,Number(document.getElementById("beItemPurchased").value)||0);
     x.note=document.getElementById("beItemNote").value||"";
@@ -1421,17 +1488,21 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
   };
   window.bePurchaseList=function(i){
     const o=beGetObj(i),items=o.estimateItems||[];
-    const buy=items.filter(x=>window.beType(x.name)==="Материалы"&&(+x.purchasedQty||0)<(+x.qty||0));
+    const buy=items.filter(x=>x.kind==="material"&&(+x.purchasedQty||0)<(+x.qty||0));
+    const review=items.filter(x=>x.kind!=="material"&&(x.needsMaterialCheck||x.materialMode==="clarify"));
     const total=buy.reduce((a,x)=>a+(Math.max(0,(+x.qty||0)-(+x.purchasedQty||0))*(+x.price||0)),0);
     document.getElementById("beEstimateSheet").innerHTML=`
       <button class="close" onclick="beOpenEstimate(${i})">×</button>
-      <h2>🛒 Что нужно купить</h2>
-      <div class="be-stat"><span>Ориентировочно на закупку</span><div class="be-big">${window.beMoney(total)}</div></div>
-      ${buy.map((x,idx)=>{const rem=Math.max(0,(+x.qty||0)-(+x.purchasedQty||0));return `<div class="be-line"><div><b>${beEsc(x.name)}</b><div class="be-muted">${rem} ${beEsc(x.unit||"шт")} × ${beMoney(x.price||0)}</div></div><b>${beMoney(rem*(+x.price||0))}</b></div>`}).join("")||'<div class="be-muted" style="padding:20px 0">Все материалы закуплены.</div>'}
-      <div class="be-actions"><button class="primary" onclick="beMarkAllPurchased(${i})">Отметить всё купленным</button><button onclick="beOpenEstimate(${i})">← К смете</button></div>`;
+      <h2>🛒 Закупки</h2>
+      <div class="be-summary"><div class="be-stat"><span>Купить точно</span><b>${buy.length}</b></div><div class="be-stat"><span>Ориентир</span><b>${window.beMoney(total)}</b></div></div>
+      <div class="be-purchase" style="margin-top:12px"><b>Как BUILDOS определяет закупку</b><div class="be-muted">В список «Купить» попадают только строки, где в исходной смете действительно указан отдельный материал. Работы сами по себе не считаются покупкой.</div></div>
+      ${buy.map(x=>{const rem=Math.max(0,(+x.qty||0)-(+x.purchasedQty||0));return `<div class="be-line"><div><b>${beEsc(x.name)}</b><div class="be-muted">${rem} ${beEsc(x.unit||"шт")} × ${window.beMoney(x.price||0)}</div>${x.sourceWork?`<div class="be-muted">Для работы: ${beEsc(x.sourceWork)}</div>`:""}</div><b>${window.beMoney(rem*(+x.price||0))}</b></div>`}).join("")||'<div class="be-muted" style="padding:20px 0">Явных материалов для закупки в исходной смете не указано.</div>'}
+      <h3 style="margin-top:20px">⚠️ Нужно уточнить</h3>
+      ${review.map(x=>`<div class="be-purchase"><b>${beEsc(x.name)}</b><div class="be-muted">Это работа. В исходном файле не указано однозначно, включён ли материал в стоимость. Нажми на позицию и выбери вариант.</div><button class="primary" style="margin-top:9px;width:100%;padding:11px;border-radius:12px;border:0;background:#2878ed;color:#fff;font-weight:800" onclick="beItem(${i},${items.indexOf(x)})">Уточнить</button></div>`).join("")||'<div class="be-muted">Позиций, требующих уточнения материалов, нет.</div>'}
+      <div class="be-actions"><button class="primary" onclick="beMarkAllPurchased(${i})">Отметить все явные материалы купленными</button><button onclick="beOpenEstimate(${i})">← К смете</button></div>`;
   };
   window.beMarkAllPurchased=function(i){
-    const o=beGetObj(i);(o.estimateItems||[]).forEach(x=>{if(window.beType(x.name)==="Материалы"){x.purchasedQty=+x.qty||0;x.status="done"}});save();bePurchaseList(i);
+    const o=beGetObj(i);(o.estimateItems||[]).forEach(x=>{if(x.kind==="material"){x.purchasedQty=+x.qty||0;x.status="done"}});save();bePurchaseList(i);
   };
   window.beEstimateCheck=function(i){
     const o=beGetObj(i),items=o.estimateItems||[], issues=[];
