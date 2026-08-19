@@ -827,67 +827,61 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 
   function projects(){
     const s=getS();
-    s.projects=s.projects||[];
-
-    // IMPORTANT: the real BUILDOS objects live in the main app's `objects`
-    // array and in buildos_objects. Always merge both sources so the picker
-    // cannot silently become empty after an update.
+    s.projects=Array.isArray(s.projects)?s.projects:[];
     const source=[];
-    try{
-      if(typeof objects!=="undefined" && Array.isArray(objects)) source.push(...objects);
-    }catch(e){}
-    try{
-      const mainObjects=JSON.parse(localStorage.getItem("buildos_objects")||"[]");
-      if(Array.isArray(mainObjects)) source.push(...mainObjects);
-    }catch(e){}
+    const add=(arr)=>{ if(Array.isArray(arr)) arr.forEach(o=>{ if(o) source.push(o); }); };
 
-    const seen=new Set();
+    // Primary source: the actual main BUILDOS object storage.
+    try{ add(JSON.parse(localStorage.getItem("buildos_objects")||"[]")); }catch(e){}
+    // Secondary source: BUILDOS PRO data.
+    try{ add((JSON.parse(localStorage.getItem(K)||"{}").projects)||[]); }catch(e){}
+    // Runtime/global sources when available.
+    try{ if(typeof objects!=="undefined") add(objects); }catch(e){}
+    try{ if(window.BUILDOS_FINAL && window.BUILDOS_FINAL.data) add(window.BUILDOS_FINAL.data.projects); }catch(e){}
+
+    const byId=new Map(), byName=new Map();
+    s.projects.forEach(p=>{ if(p&&p.name){ byName.set(String(p.name),p); if(p.id)byId.set(String(p.id),p); } });
+
     source.forEach((o,i)=>{
-      if(!o)return;
-      const name=String(o.name||("Объект "+(i+1))).trim();
-      if(!name || seen.has(name))return;
-      seen.add(name);
-      let p=s.projects.find(x=>x.name===name || (o.id && String(x.id)===String(o.id)));
+      const name=String(o.name||o.title||("Объект "+(i+1))).trim();
+      if(!name)return;
+      const oid=o.id!=null?String(o.id):"";
+      let p=(oid&&byId.get(oid))||byName.get(name);
       if(!p){
-        p={
-          id:o.id ? String(o.id) : ("main_"+encodeURIComponent(name)),
-          name:name,
-          client:o.client||"",
-          address:o.address||"",
-          area:+o.area||0,
-          budget:+o.budget||0,
-          progress:+o.progress||0,
-          stage:o.stage||""
-        };
-        s.projects.push(p);
+        p={id:oid||("main_"+encodeURIComponent(name)),name,client:o.client||"",address:o.address||"",area:+o.area||0,budget:+o.budget||0,progress:+o.progress||0,stage:o.stage||""};
+        s.projects.push(p); byName.set(name,p); if(oid)byId.set(oid,p);
       }else{
-        p.name=name; p.client=o.client||p.client||""; p.address=o.address||p.address||"";
-        p.area=+o.area||p.area||0; p.budget=+o.budget||p.budget||0;
+        p.name=name;
+        if(o.client)p.client=o.client;
+        if(o.address)p.address=o.address;
+        if(+o.area)p.area=+o.area;
+        if(+o.budget)p.budget=+o.budget;
+        if(o.progress!=null)p.progress=+o.progress||0;
+        if(o.stage)p.stage=o.stage;
       }
     });
     saveS(s);
-    return s.projects;
+    return s.projects.filter(x=>x&&x.name);
   }
   function fillProjects(){
     const sel=document.getElementById("bfImportProject");
     if(!sel)return;
     const list=projects();
     if(!list.length){
-      sel.innerHTML="<option value=''>Сначала добавь объект</option>";
+      sel.innerHTML="<option value=''>Объектов пока нет</option>";
       sel.disabled=true;
       return;
     }
     sel.disabled=false;
     sel.innerHTML="<option value=''>Выбери объект</option>"+list.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
-    // If the importer was opened from an object, select it automatically.
-    if(window.bfCurrentProject){
-      const wanted=String(window.bfCurrentProject);
-      const opt=[...sel.options].find(o=>String(o.value)===wanted);
-      if(opt)sel.value=opt.value;
-      else{
-        const p=list.find(x=>x.name===wanted);
-        if(p)sel.value=p.id;
+    const wanted=window.bfCurrentProject!=null?String(window.bfCurrentProject):"";
+    if(wanted){
+      let opt=[...sel.options].find(o=>String(o.value)===wanted);
+      if(!opt){
+        const p=list.find(x=>String(x.name)===wanted);
+        if(p) opt=[...sel.options].find(o=>String(o.value)===String(p.id));
       }
+      if(opt)sel.value=opt.value;
     }
   }
   window.bfOpenImport=function(initial="estimate"){
@@ -1057,6 +1051,11 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
     else renderSchedulePreview(parsed);
     if(top && parsed && parsed.length){
       top.style.display="block";
+      top.style.position="sticky";
+      top.style.top="0";
+      top.style.zIndex="30";
+      top.style.background="#fff";
+      top.style.paddingTop="8px";
       top.scrollIntoView({behavior:"smooth",block:"nearest"});
     }
   };
@@ -1189,7 +1188,7 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       bfImportStatus('<div class="bf-ok">✅ Готово! Смета сохранена и привязана к объекту.</div>');
       const b=document.getElementById("bfImportCommitBtn");
       const topAction=document.getElementById("bfImportTopAction");
-      if(topAction) topAction.style.display="block";
+      if(topAction){ topAction.style.display="block"; topAction.style.position="sticky"; topAction.style.top="0"; topAction.style.zIndex="30"; topAction.style.background="#fff"; }
       if(b){b.textContent="✅ Добавлено";b.disabled=true;b.style.opacity=".6";}
 
       // Refresh the object detail immediately after import.
