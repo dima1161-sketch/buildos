@@ -980,9 +980,9 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
   }
 
   window.bfImportCommit=function(){
-    const top=document.getElementById("bfImportTopAction");
+    const topAction=document.getElementById("bfImportTopAction");
     const commitBtn=document.getElementById("bfImportCommitBtn");
-    if(top) top.style.display="block";
+    if(topAction) topAction.style.display="block";
     if(commitBtn){commitBtn.disabled=true;commitBtn.textContent="⏳ Добавляем...";}
 
     try{
@@ -1011,8 +1011,8 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       saveS(s);
       bfImportStatus('<div class="bf-ok">✅ Готово! Данные добавлены в выбранный объект.</div>');
       const b=document.getElementById("bfImportCommitBtn");
-      const top=document.getElementById("bfImportTopAction");
-      if(top) top.style.display="block";
+      const topAction=document.getElementById("bfImportTopAction");
+      if(topAction) topAction.style.display="block";
       if(b){b.textContent="✅ Добавлено";b.disabled=true;b.style.opacity=".6";}
     }catch(err){bfImportStatus('<div class="bf-warn">Ошибка сохранения: '+esc(err.message||err)+'</div>')}
     if(commitBtn){commitBtn.disabled=true;commitBtn.textContent="✅ Добавлено в объект";commitBtn.style.opacity=".65";}
