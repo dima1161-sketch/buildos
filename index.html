@@ -878,5 +878,214 @@ init();
 })();
 </script>
 
+
+<script>
+/* BUILDOS PRO UPDATE — v6
+   Large batch: calendar/shifts, estimates, clients, documents,
+   notifications, global search, object budgets, worker payroll,
+   quick reports, dashboard command center.
+*/
+(function(){
+  const KEY="buildos_pro_v6";
+  const base={
+    clients:[],
+    estimates:[],
+    shifts:[],
+    notifications:[],
+    docs:[],
+    payroll:[],
+    objectBudgets:{},
+    searchHistory:[]
+  };
+  let Z=(()=>{try{return Object.assign({},base,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){return {...base}}})();
+  const save=()=>{localStorage.setItem(KEY,JSON.stringify(Z));render();};
+
+  const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+  const money=n=>new Intl.NumberFormat("ru-RU").format(Number(n)||0)+" ₽";
+  const dateNow=()=>new Date().toISOString().slice(0,10);
+  const objs=()=>Array.isArray(window.objects)?window.objects:[];
+  const tasks=()=>Array.isArray(window.tasks)?window.tasks:[];
+  const workers=()=>Array.isArray(window.BUILDOS_V5?.data()?.workers)?window.BUILDOS_V5.data().workers:[];
+  const xdata=()=>window.BUILDOS_V5?.data?.()||{};
+  const log=(a,d)=>{try{const x=xdata();x.activity=x.activity||[];x.activity.unshift({date:new Date().toISOString(),action:a,details:d});x.activity=x.activity.slice(0,100);window.BUILDOS_V5.save()}catch(e){}};
+
+  function sheet(title,body,actions=""){
+    let m=document.getElementById("v6Modal");
+    if(!m){m=document.createElement("div");m.id="v6Modal";m.className="modal";document.body.appendChild(m)}
+    m.innerHTML=`<div class="v6-sheet"><div class="v6-head"><h2>${title}</h2><button onclick="v6Close()">✕</button></div><div class="v6-body">${body}</div><div class="v6-actions">${actions||'<button class="secondary" onclick="v6Close()">Закрыть</button>'}</div></div>`;
+    m.classList.add("show");
+  }
+  window.v6Close=()=>document.getElementById("v6Modal")?.classList.remove("show");
+  const sel=(id,includeAll=false)=>`<select id="${id}">${includeAll?'<option value="">Все объекты</option>':''}${objs().map((o,i)=>`<option value="${i}">${esc(o.name)}</option>`).join("")||'<option value="">Нет объектов</option>'}</select>`;
+
+  /* CLIENTS */
+  window.v6Clients=()=>{
+    const rows=Z.clients.map((c,i)=>`<div class="v6-row"><div><b>${esc(c.name)}</b><small>${esc(c.phone||"")} · ${esc(c.objectName||"")}</small></div><button class="v6-mini" onclick="v6Client(${i})">Открыть</button><button class="v6-mini" onclick="v6DelClient(${i})">🗑️</button></div>`).join("");
+    sheet("👤 Клиенты",`<button class="primary" onclick="v6AddClient()">＋ Добавить клиента</button><div class="v6-list">${rows||'<div class="v6-empty">Клиентов пока нет</div>'}</div>`);
+  };
+  window.v6AddClient=()=>{
+    sheet("Новый клиент",`<label>Имя<input id="cName" placeholder="Иван Петров"></label><label>Телефон<input id="cPhone" placeholder="+7 ..."></label><label>Объект${sel("cObj")}</label><label>Заметки<textarea id="cNote" rows="4"></textarea></label>`,
+      `<button class="secondary" onclick="v6Clients()">Отмена</button><button class="primary" onclick="v6SaveClient()">Сохранить</button>`);
+  };
+  window.v6SaveClient=()=>{
+    const n=document.getElementById("cName").value.trim();if(!n)return;
+    const o=objs()[document.getElementById("cObj").value];
+    Z.clients.push({name:n,phone:document.getElementById("cPhone").value,objectName:o?.name||"",note:document.getElementById("cNote").value});
+    log("Добавлен клиент",n);save();v6Clients();
+  };
+  window.v6DelClient=i=>{if(confirm("Удалить клиента?")){Z.clients.splice(i,1);save();v6Clients()}};
+  window.v6Client=i=>{
+    const c=Z.clients[i];
+    sheet("👤 "+esc(c.name),`<div class="v6-card"><b>Телефон</b><span>${esc(c.phone||"—")}</span></div><div class="v6-card"><b>Объект</b><span>${esc(c.objectName||"—")}</span></div><div class="v6-card"><b>Заметки</b><span>${esc(c.note||"—")}</span></div><button class="secondary" onclick="v6AddClientPaymentByName(${i})">💳 Добавить платёж</button>`);
+  };
+  window.v6AddClientPaymentByName=i=>{
+    const c=Z.clients[i];
+    const d=xdata();
+    if(!d.clientPayments)d.clientPayments=[];
+    sheet("Платёж клиента",`<div class="v6-card"><b>${esc(c.name)}</b><span>${esc(c.objectName||"")}</span></div><label>Сумма<input id="v6cp" type="number" placeholder="100000"></label><label>Дата<input id="v6cpd" type="date" value="${dateNow()}"></label><label>Комментарий<input id="v6cpn" placeholder="Аванс"></label>`,
+      `<button class="secondary" onclick="v6Client(${i})">Отмена</button><button class="primary" onclick="d.clientPayments.unshift({objectName:'${String(c.objectName||"").replace(/'/g,"\\'")}',amount:+document.getElementById('v6cp').value||0,date:document.getElementById('v6cpd').value,note:document.getElementById('v6cpn').value,client:'${String(c.name).replace(/'/g,"\\'")}'});window.BUILDOS_V5.save();v6Close()">Добавить</button>`);
+  };
+
+  /* ESTIMATES */
+  window.v6Estimates=()=>{
+    const rows=Z.estimates.map((e,i)=>`<div class="v6-row"><div><b>${esc(e.name)}</b><small>${esc(e.objectName||"")} · ${money(e.total)}</small></div><button class="v6-mini" onclick="v6Estimate(${i})">Открыть</button><button class="v6-mini" onclick="v6DelEstimate(${i})">🗑️</button></div>`).join("");
+    sheet("📋 Сметы",`<button class="primary" onclick="v6AddEstimate()">＋ Новая смета</button><div class="v6-list">${rows||'<div class="v6-empty">Смет пока нет</div>'}</div>`);
+  };
+  window.v6AddEstimate=()=>{
+    sheet("Новая смета",`<label>Название<input id="eName" placeholder="Ремонт квартиры"></label><label>Объект${sel("eObj")}</label><label>Материалы<input id="eMat" type="number" placeholder="500000"></label><label>Работы<input id="eWork" type="number" placeholder="800000"></label><label>Резерв<input id="eRes" type="number" placeholder="100000"></label>`,
+      `<button class="secondary" onclick="v6Estimates()">Отмена</button><button class="primary" onclick="v6SaveEstimate()">Сохранить</button>`);
+  };
+  window.v6SaveEstimate=()=>{
+    const o=objs()[document.getElementById("eObj").value];
+    const mat=+document.getElementById("eMat").value||0,work=+document.getElementById("eWork").value||0,res=+document.getElementById("eRes").value||0;
+    Z.estimates.unshift({name:document.getElementById("eName").value||"Новая смета",objectName:o?.name||"",materials:mat,work:work,reserve:res,total:mat+work+res,date:dateNow()});
+    log("Создана смета",Z.estimates[0].name);save();v6Estimates();
+  };
+  window.v6Estimate=i=>{
+    const e=Z.estimates[i];
+    sheet("📋 "+esc(e.name),`<div class="v6-stats"><div><b>${money(e.materials)}</b><small>Материалы</small></div><div><b>${money(e.work)}</b><small>Работы</small></div><div><b>${money(e.reserve)}</b><small>Резерв</small></div><div><b>${money(e.total)}</b><small>Итого</small></div></div><button class="secondary" onclick="v6Close()">Готово</button>`);
+  };
+  window.v6DelEstimate=i=>{if(confirm("Удалить смету?")){Z.estimates.splice(i,1);save();v6Estimates()}};
+
+  /* CALENDAR / SHIFTS */
+  window.v6Calendar=()=>{
+    const rows=Z.shifts.slice().sort((a,b)=>a.date.localeCompare(b.date)).map((s,i)=>`<div class="v6-row"><div><b>${esc(s.date)} · ${esc(s.worker)}</b><small>${esc(s.objectName||"")} · ${esc(s.role||"")} · ${money(s.rate)}</small></div><button class="v6-mini" onclick="v6DelShift(${i})">🗑️</button></div>`).join("");
+    sheet("📅 Календарь работ",`<button class="primary" onclick="v6AddShift()">＋ Запланировать смену</button><div class="v6-list">${rows||'<div class="v6-empty">Смен пока нет</div>'}</div>`);
+  };
+  window.v6AddShift=()=>{
+    const ws=workers();
+    sheet("Новая смена",`<label>Дата<input id="sDate" type="date" value="${dateNow()}"></label><label>Рабочий<select id="sWorker">${ws.map((w,i)=>`<option value="${i}">${esc(w.name)}</option>`).join("")||'<option value="">Сначала добавьте рабочего</option>'}</select></label><label>Объект${sel("sObj")}</label><label>Смена<input id="sRate" type="number" placeholder="5000"></label><label>Комментарий<input id="sNote"></label>`,
+      `<button class="secondary" onclick="v6Calendar()">Отмена</button><button class="primary" onclick="v6SaveShift()">Добавить</button>`);
+  };
+  window.v6SaveShift=()=>{
+    const w=workers()[document.getElementById("sWorker").value],o=objs()[document.getElementById("sObj").value];
+    Z.shifts.push({date:document.getElementById("sDate").value,worker:w?.name||"Не назначен",objectName:o?.name||"",role:w?.role||"",rate:+document.getElementById("sRate").value||w?.rate||0,note:document.getElementById("sNote").value});
+    log("Запланирована смена",`${w?.name||""} ${document.getElementById("sDate").value}`);save();v6Calendar();
+  };
+  window.v6DelShift=i=>{if(confirm("Удалить смену?")){Z.shifts.splice(i,1);save();v6Calendar()}};
+
+  /* PAYROLL */
+  window.v6Payroll=()=>{
+    const by={};Z.shifts.forEach(s=>{by[s.worker]=(by[s.worker]||0)+(Number(s.rate)||0)});
+    const rows=Object.entries(by).map(([w,n])=>`<div class="v6-row"><div><b>${esc(w)}</b><small>${Z.shifts.filter(s=>s.worker===w).length} смен</small></div><b>${money(n)}</b></div>`).join("");
+    const total=Object.values(by).reduce((a,b)=>a+b,0);
+    sheet("🧾 Зарплата рабочих",`<div class="v6-card"><b>Итого к выплате</b><strong>${money(total)}</strong></div><div class="v6-list">${rows||'<div class="v6-empty">Нет запланированных смен</div>'}</div><button class="secondary" onclick="v6ExportPayroll()">📤 Экспорт расчёта</button>`);
+  };
+  window.v6ExportPayroll=()=>{
+    const by={};Z.shifts.forEach(s=>by[s.worker]=(by[s.worker]||0)+(Number(s.rate)||0));
+    const csv="Рабочий;Смен;Сумма\n"+Object.entries(by).map(([w,n])=>`${w};${Z.shifts.filter(s=>s.worker===w).length};${n}`).join("\n");
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv"}));a.download="BUILDOS_payroll.csv";a.click();
+  };
+
+  /* DOCUMENTS */
+  window.v6Docs=()=>{
+    const rows=Z.docs.map((d,i)=>`<div class="v6-row"><div><b>${esc(d.name)}</b><small>${esc(d.objectName||"")} · ${d.date}</small></div><button class="v6-mini" onclick="v6DelDoc(${i})">🗑️</button></div>`).join("");
+    sheet("📁 Документы",`<button class="primary" onclick="v6AddDoc()">＋ Добавить документ</button><div class="v6-list">${rows||'<div class="v6-empty">Документов пока нет</div>'}</div>`);
+  };
+  window.v6AddDoc=()=>{
+    sheet("Новый документ",`<label>Название<input id="dName" placeholder="Договор, акт, счёт..."></label><label>Объект${sel("dObj")}</label><label>Дата<input id="dDate" type="date" value="${dateNow()}"></label><label>Комментарий<textarea id="dNote" rows="3"></textarea></label>`,
+      `<button class="secondary" onclick="v6Docs()">Отмена</button><button class="primary" onclick="v6SaveDoc()">Добавить</button>`);
+  };
+  window.v6SaveDoc=()=>{
+    const o=objs()[document.getElementById("dObj").value];
+    Z.docs.unshift({name:document.getElementById("dName").value||"Документ",objectName:o?.name||"",date:document.getElementById("dDate").value,note:document.getElementById("dNote").value});
+    save();v6Docs();
+  };
+  window.v6DelDoc=i=>{if(confirm("Удалить документ?")){Z.docs.splice(i,1);save();v6Docs()}};
+
+  /* NOTIFICATIONS */
+  window.v6Notifications=()=>{
+    const t=tasks(), overdue=t.filter(x=>!x.done&&x.due&&new Date(x.due+"T23:59:59")<new Date());
+    const upcoming=t.filter(x=>!x.done&&x.due&&new Date(x.due+"T23:59:59")>=new Date()).slice(0,10);
+    const body=[...overdue.map(x=>`<div class="v6-alert redbg">🔴 Просрочено: <b>${esc(x.title)}</b><small>${esc(x.object||"")}</small></div>`),...upcoming.map(x=>`<div class="v6-alert">🔵 В работе: <b>${esc(x.title)}</b><small>Срок: ${esc(x.due)}</small></div>`)].join("");
+    sheet("🔔 Уведомления",body||'<div class="v6-empty">Сейчас всё спокойно</div>');
+  };
+
+  /* GLOBAL SEARCH */
+  window.v6Search=()=>{
+    sheet("🔎 Поиск по BUILDOS",`<input id="v6q" placeholder="Объект, задача, клиент, рабочий..." oninput="v6SearchRun()"><div id="v6results"></div>`);
+    setTimeout(()=>document.getElementById("v6q")?.focus(),100);
+  };
+  window.v6SearchRun=()=>{
+    const q=(document.getElementById("v6q")?.value||"").toLowerCase();
+    const out=[];
+    objs().forEach((o,i)=>{if((o.name+" "+(o.client||"")).toLowerCase().includes(q))out.push(`<button class="v6-result" onclick="v6Close();setTimeout(()=>v5ObjectWorkspace(${i}),100)">🏗️ ${esc(o.name)}<small>${esc(o.client||"")}</small></button>`)});
+    tasks().forEach(t=>{if((t.title+" "+(t.object||"")).toLowerCase().includes(q))out.push(`<div class="v6-result">✅ ${esc(t.title)}<small>${esc(t.object||"")}</small></div>`)});
+    Z.clients.forEach(c=>{if((c.name+" "+(c.phone||"")).toLowerCase().includes(q))out.push(`<div class="v6-result">👤 ${esc(c.name)}<small>${esc(c.phone||"")}</small></div>`)});
+    workers().forEach(w=>{if((w.name+" "+(w.role||"")).toLowerCase().includes(q))out.push(`<div class="v6-result">👷 ${esc(w.name)}<small>${esc(w.role||"")}</small></div>`)});
+    document.getElementById("v6results").innerHTML=out.length?out.join(""):'<div class="v6-empty">Ничего не найдено</div>';
+  };
+
+  /* COMMAND CENTER */
+  window.v6Center=()=>{
+    const x=xdata(), ps=x.payments||[];
+    const inc=ps.filter(p=>p.type==="income").reduce((s,p)=>s+p.amount,0), exp=ps.filter(p=>p.type==="expense").reduce((s,p)=>s+p.amount,0);
+    const overdue=tasks().filter(t=>!t.done&&t.due&&new Date(t.due+"T23:59:59")<new Date()).length;
+    const todayShifts=Z.shifts.filter(s=>s.date===dateNow());
+    sheet("🚀 Центр управления",`
+      <div class="v6-stats"><div><b>${money(inc-exp)}</b><small>Прибыль</small></div><div><b>${objs().length}</b><small>Объектов</small></div><div><b>${workers().length}</b><small>Рабочих</small></div><div><b>${overdue}</b><small>Просрочено</small></div></div>
+      <h3>Сегодня</h3><div class="v6-card"><b>Смены</b><span>${todayShifts.length?todayShifts.map(s=>esc(s.worker)).join(", "):"Смен нет"}</span></div>
+      <div class="v6-grid"><button class="secondary" onclick="v6Search()">🔎 Поиск</button><button class="secondary" onclick="v6Notifications()">🔔 Уведомления</button><button class="secondary" onclick="v6Calendar()">📅 Календарь</button><button class="secondary" onclick="v6Estimates()">📋 Сметы</button><button class="secondary" onclick="v6Clients()">👤 Клиенты</button><button class="secondary" onclick="v6Docs()">📁 Документы</button><button class="secondary" onclick="v6Payroll()">🧾 Зарплата</button><button class="secondary" onclick="v6Center()">↻ Обновить</button></div>`);
+  };
+
+  function hooks(){
+    document.querySelectorAll("button").forEach(b=>{
+      const t=(b.innerText||"").trim();
+      if(t==="Рабочие")b.onclick=()=>v5Workers();
+      if(t==="Отчёты")b.onclick=()=>v5Reports();
+      if(t==="Расходы")b.onclick=()=>v5Finance();
+      if(t==="Настройки")b.onclick=()=>v5Settings();
+      if(t.includes("AI-помощник"))b.onclick=()=>v6Center();
+      if(t==="Календарь")b.onclick=()=>v6Calendar();
+      if(t==="Клиенты")b.onclick=()=>v6Clients();
+      if(t==="Сметы")b.onclick=()=>v6Estimates();
+    });
+    // Add a compact PRO launcher to the home content only once.
+    if(!document.getElementById("v6Launcher")){
+      const c=document.querySelector(".content");
+      if(c){
+        const el=document.createElement("section");el.id="v6Launcher";el.className="v6-launch";
+        el.innerHTML=`<div class="v6-launch-head"><h2>🚀 BUILDOS PRO</h2><button onclick="v6Center()">Открыть</button></div><div class="v6-launch-grid">
+          <button onclick="v6Search()">🔎<span>Поиск</span></button><button onclick="v6Calendar()">📅<span>Календарь</span></button><button onclick="v6Estimates()">📋<span>Сметы</span></button><button onclick="v6Clients()">👤<span>Клиенты</span></button><button onclick="v6Docs()">📁<span>Документы</span></button><button onclick="v6Payroll()">🧾<span>Зарплата</span></button></div>`;
+        c.appendChild(el);
+      }
+    }
+  }
+  function render(){setTimeout(hooks,50)}
+  function styles(){
+    const s=document.createElement("style");s.textContent=`
+      #v6Modal.show{display:flex!important}
+      .v6-sheet{background:#fff;border-radius:28px 28px 0 0;position:absolute;left:0;right:0;bottom:0;max-height:93vh;overflow:auto;padding:18px}
+      .v6-head{display:flex;align-items:center;justify-content:space-between}.v6-head h2{margin:0;font-size:26px}.v6-head button{border:0;background:#eef1f6;border-radius:50%;width:40px;height:40px;font-size:20px}
+      .v6-body{padding:15px 0}.v6-body label{display:block;font-weight:750;color:#697386;margin:12px 0}.v6-body input,.v6-body select,.v6-body textarea{width:100%;box-sizing:border-box;padding:15px;border:1px solid #d7dce5;border-radius:15px;margin-top:7px;font:inherit;background:#fff}
+      .v6-actions{display:flex;gap:10px}.v6-actions button{flex:1}.v6-list{display:grid;gap:9px;margin-top:12px}.v6-row{display:flex;gap:10px;align-items:center;padding:13px;border:1px solid #e1e5eb;border-radius:16px}.v6-row>div{flex:1;min-width:0}.v6-row small,.v6-card span{display:block;color:#747d8d;margin-top:4px}.v6-mini{border:0;background:#f0f3f7;border-radius:11px;padding:9px;font:inherit}.v6-empty{padding:25px;text-align:center;color:#7b8492;background:#f5f7fa;border-radius:16px}.v6-grid,.v6-launch-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.v6-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.v6-stats>div,.v6-card{background:#f5f7fa;border-radius:17px;padding:15px;margin-bottom:10px}.v6-stats b{font-size:21px;display:block}.v6-stats small{color:#747d8d}.v6-alert{padding:13px;border-radius:14px;background:#edf5ff;margin:8px 0}.v6-alert small{display:block;color:#747d8d;margin-top:3px}.v6-alert.redbg{background:#fff0f0}.v6-result{display:block;width:100%;text-align:left;border:1px solid #e1e5eb;background:#fff;border-radius:15px;padding:13px;margin-top:8px;font:inherit}.v6-result small{display:block;color:#747d8d;margin-top:3px}.v6-launch{background:#fff;border:1px solid #e1e5eb;border-radius:22px;padding:16px;margin:12px 0}.v6-launch-head{display:flex;justify-content:space-between;align-items:center}.v6-launch-head h2{margin:0;font-size:21px}.v6-launch-head button{border:0;background:#2875ed;color:#fff;border-radius:12px;padding:9px 13px;font:inherit;font-weight:700}.v6-launch-grid button{border:1px solid #e1e5eb;background:#f9fafc;border-radius:15px;padding:14px;font-size:23px}.v6-launch-grid span{display:block;font-size:13px;font-weight:700;margin-top:4px}
+      @media(max-width:430px){.v6-sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom))}}
+    `;document.head.appendChild(s);
+  }
+  function init(){styles();hooks();setInterval(hooks,1800);window.BUILDOS_V6={data:()=>Z,save};}
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
+</script>
+
 </body>
 </html>
