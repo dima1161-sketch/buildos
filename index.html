@@ -474,6 +474,21 @@ function openObject(i){
    ${objExpenses.length?objExpenses.slice().reverse().map(e=>`<div class="expense-item"><div><div class="expense-name">${e.category||"Расход"}</div><div class="expense-meta">${e.comment||"Без комментария"} · ${e.date}</div></div><div class="expense-amount">${money(e.amount)}</div></div>`).join(""):'<div class="empty">Расходов по объекту пока нет.</div>'}
  </div>
 
+ <div class="detail-card"><h3>🧾 Импортированная смета</h3>
+ ${o.estimateItems&&o.estimateItems.length?
+   `<div class="row"><span>Позиций</span><b>${o.estimateItems.length}</b></div>
+    <div class="row"><span>Сумма сметы</span><b>${money(o.estimateTotal||0)}</b></div>
+    ${o.estimateItems.slice(0,12).map(x=>`<div class="row"><span>${x.name}<small style="display:block;color:var(--muted)">${x.qty||0} ${x.unit||"шт"} × ${money(x.price||0)}</small></span><b>${money((+x.qty||0)*(+x.price||0))}</b></div>`).join("")}
+    ${o.estimateItems.length>12?`<div class="empty">Показаны первые 12 позиций из ${o.estimateItems.length}.</div>`:""}`
+   :'<div class="empty">Смета по объекту пока не загружена.</div>'}
+ </div>
+
+ <div class="detail-card"><h3>📅 График работ</h3>
+ ${o.schedule&&o.schedule.length?
+   o.schedule.slice(0,12).map(x=>`<div class="expense-item"><div><div class="expense-name">${esc(x.title||x.name)}</div><div class="expense-meta">${x.start||"—"} → ${x.end||"—"} · ${esc(x.assignee||"Ответственный не указан")}</div></div></div>`).join("")
+   :'<div class="empty">График по объекту пока не загружен.</div>'}
+ </div>
+
  <div class="detail-card"><h3>📋 Основная информация</h3>
  <div class="row"><span>Клиент</span><b>${o.client}</b></div><div class="row"><span>Этап</span><span>${o.stage}</span></div><div class="row"><span>Рабочие</span><span>${o.workers} человек</span></div><div class="row"><span>Начало</span><span>${o.start}</span></div><div class="row"><span>Сдача</span><span>${o.finish}</span></div></div>
 
@@ -1037,7 +1052,62 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
         });
       }
       saveS(s);
-      bfImportStatus('<div class="bf-ok">✅ Готово! Данные добавлены в выбранный объект.</div>');
+
+      // Sync imported data into the main BUILDOS app storage as well.
+      // The main app uses `buildos_objects` / `buildos_tasks`, while BUILDOS PRO
+      // uses `buildos_final_v1`. Without this bridge the import looked successful
+      // but was invisible in the normal object screen.
+      try{
+        const mainObjects=JSON.parse(localStorage.getItem("buildos_objects")||"[]");
+        const project=s.projects.find(p=>String(p.id)===String(pid));
+        const mainObj=Array.isArray(mainObjects)
+          ? mainObjects.find(o=>(project&&project.name&&o.name===project.name) || String(o.id||"")===String(pid))
+          : null;
+
+        if(mainObj){
+          if(mode==="estimate"){
+            mainObj.estimateItems=mainObj.estimateItems||[];
+            const byKey=(x)=>norm(x.name)+"|"+norm(x.unit||"шт");
+            parsed.forEach(x=>{
+              const key=byKey(x);
+              const ex=mainObj.estimateItems.find(m=>byKey(m)===key);
+              if(ex){
+                ex.qty=(+ex.qty||0)+(+x.qty||0);
+                ex.price=+x.price||ex.price||0;
+                ex.total=(+ex.qty||0)*(+ex.price||0);
+              }else{
+                mainObj.estimateItems.push({
+                  id:x.id||id(),name:x.name,qty:+x.qty||0,unit:x.unit||"шт",
+                  price:+x.price||0,total:(+x.qty||0)*(+x.price||0)
+                });
+              }
+            });
+            mainObj.estimateTotal=mainObj.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
+          }else{
+            mainObj.schedule=mainObj.schedule||[];
+            parsed.forEach(x=>mainObj.schedule.push({
+              id:x.id||id(),title:x.name,start:x.start,end:x.end,
+              assignee:x.assignee||"",status:x.status||"Запланировано"
+            }));
+          }
+          localStorage.setItem("buildos_objects",JSON.stringify(mainObjects));
+        }
+
+        // Also mirror schedule tasks into the main Tasks screen.
+        if(mode==="schedule"){
+          const mainTasks=JSON.parse(localStorage.getItem("buildos_tasks")||"[]");
+          const projectName=project?.name||"";
+          parsed.forEach(x=>mainTasks.push({
+            title:x.name,object:projectName,assignee:x.assignee||"",
+            due:x.end||"",priority:"medium",done:false
+          }));
+          localStorage.setItem("buildos_tasks",JSON.stringify(mainTasks));
+        }
+      }catch(syncErr){
+        console.warn("BUILDOS main storage sync failed",syncErr);
+      }
+
+      bfImportStatus('<div class="bf-ok">✅ Готово! Смета сохранена и привязана к объекту.</div>');
       const b=document.getElementById("bfImportCommitBtn");
       const topAction=document.getElementById("bfImportTopAction");
       if(topAction) topAction.style.display="block";
