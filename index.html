@@ -484,7 +484,7 @@ function openObject(i){
      </div>
    </div>
    ${o.estimateItems&&o.estimateItems.length?
-     (()=>{const total=Number(o.estimateTotal)||o.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const workTotal=Number(o.estimateWorkTotal)||o.estimateItems.filter(x=>x.kind!=="material").reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const materialTotal=Number(o.estimateMaterialTotal)||o.estimateItems.filter(x=>x.kind==="material").reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const purchased=o.estimateItems.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);const work=o.estimateItems.filter(x=>x.status==="work").length;const done=o.estimateItems.filter(x=>x.status==="done").length;const buy=o.estimateItems.filter(x=>x.kind==="material"&&(+x.purchasedQty||0)<(+x.qty||0)).length;const check=o.estimateItems.filter(x=>x.needsMaterialCheck||x.materialMode==="clarify").length;return `
+     (()=>{const total=o.estimateItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const workTotal=o.estimateItems.filter(x=>x.kind!=="material").reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const materialTotal=o.estimateItems.filter(x=>x.kind==="material").reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);const purchased=o.estimateItems.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);const work=o.estimateItems.filter(x=>x.status==="work").length;const done=o.estimateItems.filter(x=>x.status==="done").length;const buy=o.estimateItems.filter(x=>x.kind==="material"&&(+x.purchasedQty||0)<(+x.qty||0)).length;const check=o.estimateItems.filter(beNeedsCheck).length;return `
        <h3>📋 Смета объекта</h3>
        <div class="be-summary">
          <div class="be-stat"><span>Всего по смете</span><b>${window.beMoney(total)}</b></div>
@@ -496,6 +496,7 @@ function openObject(i){
        </div>
        <div class="be-progress"><i style="width:${total?Math.min(100,Math.round(purchased/total*100)):0}%"></i></div>
        <div class="be-muted" style="margin-top:6px">${o.estimateItems.length} позиций · 🛒 ${buy} материалов к закупке · ⚠️ ${check} позиций требуют проверки материалов</div>
+       <div class="be-category-row"><span>Работы / СМР <b>${o.estimateItems.filter(x=>x.kind!=="material").length}</b></span><span>Материалы <b>${o.estimateItems.filter(x=>x.kind==="material").length}</b></span><span>Уточнить <b>${check}</b></span></div>
        <div class="be-actions">
          <button class="primary" onclick="beOpenEstimate(${i})">Открыть смету →</button>
          <button onclick="bePurchaseList(${i})">🛒 Что купить</button>
@@ -990,46 +991,79 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
     // E work price, F work total, G material name, H unit, I qty, J price, K total.
     if(Array.isArray(window.bfXlsxRows) && window.bfXlsxRows.length){
       const rows=window.bfXlsxRows;
-      const headerIndex=rows.findIndex(r=>String(r[1]||'').toLowerCase().includes('наименование работ') && String(r[6]||'').toLowerCase().includes('материал'));
+      const normCell=v=>norm(String(v??""));
+      const num=v=>{
+        if(typeof v==='number') return isFinite(v)?v:0;
+        const z=String(v??"").replace(/\s/g,"").replace(/₽/g,"").replace(/,/g,".").replace(/[^0-9.\-]/g,"");
+        const n=Number(z); return isFinite(n)?n:0;
+      };
+      // Find the real work/material header even when Excel has a title row above it.
+      const headerIndex=rows.findIndex(r=>{
+        const all=r.map(normCell).join(" | ");
+        return all.includes("наименование работ") && (all.includes("материал") || all.includes("стоимость руб"));
+      });
       if(headerIndex>=0){
-        const items=[], materials=[];
-        let explicitTotal=0;
+        const workItems=[], materialItems=[];
+        let sourceWorkSubtotal=0, sourceMaterialSubtotal=0, sourceGrandTotal=0;
+        let currentSection="";
         for(let i=headerIndex+1;i<rows.length;i++){
           const r=rows[i]||[];
-          const a=r[0], b=String(r[1]||'').trim(), c=String(r[2]||'').trim();
-          const d=Number(r[3])||0, e=Number(r[4])||0, f=Number(r[5])||0;
-          const g=String(r[6]||'').trim(), h=String(r[7]||'').trim();
-          const iq=Number(r[8])||0, jp=Number(r[9])||0, kt=Number(r[10])||0;
-          const low=norm(b);
-          if(/итого\s*смр|итого$|всего\s*смр/.test(low)){ if(f>0) explicitTotal=f; continue; }
-          if(!b && !g) continue;
-          // Section headers: text only, no measurable values.
-          if(b && !d && !e && !f && !g && !iq && !jp && !kt){ continue; }
-          // Work item. Keep zero-price/zero-qty rows as clarification items.
-          if(b && (d||e||f||/требует уточнения/i.test(g))){
-            const clarification=/требует уточнения/i.test(g) || d<=0 || e<=0 || f<=0;
-            const work={id:id(),name:b,qty:d,unit:c||'шт',price:e,total:f||d*e,kind:'work',materialMode:clarification?'clarify':'included_or_unknown',needsMaterialCheck:false,materialName:g&& !/требует уточнения/i.test(g)?g:'',materialQty:iq,materialUnit:h,materialPrice:jp,materialTotal:kt};
-            // Conservative signal: the app may suggest checking consumables,
-            // but never silently invent a material quantity or cost.
-            work.needsMaterialCheck=/(монтаж|устройство|укладк|штукатур|грунт|шпатл|окраск|поклей|стяжк|изоляц|гидроиз|каркас|зашивк|прокладк|установк|подключ|сборк)/i.test(low);
-            if(g && !/требует уточнения/i.test(g)){
-              work.materialMode='separate';
-              if(iq>0||jp>0||kt>0) materials.push({id:id(),name:g,qty:iq,unit:h||'шт',price:jp,total:kt||iq*jp,kind:'material',sourceWork:b,status:'need_buy',purchasedQty:0});
+          const b=String(r[1]??"").trim(), c=String(r[2]??"").trim();
+          const d=num(r[3]), e=num(r[4]), f=num(r[5]);
+          const g=String(r[6]??"").trim(), h=String(r[7]??"").trim();
+          const iq=num(r[8]), jp=num(r[9]), kt=num(r[10]);
+          const rowText=r.map(v=>String(v??"").trim()).join(" ");
+          const low=norm(rowText), lowB=norm(b);
+          if(!rowText) continue;
+          // Never count summary rows as real positions. Use them only as a source check.
+          if(/итого\s*смр|итого\s*работ|всего\s*смр/.test(lowB)) { if(f>0) sourceWorkSubtotal=f; continue; }
+          if(/^итого\s*материал|всего\s*материал/.test(lowB)) { if(kt>0) sourceMaterialSubtotal=kt; continue; }
+          if(/^итого|^всего|^сумма/.test(lowB)) { if(f>0) sourceGrandTotal=f; else if(kt>0) sourceGrandTotal=kt; continue; }
+          // Section/header rows: text only.
+          if(b && !d && !e && !f && !g && !iq && !jp && !kt){ currentSection=b; continue; }
+
+          // A row with a work name is a WORK position. Material columns are a separate
+          // procurement position and must never be added to the work amount.
+          if(b && (d||e||f||g||iq||jp||kt)){
+            const workTotal=f || (d*e);
+            const explicitMaterial=!!g && (iq>0 || jp>0 || kt>0);
+            const unclearMaterial=/требует\s+уточнения|уточн/i.test(g);
+            const likelyMaterialWork=/монтаж|устройств|укладк|штукатур|грунт|шпатл|шпакл|окраск|поклей|стяжк|изоляц|гидроиз|каркас|зашивк|прокладк|установк|подключ|сборк|облицовк|плинтус|двер|утеплен|стеклохолст/i.test(lowB);
+            let materialMode=explicitMaterial?'buy':(unclearMaterial?'clarify':(likelyMaterialWork?'review':'included'));
+            const work={id:id(),name:b,qty:d,unit:c||'шт',price:e,total:workTotal,kind:'work',category:'Работы / СМР',materialMode,needsMaterialCheck:materialMode==='review'||materialMode==='clarify',materialName:g&&!unclearMaterial?g:'',materialQty:iq,materialUnit:h,materialPrice:jp,materialTotal:kt,sourceSection:currentSection};
+            workItems.push(work);
+            if(explicitMaterial){
+              materialItems.push({id:id(),name:g,qty:iq,unit:h||'шт',price:jp,total:kt||iq*jp,kind:'material',category:'Материалы',sourceWork:b,materialMode:'buy',status:'need_buy',purchasedQty:0,sourceSection:currentSection});
             }
-            items.push(work);
             continue;
           }
-          // Material-only row (some estimates place materials without a work row).
+
+          // Material-only row.
           if(g && (iq||jp||kt)){
-            materials.push({id:id(),name:g,qty:iq,unit:h||'шт',price:jp,total:kt||iq*jp,kind:'material',sourceWork:b,status:'need_buy',purchasedQty:0});
+            materialItems.push({id:id(),name:g,qty:iq,unit:h||'шт',price:jp,total:kt||iq*jp,kind:'material',category:'Материалы',sourceWork:b||"",materialMode:'buy',status:'need_buy',purchasedQty:0,sourceSection:currentSection});
           }
         }
-        // Some work names are split across rows: if a row has a continuation
-        // with measurable values and no section number, keep it as a work item.
-        const all=[...items,...materials];
-        const workTotal=explicitTotal||items.reduce((a,x)=>a+(+x.total||0),0);
-        const materialTotal=materials.reduce((a,x)=>a+(+x.total||0),0);
-        return {items:all,workTotal,materialTotal,grandTotal:workTotal+materialTotal,explicitTotal,structured:true};
+
+        // Deduplicate exact material lines while preserving source work links.
+        const matMap=new Map();
+        for(const m of materialItems){
+          const key=norm(m.name)+"|"+norm(m.unit||"шт")+"|"+norm(m.sourceWork||"");
+          if(matMap.has(key)){
+            const a=matMap.get(key); a.qty+=(+m.qty||0); a.total+=(+m.total||0); if(!a.price&&m.price)a.price=m.price;
+          }else matMap.set(key,{...m});
+        }
+        const mats=[...matMap.values()];
+        const workTotal=workItems.reduce((a,x)=>a+(+x.total||0),0);
+        const materialTotal=mats.reduce((a,x)=>a+(+x.total||0),0);
+        const calculatedTotal=workTotal+materialTotal;
+        // Source subtotals are validation signals only. Never replace calculated totals
+        // with a subtotal, otherwise a duplicated/partial "Итого" row corrupts the object.
+        const sourceCheck={work:sourceWorkSubtotal,material:sourceMaterialSubtotal,grand:sourceGrandTotal};
+        const discrepancy=[];
+        if(sourceWorkSubtotal>0 && Math.abs(sourceWorkSubtotal-workTotal)>Math.max(100,sourceWorkSubtotal*.03)) discrepancy.push(`СМР: файл ${sourceWorkSubtotal}, позиции ${workTotal}`);
+        if(sourceMaterialSubtotal>0 && Math.abs(sourceMaterialSubtotal-materialTotal)>Math.max(100,sourceMaterialSubtotal*.03)) discrepancy.push(`материалы: файл ${sourceMaterialSubtotal}, позиции ${materialTotal}`);
+        if(sourceGrandTotal>0 && Math.abs(sourceGrandTotal-calculatedTotal)>Math.max(100,sourceGrandTotal*.03)) discrepancy.push(`итого: файл ${sourceGrandTotal}, позиции ${calculatedTotal}`);
+        return {items:[...workItems,...mats],workTotal,materialTotal,grandTotal:calculatedTotal,explicitTotal:sourceGrandTotal,sourceCheck,discrepancy,structured:true};
       }
     }
 
@@ -1114,7 +1148,7 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
     const total=Number(meta.grandTotal)||0;
     const materialTotal=Number(meta.materialTotal)||0;
     const clarify=list.filter(x=>x.materialMode==='clarify'||x.needsMaterialCheck).length;
-    bfImportStatus(`<div class="bf-ok">Найдено <b>${list.length}</b> позиций. <b>СМР: ${money(meta.workTotal||0)}</b> · материалы: <b>${money(materialTotal)}</b> · всего: <b>${money(total)}</b>${clarify?` · ⚠️ ${clarify} позиций требуют проверки материалов`:''}</div>`);
+    bfImportStatus(`<div class="bf-ok">Найдено <b>${list.length}</b> позиций. <b>СМР: ${money(meta.workTotal||0)}</b> · материалы: <b>${money(materialTotal)}</b> · всего: <b>${money(total)}</b>${clarify?` · ⚠️ ${clarify} позиций требуют проверки материалов`:''}${meta.discrepancy&&meta.discrepancy.length?`<br>⚠️ Есть расхождение с итогами исходного файла — BUILDOS использует сумму реальных позиций, а не строку «Итого».`:''}</div>`);
     bfImportPreview(list.length?`<div class="bf-import-summary"><div><b>${money(meta.workTotal||0)}</b><span>Работы / СМР</span></div><div><b>${money(materialTotal)}</b><span>Материалы</span></div><div><b>${money(total)}</b><span>Всего</span></div></div><table class="bf-import-table"><thead><tr><th>Позиция</th><th>Тип</th><th>Объём</th><th>Сумма</th></tr></thead><tbody>${list.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.kind==='material'?'Материал':x.materialMode==='clarify'?'Уточнить':'Работа'}</td><td>${x.qty||0} ${esc(x.unit||'шт')}</td><td>${money(x.total||0)}</td></tr>`).join("")}</tbody></table>`:"<div class='bf-import-muted'>Позиции не распознаны. Попробуй вставить текст таблицы.</div>");
   }
   function renderSchedulePreview(items){
@@ -1144,9 +1178,10 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       if(mode==="estimate"){
         const estimateItems=parsed.items||[];
         for(const x of estimateItems){
+          if(x.kind!=="material") continue;
           const ex=s.materials.find(m=>m.projectId===pid&&norm(m.name)===norm(x.name)&&norm(m.unit||"шт")===norm(x.unit));
-          if(ex){ex.qty=(+ex.qty||0)+(+x.qty||0);if(!ex.price)ex.price=x.price}
-          else s.materials.push({id:x.id||id(),projectId:pid,name:x.name,qty:x.qty,unit:x.unit,price:x.price,supplier:"",status:"Нужно купить"});
+          if(ex){ex.qty=(+ex.qty||0)+(+x.qty||0);if(!ex.price)ex.price=x.price;ex.status="Нужно купить"}
+          else s.materials.push({id:x.id||id(),projectId:pid,name:x.name,qty:x.qty,unit:x.unit,price:x.price,supplier:"",status:"Нужно купить",sourceWork:x.sourceWork||""});
         }
         let e=s.estimates.find(x=>x.projectId===pid);
         if(!e){e={id:id(),projectId:pid,name:"Импортированная смета",items:[]};s.estimates.push(e)}
@@ -1203,8 +1238,13 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
                   ex.qty=(+ex.qty||0)+(+x.qty||0);
                   ex.price=+x.price||ex.price||0;
                   ex.total=(+ex.qty||0)*(+ex.price||0);
+                  ex.kind=x.kind||ex.kind||"work";
+                  ex.category=x.category||(ex.kind==="material"?"Материалы":"Работы / СМР");
+                  ex.materialMode=x.materialMode||ex.materialMode||"unknown";
+                  ex.needsMaterialCheck=!!x.needsMaterialCheck;
+                  ex.sourceWork=x.sourceWork||ex.sourceWork||"";
                 }else{
-                  mainObj.estimateItems.push({id:x.id||id(),name:x.name,qty:+x.qty||0,unit:x.unit||"шт",price:+x.price||0,total:(+x.qty||0)*(+x.price||0),purchasedQty:0,status:x.kind==="material"?"need_buy":"todo",kind:x.kind||"work",materialMode:x.materialMode||"unknown",needsMaterialCheck:!!x.needsMaterialCheck,materialName:x.materialName||"",materialQty:+x.materialQty||0,materialUnit:x.materialUnit||"",materialPrice:+x.materialPrice||0,materialTotal:+x.materialTotal||0});
+                  mainObj.estimateItems.push({id:x.id||id(),name:x.name,qty:+x.qty||0,unit:x.unit||"шт",price:+x.price||0,total:(+x.qty||0)*(+x.price||0),purchasedQty:0,status:x.kind==="material"?"need_buy":"todo",kind:x.kind||"work",category:x.category||(x.kind==="material"?"Материалы":"Работы / СМР"),materialMode:x.materialMode||"unknown",needsMaterialCheck:!!x.needsMaterialCheck,materialName:x.materialName||"",materialQty:+x.materialQty||0,materialUnit:x.materialUnit||"",materialPrice:+x.materialPrice||0,materialTotal:+x.materialTotal||0,sourceWork:x.sourceWork||""});
                 }
               });
               mainObj.estimateWorkTotal=Number(parsed.workTotal)||0;
@@ -1377,7 +1417,7 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
 .be-field input,.be-field select{width:100%;box-sizing:border-box;border:1px solid #d8dee7;border-radius:13px;padding:12px;font:inherit}
 .be-field{margin:11px 0}.be-field label{display:block;font-weight:700;color:#6f7888;margin-bottom:6px}
 .be-line{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #e7eaf0}.be-line:last-child{border-bottom:0}
-.be-cat{font-size:12px;font-weight:800;color:#2863b8}.be-big{font-size:26px;font-weight:900}
+.be-cat{font-size:12px;font-weight:800;color:#2863b8}.be-category-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:10px}.be-category-row span{background:#f6f8fb;border:1px solid #e3e8ef;border-radius:12px;padding:9px;font-size:11px;color:#717a8a}.be-category-row b{display:block;color:#182235;font-size:15px;margin-top:2px}.be-big{font-size:26px;font-weight:900}
 .bf-import-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}.bf-import-summary>div{background:#f6f8fb;border:1px solid #e3e8ef;border-radius:14px;padding:10px}.bf-import-summary b{display:block;font-size:15px}.bf-import-summary span{display:block;color:#717a8a;font-size:11px;margin-top:3px}
 </style>
 <div id="beEstimateModal" class="be-modal" onclick="if(event.target===this)beCloseEstimate()"><div class="be-sheet" id="beEstimateSheet"></div></div>
@@ -1388,10 +1428,11 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
   window.beMoney=function(x){return new Intl.NumberFormat("ru-RU").format(Number(x)||0)+" ₽";}
   const beMoney=window.beMoney;
   function beEsc(x){return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+  const BE_MATERIAL_RE=/плит|керам|клей|грунт|краск|штукатур|шпаклев|гипс|гкл|профил|кабел|провод|розет|выключ|смес|труб|ламин|паркет|цемент|саморез|дюбел|гермет|утепл|минват|фанер|мдф|дсп|обои|светиль|силикон|стеклохолст|шпатл|гидроизол|теплоизол|двер|плинтус/i;
+  const BE_WORK_MATERIAL_RE=/монтаж|устройств|укладк|штукатур|грунт|шпатл|шпакл|окраск|поклей|стяжк|изоляц|гидроиз|каркас|зашивк|прокладк|установк|подключ|сборк|стеклохолст|утеплен|облицовк|плинтус|двер/i;
+  function beNeedsCheck(x){return !!(x && x.kind!=="material" && (x.materialMode==="review" || x.materialMode==="clarify" || x.needsMaterialCheck));}
   window.beType=function(name){
-    const n=String(name||"").toLowerCase();
-    if(/плит|клей|грунт|краск|штукатур|шпаклев|гипс|профил|кабел|провод|розет|выключ|смес|труб|ламин|паркет|цемент|саморез|дюбел|гермет|утепл|минват|фанер|мдф|дсп|керам|обои|светиль|силикон/.test(n))return "Материалы";
-    return "Работы";
+    return BE_MATERIAL_RE.test(String(name||"")) ? "Материалы" : "Работы";
   };
   function beStatus(x){
     const st=x.status||"todo";
@@ -1410,13 +1451,13 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
     o.estimateItems=o.estimateItems||[];
     const items=o.estimateItems;
     const q=(o.beEstimateFilter||"all"), search=o.beEstimateSearch||"";
-    const filtered=items.filter(x=>((q==="all")||(q==="Материалы"&&x.kind==="material")||(q==="Работы"&&x.kind!=="material")||(q==="Купить"&&x.kind==="material"&&(+x.purchasedQty||0)<(+x.qty||0))||(q==="Проверить"&&(x.needsMaterialCheck||x.materialMode==="clarify"))||x.status===q) && String(x.name||"").toLowerCase().includes(search.toLowerCase()));
+    const filtered=items.filter(x=>((q==="all")||(q==="Материалы"&&x.kind==="material")||(q==="Работы"&&x.kind!=="material")||(q==="Купить"&&x.kind==="material"&&(+x.purchasedQty||0)<(+x.qty||0))||(q==="Проверить"&&beNeedsCheck(x))||x.status===q) && String(x.name||"").toLowerCase().includes(search.toLowerCase()));
     const total=items.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
     const purchased=items.reduce((a,x)=>a+(+x.purchasedQty||0)*(+x.price||0),0);
     const left=Math.max(0,total-purchased);
     const done=items.filter(x=>x.status==="done").length;
     const work=items.filter(x=>x.status==="work").length;
-    const buy=items.filter(x=>(+x.purchasedQty||0)<(+x.qty||0));
+    const buy=items.filter(x=>x.kind==="material"&&(+x.purchasedQty||0)<(+x.qty||0));
     document.getElementById("beEstimateSheet").innerHTML=`
       <button class="close" onclick="beCloseEstimate()">×</button>
       <h2>📋 Смета</h2>
@@ -1442,7 +1483,7 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
             <div class="be-item-top"><div><div class="be-name">${beEsc(x.name)}</div><div class="be-muted">${x.kind==="material"?"Материал":"Работа"} · ${x.qty||0} ${beEsc(x.unit||"шт")} · ${beMoney(x.price||0)}/${beEsc(x.unit||"шт")}</div></div><div class="be-amount">${beMoney(sum)}</div></div>
             <span class="be-status ${st[0]}">${st[1]}</span>
             ${x.kind==="material"&&rem>0?`<div class="be-muted" style="margin-top:7px">🛒 Купить ещё: <b>${rem} ${beEsc(x.unit||"шт")}</b></div>`:""}
-            ${x.needsMaterialCheck||x.materialMode==="clarify"?`<div class="be-purchase"><b>⚠️ Нужно проверить материал</b><div class="be-muted">Смета содержит работу, но не даёт однозначного ответа, входит ли материал в цену. BUILDOS не будет придумывать объём — его можно указать вручную.</div></div>`:""}
+            ${beNeedsCheck(x)?`<div class="be-purchase"><b>⚠️ Нужно проверить материал</b><div class="be-muted">Смета содержит работу, но не даёт однозначного ответа, входит ли материал в цену. BUILDOS не будет придумывать объём — его можно указать вручную.</div></div>`:""}
           </div>`}).join("")||'<div class="be-muted" style="padding:20px 0">Ничего не найдено.</div>'}
       </div>`;
     document.getElementById("beEstimateModal").classList.add("show");
@@ -1453,7 +1494,7 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
     document.getElementById("beEstimateSheet").innerHTML=`
       <button class="close" onclick="beOpenEstimate(${oi})">×</button>
       <h2>${beEsc(x.name)}</h2>
-      <div class="be-cat">${window.beType(x.name)}</div>
+      <div class="be-cat">${beEsc(x.category||(x.kind==="material"?"Материалы":"Работы / СМР"))}</div>${x.sourceWork?`<div class="be-muted">Для работы: ${beEsc(x.sourceWork)}</div>`:""}
       <div class="be-summary" style="margin-top:14px">
         <div class="be-stat"><span>Количество</span><b>${x.qty||0} ${beEsc(x.unit||"шт")}</b></div>
         <div class="be-stat"><span>Цена</span><b>${beMoney(x.price||0)}</b></div>
@@ -1477,6 +1518,7 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
   window.beSaveItem=function(oi,ii){
     const o=beGetObj(oi),x=o.estimateItems[ii];if(!x)return;
     x.kind=document.getElementById("beItemKind").value;
+    x.category=x.kind==="material"?"Материалы":"Работы / СМР";
     x.materialMode=document.getElementById("beItemMaterialMode").value;
     x.needsMaterialCheck=(x.kind!=="material" && (x.materialMode==="buy"||x.materialMode==="clarify"));
     x.status=document.getElementById("beItemStatus").value;
@@ -1489,7 +1531,7 @@ window.bfAddClose=function(){document.getElementById("bfAddSheet").classList.rem
   window.bePurchaseList=function(i){
     const o=beGetObj(i),items=o.estimateItems||[];
     const buy=items.filter(x=>x.kind==="material"&&(+x.purchasedQty||0)<(+x.qty||0));
-    const review=items.filter(x=>x.kind!=="material"&&(x.needsMaterialCheck||x.materialMode==="clarify"));
+    const review=items.filter(beNeedsCheck);
     const total=buy.reduce((a,x)=>a+(Math.max(0,(+x.qty||0)-(+x.purchasedQty||0))*(+x.price||0)),0);
     document.getElementById("beEstimateSheet").innerHTML=`
       <button class="close" onclick="beOpenEstimate(${i})">×</button>
@@ -1534,6 +1576,40 @@ if(typeof window.beType!=="function"){
 
 <script>
 window.beMoney=window.beMoney||function(x){return new Intl.NumberFormat("ru-RU").format(Number(x)||0)+" ₽";};
+</script>
+
+<style>
+/* v8 mobile touch fix: keep estimate controls above any object-page layer */
+#detail .beq, #detail .beq-scroll, #detail .beq-scroll button, #detail .be-actions, #detail .be-actions button{position:relative;z-index:6001;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#detail .beq-scroll button, #detail .be-actions button{cursor:pointer;user-select:none}
+</style>
+<script>
+(function(){
+  function idxFromOnclick(btn){
+    const a=btn.getAttribute('onclick')||'';
+    let m=a.match(/be(?:OpenEstimate|PurchaseList|EstimateCheck)\((\d+)\)/);
+    return m?Number(m[1]):null;
+  }
+  document.addEventListener('click',function(ev){
+    const btn=ev.target.closest && ev.target.closest('#detail .beq-scroll button, #detail .be-actions button');
+    if(!btn) return;
+    const i=idxFromOnclick(btn);
+    if(i===null) return;
+    const a=btn.getAttribute('onclick')||'';
+    let fn=null;
+    if(a.includes('bePurchaseList')) fn=window.bePurchaseList;
+    else if(a.includes('beEstimateCheck')) fn=window.beEstimateCheck;
+    else if(a.includes('beOpenEstimate')) fn=window.beOpenEstimate;
+    if(typeof fn!=='function') return;
+    ev.preventDefault(); ev.stopImmediatePropagation();
+    try{fn(i)}catch(err){console.error('BUILDOS estimate button error',err);}
+  },true);
+
+  // Also expose a simple diagnostic helper for the mini-app.
+  window.BUILDOS_ESTIMATE_BUTTONS_OK=function(){
+    return !!(window.beOpenEstimate&&window.bePurchaseList&&window.beEstimateCheck);
+  };
+})();
 </script>
 </body>
 </html>
